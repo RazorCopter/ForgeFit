@@ -1,37 +1,30 @@
 @echo off
-title Git Auto-Push
-echo ==========================================
-echo       GIT PUSH AUTOMATICO
-echo ==========================================
+echo =====================================================
+echo Inizio procedura di pubblicazione per ForgeFit...
+echo =====================================================
 echo.
 
-:: Richiede il commento all'utente
-set /p commit_msg="Inserisci il commento del commit: "
-
-:: Controllo se il commento è vuoto
-if "%commit_msg%"=="" (
-    echo.
-    echo [ERRORE] Il commento non puo' essere vuoto! Operazione annullata.
-    echo.
-    pause
-    exit /b
-)
-
+:: 1. Controlla lo stato dei file modificati
+echo [1/4] Controllo stato dei file...
+git status
 echo.
-echo [1/3] Aggiunta dei file in corso (git add .)...
+
+:: 2. Aggiungi tutte le modifiche allo stage
+echo [2/4] Aggiunta delle modifiche allo stage (git add .)...
 git add .
-
 echo.
-echo [2/3] Creazione del commit...
-git commit -m "%commit_msg%"
 
+:: 3. Crea un "pacchetto" con un messaggio chiaro
+echo [3/4] Creazione del commit...
+git commit -m "fix: risolto routing dinamico API, fix flusso di login e aggiunta favicon ForgeFit"
 echo.
-echo [3/3] Invio al server (git push origin main)...
+
+:: 4. Spingi tutto sul repository remoto
+echo [4/4] Push sul repository remoto (origin main)...
 git push origin main
+echo.
 
-echo.
-echo ==========================================
-echo       OPERAZIONE COMPLETATA!
-echo ==========================================
-echo.
+echo =====================================================
+echo Operazione completata!
+echo =====================================================
 pause
