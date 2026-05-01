@@ -440,13 +440,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 16),
                     // Titolo giorno (es. PUSH, PULL, LEGS)
-                    Text(
-                      day.title,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: accentColor,
-                        letterSpacing: 1.5,
+                    Expanded(
+                      child: Text(
+                        day.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: accentColor,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
                   ],
