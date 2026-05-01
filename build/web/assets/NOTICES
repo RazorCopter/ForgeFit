@@ -817,7 +817,6 @@ clock
 cpu_features
 fake_async
 flatbuffers
-google_generative_ai
 gtest-parallel
 spirv-cross
 spirv-tools

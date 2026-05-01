@@ -9,6 +9,10 @@ echo [1/4] Controllo stato dei file...
 git status
 echo.
 
+:: 0. Compilazione dell'app Web
+echo [0/4] Compilazione in corso (flutter build web)...
+call flutter build web --release --dart-define=API_BASE_URL=https://fitconsole.ghome.it
+
 :: 2. Aggiungi tutte le modifiche allo stage
 echo [2/4] Aggiunta delle modifiche allo stage (git add .)...
 git add .
