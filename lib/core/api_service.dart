@@ -266,6 +266,37 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // POST /api/ai/analyze [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+
+  /// Metodo passthrough generico per inviare un prompt e un contesto al backend.
+  static Future<Map<String, dynamic>> analyzeWithAI({
+    required String prompt,
+    Map<String, dynamic>? contextData,
+  }) async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.aiAnalyze),
+            headers: headers,
+            body: jsonEncode({
+              'prompt_text': prompt,
+              'context_data': contextData ?? {},
+            }),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      _checkUnauthorized(response);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore durante l\'analisi passthrough AI: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // Helper: controlla 401 e forza logout
   // ------------------------------------------------------------------
 

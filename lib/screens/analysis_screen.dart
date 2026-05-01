@@ -209,11 +209,44 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     });
 
     try {
-      // Chiamata al backend FastAPI che gestisce internamente Gemini
-      final response = await ApiService.generateAnalysis();
+      // Dati di contesto per l'AI
+      final age = _profile != null ? DateTime.now().difference(_profile!.dateOfBirth).inDays ~/ 365 : 0;
+      final height = _profile?.height ?? 0.0;
+      final biometricHistory = DatabaseService.getBiometricHistoryForAI();
+      final workoutHistory = DatabaseService.getWorkoutHistoryForAI(4);
+
+      final prompt = '''
+Agisci come un personal trainer esperto.
+Il mio profilo:
+Altezza: $height cm
+Età: $age anni
+Obiettivo: ${_goalController.text}
+
+Storico progressivo del mio fisico (Peso e Circonferenze):
+[$biometricHistory]
+
+Storico dettagliato dei miei allenamenti (diviso in settimane, dalla meno recente alla più recente):
+[$workoutHistory]
+
+Fornisci un feedback sintetico e diretto (max 120 parole) in italiano. 
+1. Analizza la progressione (o stallo) fisiologica in relazione ai carichi sollevati.
+2. Dimmi se sto procedendo nella giusta direzione verso il mio obiettivo.
+3. Dammi un consiglio pratico per le prossime settimane.
+''';
+
+      // Chiamata al nuovo endpoint passthrough del backend
+      final response = await ApiService.analyzeWithAI(
+        prompt: prompt,
+        contextData: {
+          'age': age,
+          'height': height,
+          'goal': _goalController.text,
+          'type': 'performance_report',
+        },
+      );
 
       setState(() {
-        _aiResponse = response['analysis'] ?? 'Nessuna risposta dal modello.';
+        _aiResponse = response['analysis'] ?? response['response'] ?? 'Nessuna risposta dal modello.';
       });
     } catch (e) {
       setState(() {
