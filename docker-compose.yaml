@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  forgefit-app:
+    build: .
+    container_name: ForgeFit
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    volumes:
+      - fitness_data:/app/data
+    environment:
+      - TZ=Europe/Rome
+
+volumes:
+  fitness_data:
