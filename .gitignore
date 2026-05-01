@@ -31,10 +31,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 
-# Escludi TUTTO il contenuto della cartella build
-/build/
-
-# Ma "ri-includi" forzatamente solo la cartella web compilata
+# Escludi la cartella build ma permetti il caricamento della versione web compilata
+/build/*
 !/build/web/
 
 /coverage/
@@ -49,5 +47,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-# API Keys e Secrets
-lib/core/api_config.dart
+
+# API Keys e Secrets (Sbloccati per il corretto funzionamento del backend passthrough)
+# lib/core/api_config.dart
