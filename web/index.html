@@ -48,6 +48,106 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <!-- INIZIO: POPUP INSTALLAZIONE PWA -->
+  <style>
+    #pwa-install-prompt {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20, 20, 25, 0.95);
+      color: #fff;
+      padding: 16px 20px;
+      border-radius: 12px;
+      z-index: 99999;
+      box-shadow: 0 10px 25px rgba(0, 229, 255, 0.2);
+      text-align: center;
+      font-family: sans-serif;
+      width: 85%;
+      max-width: 400px;
+      border: 1px solid #00e5ff;
+    }
+
+    #pwa-install-prompt p {
+      margin: 0 0 15px 0;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .pwa-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+      margin: 0 5px;
+    }
+
+    #pwa-install-btn {
+      background: #00e5ff;
+      color: #000;
+    }
+
+    #pwa-close-btn {
+      background: transparent;
+      color: #aaa;
+      border: 1px solid #555;
+    }
+  </style>
+
+  <div id="pwa-install-prompt">
+    <p id="pwa-install-text">Installa Forge Fit sul tuo dispositivo per un'esperienza più veloce e a tutto schermo.</p>
+    <button id="pwa-install-btn" class="pwa-btn">Installa App</button>
+    <button id="pwa-close-btn" class="pwa-btn">Non ora</button>
+  </div>
+
+  <script>
+    let deferredPrompt;
+    const installPrompt = document.getElementById('pwa-install-prompt');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const closeBtn = document.getElementById('pwa-close-btn');
+    const installText = document.getElementById('pwa-install-text');
+
+    // 1. Rileva se è iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // 2. Rileva se l'app è GIA' installata (modalità standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // Logica per iOS: Mostra istruzioni manuali
+    if (isIOS && !isStandalone) {
+      installPrompt.style.display = 'block';
+      installText.innerHTML = "Per installare <b>Forge Fit</b>: <br>Premi l'icona <b>Condividi</b> in basso <br>e seleziona <b>Aggiungi a Home</b>.";
+      installBtn.style.display = 'none'; // Nascondi il bottone, iOS non lo fa cliccare
+    }
+
+    // Logica per Android/Chrome: Intercetta l'evento nativo
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); // Blocca il mini-banner automatico di Android
+      deferredPrompt = e; // Salva l'evento
+      installPrompt.style.display = 'block'; // Mostra il nostro popup
+    });
+
+    // Cosa succede se clicchi "Installa" (solo Android)
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        installPrompt.style.display = 'none';
+        deferredPrompt.prompt(); // Fai apparire il vero prompt di sistema
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('Utente ha accettato installazione');
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // Cosa succede se clicchi "Non ora"
+    closeBtn.addEventListener('click', () => {
+      installPrompt.style.display = 'none';
+    });
+  </script>
+  <!-- FINE: POPUP INSTALLAZIONE PWA -->
 </body>
 
 </html>
