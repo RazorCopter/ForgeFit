@@ -14,9 +14,14 @@ echo [2/4] Aggiunta delle modifiche allo stage (git add .)...
 git add .
 echo.
 
-:: 3. Crea un "pacchetto" con un messaggio chiaro
+:: 3. Richiedi e crea il commit
 echo [3/4] Creazione del commit...
-git commit -m "fix: risolto routing dinamico API, fix flusso di login e aggiunta favicon ForgeFit"
+set /p COMMIT_MSG="Inserisci il messaggio per questo commit: "
+
+:: Se premi invio senza scrivere nulla, usa un messaggio di default
+if "%COMMIT_MSG%"=="" set COMMIT_MSG="Aggiornamento di sistema"
+
+git commit -m "%COMMIT_MSG%"
 echo.
 
 :: 4. Spingi tutto sul repository remoto
