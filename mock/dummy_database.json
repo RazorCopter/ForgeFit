@@ -1,0 +1,296 @@
+{
+  "profile": {
+    "name": "Gianvito",
+    "dateOfBirth": "1995-04-28T00:00:00.000",
+    "height": 175.0
+  },
+  "biometrics": [
+    {
+      "date": "2026-04-07T08:00:00.000",
+      "weight": 80.0,
+      "abdomen": 90.0,
+      "chest": 105.0,
+      "biceps": 38.0
+    },
+    {
+      "date": "2026-04-14T08:00:00.000",
+      "weight": 79.5,
+      "abdomen": 89.0,
+      "chest": 105.5,
+      "biceps": 38.5
+    },
+    {
+      "date": "2026-04-21T08:00:00.000",
+      "weight": 79.0,
+      "abdomen": 88.0,
+      "chest": 106.0,
+      "biceps": 39.0
+    }
+  ],
+  "workouts": [
+    {
+      "id": "w1_d1",
+      "title": "PUSH (Settimana 1)",
+      "date": "2026-04-07T18:00:00.000",
+      "durationSeconds": 3600,
+      "exercises": [
+        {
+          "name": "Panca Piana",
+          "sets": [
+            {"weight": 60.0, "reps": 10},
+            {"weight": 65.0, "reps": 8},
+            {"weight": 70.0, "reps": 6}
+          ]
+        },
+        {
+          "name": "Military Press",
+          "sets": [
+            {"weight": 30.0, "reps": 10},
+            {"weight": 35.0, "reps": 8},
+            {"weight": 35.0, "reps": 8}
+          ]
+        },
+        {
+          "name": "Pushdown Tricipiti",
+          "sets": [
+            {"weight": 20.0, "reps": 12},
+            {"weight": 25.0, "reps": 10},
+            {"weight": 25.0, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w1_d2",
+      "title": "PULL (Settimana 1)",
+      "date": "2026-04-09T18:00:00.000",
+      "durationSeconds": 3400,
+      "exercises": [
+        {
+          "name": "Trazioni",
+          "sets": [
+            {"weight": 0.0, "reps": 8},
+            {"weight": 0.0, "reps": 8},
+            {"weight": 0.0, "reps": 6}
+          ]
+        },
+        {
+          "name": "Rematore",
+          "sets": [
+            {"weight": 40.0, "reps": 12},
+            {"weight": 45.0, "reps": 10},
+            {"weight": 50.0, "reps": 8}
+          ]
+        },
+        {
+          "name": "Curl Bicipiti",
+          "sets": [
+            {"weight": 12.0, "reps": 12},
+            {"weight": 14.0, "reps": 10},
+            {"weight": 14.0, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w1_d3",
+      "title": "LEGS (Settimana 1)",
+      "date": "2026-04-11T18:00:00.000",
+      "durationSeconds": 3800,
+      "exercises": [
+        {
+          "name": "Squat",
+          "sets": [
+            {"weight": 70.0, "reps": 10},
+            {"weight": 80.0, "reps": 8},
+            {"weight": 90.0, "reps": 6}
+          ]
+        },
+        {
+          "name": "Leg Press",
+          "sets": [
+            {"weight": 120.0, "reps": 12},
+            {"weight": 140.0, "reps": 10},
+            {"weight": 160.0, "reps": 8}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w2_d1",
+      "title": "PUSH (Settimana 2)",
+      "date": "2026-04-14T18:00:00.000",
+      "durationSeconds": 3700,
+      "exercises": [
+        {
+          "name": "Panca Piana",
+          "sets": [
+            {"weight": 62.5, "reps": 10},
+            {"weight": 67.5, "reps": 8},
+            {"weight": 72.5, "reps": 6}
+          ]
+        },
+        {
+          "name": "Military Press",
+          "sets": [
+            {"weight": 32.5, "reps": 10},
+            {"weight": 37.5, "reps": 8},
+            {"weight": 37.5, "reps": 8}
+          ]
+        },
+        {
+          "name": "Pushdown Tricipiti",
+          "sets": [
+            {"weight": 22.5, "reps": 12},
+            {"weight": 27.5, "reps": 10},
+            {"weight": 27.5, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w2_d2",
+      "title": "PULL (Settimana 2)",
+      "date": "2026-04-16T18:00:00.000",
+      "durationSeconds": 3500,
+      "exercises": [
+        {
+          "name": "Trazioni",
+          "sets": [
+            {"weight": 2.5, "reps": 8},
+            {"weight": 2.5, "reps": 8},
+            {"weight": 0.0, "reps": 8}
+          ]
+        },
+        {
+          "name": "Rematore",
+          "sets": [
+            {"weight": 42.5, "reps": 12},
+            {"weight": 47.5, "reps": 10},
+            {"weight": 52.5, "reps": 8}
+          ]
+        },
+        {
+          "name": "Curl Bicipiti",
+          "sets": [
+            {"weight": 14.0, "reps": 12},
+            {"weight": 16.0, "reps": 10},
+            {"weight": 16.0, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w2_d3",
+      "title": "LEGS (Settimana 2)",
+      "date": "2026-04-18T18:00:00.000",
+      "durationSeconds": 3900,
+      "exercises": [
+        {
+          "name": "Squat",
+          "sets": [
+            {"weight": 72.5, "reps": 10},
+            {"weight": 82.5, "reps": 8},
+            {"weight": 92.5, "reps": 6}
+          ]
+        },
+        {
+          "name": "Leg Press",
+          "sets": [
+            {"weight": 125.0, "reps": 12},
+            {"weight": 145.0, "reps": 10},
+            {"weight": 165.0, "reps": 8}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w3_d1",
+      "title": "PUSH (Settimana 3)",
+      "date": "2026-04-21T18:00:00.000",
+      "durationSeconds": 3650,
+      "exercises": [
+        {
+          "name": "Panca Piana",
+          "sets": [
+            {"weight": 65.0, "reps": 10},
+            {"weight": 70.0, "reps": 8},
+            {"weight": 75.0, "reps": 6}
+          ]
+        },
+        {
+          "name": "Military Press",
+          "sets": [
+            {"weight": 35.0, "reps": 10},
+            {"weight": 40.0, "reps": 8},
+            {"weight": 40.0, "reps": 8}
+          ]
+        },
+        {
+          "name": "Pushdown Tricipiti",
+          "sets": [
+            {"weight": 25.0, "reps": 12},
+            {"weight": 30.0, "reps": 10},
+            {"weight": 30.0, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w3_d2",
+      "title": "PULL (Settimana 3)",
+      "date": "2026-04-23T18:00:00.000",
+      "durationSeconds": 3450,
+      "exercises": [
+        {
+          "name": "Trazioni",
+          "sets": [
+            {"weight": 5.0, "reps": 8},
+            {"weight": 5.0, "reps": 6},
+            {"weight": 2.5, "reps": 8}
+          ]
+        },
+        {
+          "name": "Rematore",
+          "sets": [
+            {"weight": 45.0, "reps": 12},
+            {"weight": 50.0, "reps": 10},
+            {"weight": 55.0, "reps": 8}
+          ]
+        },
+        {
+          "name": "Curl Bicipiti",
+          "sets": [
+            {"weight": 16.0, "reps": 12},
+            {"weight": 18.0, "reps": 10},
+            {"weight": 18.0, "reps": 10}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w3_d3",
+      "title": "LEGS (Settimana 3)",
+      "date": "2026-04-25T18:00:00.000",
+      "durationSeconds": 3850,
+      "exercises": [
+        {
+          "name": "Squat",
+          "sets": [
+            {"weight": 75.0, "reps": 10},
+            {"weight": 85.0, "reps": 8},
+            {"weight": 95.0, "reps": 6}
+          ]
+        },
+        {
+          "name": "Leg Press",
+          "sets": [
+            {"weight": 130.0, "reps": 12},
+            {"weight": 150.0, "reps": 10},
+            {"weight": 170.0, "reps": 8}
+          ]
+        }
+      ]
+    }
+  ]
+}
