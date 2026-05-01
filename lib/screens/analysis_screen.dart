@@ -249,6 +249,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
         _aiResponse = response['analysis'] ?? response['response'] ?? 'Nessuna risposta dal modello.';
       });
     } catch (e) {
+      debugPrint('DEBUG AI ERROR: $e');
       setState(() {
         _aiResponse = 'Errore durante la generazione del report: $e';
       });
