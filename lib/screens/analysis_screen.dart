@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../data/database_service.dart';
@@ -210,41 +209,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     });
 
     try {
-      // Usiamo Gemini 1.5 Flash (o quello disponibile)
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: 'INSERISCI_LA_TUA_API_KEY', 
-      );
-
-      final age = _profile != null ? DateTime.now().difference(_profile!.dateOfBirth).inDays ~/ 365 : 0;
-      final height = _profile?.height ?? 0.0;
-
-      final biometricHistory = DatabaseService.getBiometricHistoryForAI();
-      final workoutHistory = DatabaseService.getWorkoutHistoryForAI(4);
-
-      final prompt = '''
-Agisci come un personal trainer esperto.
-Il mio profilo:
-Altezza: $height cm
-Età: $age anni
-Obiettivo: ${_goalController.text}
-
-Storico progressivo del mio fisico (Peso e Circonferenze):
-[$biometricHistory]
-
-Storico dettagliato dei miei allenamenti (diviso in settimane, dalla meno recente alla più recente):
-[$workoutHistory]
-
-Fornisci un feedback sintetico e diretto (max 120 parole) in italiano. 
-1. Analizza la progressione (o stallo) fisiologica in relazione ai carichi sollevati.
-2. Dimmi se sto procedendo nella giusta direzione verso il mio obiettivo.
-3. Dammi un consiglio pratico per le prossime settimane.
-''';
-
-      final response = await model.generateContent([Content.text(prompt)]);
+      // Chiamata al backend FastAPI che gestisce internamente Gemini
+      final response = await ApiService.generateAnalysis();
 
       setState(() {
-        _aiResponse = response.text ?? 'Nessuna risposta dal modello.';
+        _aiResponse = response['analysis'] ?? 'Nessuna risposta dal modello.';
       });
     } catch (e) {
       setState(() {

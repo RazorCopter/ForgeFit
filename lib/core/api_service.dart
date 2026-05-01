@@ -211,6 +211,61 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // POST /api/plans/generate-ai [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+
+  /// Richiede al backend di generare una nuova scheda di allenamento tramite AI.
+  static Future<Map<String, dynamic>> generateAIPlan({
+    required String experienceLevel,
+    String? ptNotes,
+  }) async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.generateAIPlan),
+            headers: headers,
+            body: jsonEncode({
+              'experience_level': experienceLevel,
+              'pt_notes': ptNotes ?? '',
+            }),
+          )
+          .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
+
+      _checkUnauthorized(response);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore generazione scheda AI: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // POST /api/analysis/generate [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+
+  /// Richiede al backend di generare un report di analisi performance tramite AI.
+  static Future<Map<String, dynamic>> generateAnalysis() async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.generateAnalysis),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
+
+      _checkUnauthorized(response);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore generazione report AI: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // Helper: controlla 401 e forza logout
   // ------------------------------------------------------------------
 
