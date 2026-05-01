@@ -34,6 +34,7 @@ migrate_working_dir/
 # Escludi la cartella build ma permetti il caricamento della versione web compilata
 /build/*
 !/build/web/
+build/
 
 /coverage/
 
