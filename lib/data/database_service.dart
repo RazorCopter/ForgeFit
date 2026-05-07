@@ -54,6 +54,18 @@ class DatabaseService {
     return _settingsBox.get('user_email') as String?;
   }
 
+  /// Persiste l'[userId] numerico dell'utente.
+  static Future<void> saveUserId(int userId) async {
+    await _settingsBox.put('user_id', userId);
+  }
+
+  /// Legge l'ID numerico dell'utente.
+  static int? getUserId() {
+    final rawValue = _settingsBox.get('user_id');
+    debugPrint('📦 [DatabaseService] getUserId() -> Raw Value in Hive: $rawValue (${rawValue?.runtimeType})');
+    return rawValue as int?;
+  }
+
   // --- PARSING SCHEDA DA JSON SERVER ---
 
   // Struttura reale del campo plan_json restituito da /api/plans/{email}:
@@ -219,7 +231,7 @@ class DatabaseService {
     StringBuffer buffer = StringBuffer();
     for (var r in records) {
       final dateStr = '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}';
-      buffer.writeln('- $dateStr: Peso ${r.weight}kg, Addome ${r.abdomen}cm, Petto ${r.chest}cm, Bicipite ${r.biceps}cm, Vita ${r.waist ?? '—'}cm, Coscia ${r.thigh ?? '—'}cm');
+      buffer.writeln('- $dateStr: Peso ${r.weight}kg, Fianchi ${r.hips}cm, Petto ${r.chest}cm, Bicipite ${r.biceps}cm, Vita ${r.waist ?? '—'}cm, Coscia ${r.thigh ?? '—'}cm, Polpaccio ${r.calf ?? '—'}cm');
     }
     return buffer.toString().trim();
   }

@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------------------
   List<TrainingDay> _days = [];
 
-  /// true mentre è in corso la chiamata GET /api/plans/{email}
+  /// true mentre è in corso la chiamata GET /api/plans/{user_id}
   bool _isSyncing = false;
 
   // ----------------------------------------------------------------
@@ -46,23 +46,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ----------------------------------------------------------------
-  // Sincronizzazione: GET /api/plans/{email}
+  // Sincronizzazione: GET /api/plans/{user_id}
   // ----------------------------------------------------------------
 
   /// Recupera la scheda di allenamento dal backend e aggiorna la UI.
   ///
   /// Flusso:
-  /// 1. Legge l'email dell'utente da Hive (salvata durante l'onboarding)
-  /// 2. Chiama GET /api/plans/{email} tramite [ApiService]
-  /// 3. Estrae il campo `plan_json` dalla risposta
+  /// 1. Legge l'ID dell'utente da Hive (salvato durante il login)
+  /// 2. Chiama GET /api/plans/{user_id} tramite [ApiService]
+  /// 3. Estrae il campo `plan` dalla risposta
   /// 4. Parsa il JSON in oggetti [TrainingDay] tramite [DatabaseService]
   /// 5. Chiama [setState] per aggiornare la UI
   Future<void> _syncScheda() async {
-    // Recupera l'email: è necessaria per la chiamata REST
-    final email = DatabaseService.getUserEmail();
-    if (email == null || email.isEmpty) {
+    // Recupera l'ID utente: è necessario per la chiamata REST
+    final userId = DatabaseService.getUserId();
+    debugPrint('🔄 [HomeScreen] _syncScheda called. userId from Hive: $userId');
+
+    if (userId == null) {
+      debugPrint('❌ [HomeScreen] userId is NULL. Showing error snackbar.');
       _showErrorSnackBar(
-        'Nessun account trovato. Completa prima la registrazione.',
+        'Nessun account trovato. Effettua il login o riavvia l\'app.',
       );
       return;
     }
@@ -71,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isSyncing = true);
 
     try {
-      // Chiamata REST al backend FastAPI
-      final response = await ApiService.getPlans(email);
+      // Chiamata REST al backend FastAPI usando l'ID numerico
+      final response = await ApiService.getPlans(userId);
 
       // Estrazione del campo "plan" dalla risposta del backend.
       // Il backend restituisce: { "plan": { "titolo": "...", "giorni": [...] } }
@@ -128,16 +131,14 @@ class _HomeScreenState extends State<HomeScreen> {
         'Scheda sincronizzata! ${parsedDays.length} giorni caricati.',
       );
     } on ApiException catch (e) {
-      // Errore HTTP specifico (es. 404 utente non trovato, 500 server error)
-      print('[HomeScreen] ApiException: $e');
-      _showErrorSnackBar('Errore dal server: ${e.message}');
+      // Errore HTTP specifico (es. 401 Unauthorized, 404 Not Found)
+      debugPrint('❌ [HomeScreen] ApiException: ${e.statusCode} - ${e.message}');
+      _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
     } catch (e, stack) {
-      // Errore di parsing, cast, o rete: stampa stack trace completo per debug
-      print('[HomeScreen] Errore inatteso: $e');
-      print('[HomeScreen] StackTrace: $stack');
-      _showErrorSnackBar(
-        'Errore durante la sincronizzazione: $e',
-      );
+      // Errore di parsing, rete o inatteso
+      debugPrint('❌ [HomeScreen] Errore inatteso: $e');
+      debugPrint('🥞 [HomeScreen] StackTrace: $stack');
+      _showErrorSnackBar('Errore di sistema: $e');
     } finally {
       // Nasconde il loading in ogni caso (successo o errore)
       if (mounted) setState(() => _isSyncing = false);
@@ -377,6 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------------------
   Widget _buildDaysList() {
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       itemCount: _days.length,
       itemBuilder: (context, index) {
         final day = _days[index];
@@ -414,47 +416,66 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    // Icona del tipo di allenamento
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accentColor.withOpacity(0.3),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          )
-                        ],
-                      ),
-                      child: Icon(
-                        _getIconForDay(day.id),
-                        color: accentColor,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Titolo giorno (es. PUSH, PULL, LEGS)
-                    Expanded(
-                      child: Text(
+                // Icona del tipo di allenamento
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.3),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      )
+                    ],
+                  ),
+                  child: Icon(
+                    _getIconForDay(day.id),
+                    color: accentColor,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Contenuto testuale flessibile
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Titolo giorno (es. PUSH, PULL, LEGS)
+                      Text(
                         day.title,
-                        maxLines: 1,
+                        maxLines: 2,
+                        softWrap: true,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 24, // Leggermente ridotto per gestire 2 righe
                           fontWeight: FontWeight.w900,
                           color: accentColor,
-                          letterSpacing: 1.5,
+                          letterSpacing: 1.2,
+                          height: 1.1,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      // Sottotitolo (muscoli bersaglio)
+                      Text(
+                        day.subtitle,
+                        maxLines: 2,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Icon(
                   Icons.arrow_forward_ios,
                   color: accentColor.withOpacity(0.7),
@@ -462,20 +483,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Sottotitolo (muscoli bersaglio)
-            Text(
-              day.subtitle,
-              style: const TextStyle(
-                fontSize: 18,
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             // Priorità / note del trainer
             Text(
               day.priority,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,

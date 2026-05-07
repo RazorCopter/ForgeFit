@@ -64,12 +64,40 @@ class ApiService {
           .timeout(_timeout);
 
       final data = _handleResponse(response);
+      
+      // ── LOG LOGIN RESPONSE ──────────────────────────────────────────────────
+      debugPrint('🔑 [ApiService] Login Response Body: $data');
+      // ────────────────────────────────────────────────────────────────────────
+
       // Salva token e email in locale
       final token = data['access_token'] as String?;
       if (token != null) {
         await AuthService.saveToken(token);
         await AuthService.saveEmail(email);
         await DatabaseService.saveUserEmail(email); // Sincronizza con Hive
+        
+        // Estrazione ID utente ultra-robusta
+        int? userId;
+        try {
+          if (data['user'] != null && data['user'] is Map) {
+            userId = (data['user']['id'] as num?)?.toInt();
+          } else {
+            userId = (data['user_id'] as num? ?? data['id'] as num?)?.toInt();
+          }
+        } catch (e) {
+          debugPrint('❌ [ApiService] Errore parsing userId: $e');
+        }
+
+        debugPrint('👤 [ApiService] Extracted userId: $userId');
+        debugPrint('🏷️ [ApiService] Backend Version: ${data['version'] ?? "Unknown (Old)"}');
+
+        if (userId != null) {
+          await AuthService.saveUserId(userId);
+          await DatabaseService.saveUserId(userId);
+          debugPrint('✅ [ApiService] userId $userId saved to persistent storage.');
+        } else {
+          debugPrint('⚠️ [ApiService] userId is NULL after extraction!');
+        }
       }
       return data;
     } on ApiException {
@@ -104,6 +132,23 @@ class ApiService {
         await AuthService.saveToken(token);
         await AuthService.saveEmail(email);
         await DatabaseService.saveUserEmail(email); // Sincronizza con Hive
+
+        // Estrazione ID utente ultra-robusta
+        int? userId;
+        try {
+          if (data['user'] != null && data['user'] is Map) {
+            userId = (data['user']['id'] as num?)?.toInt();
+          } else {
+            userId = (data['user_id'] as num? ?? data['id'] as num?)?.toInt();
+          }
+        } catch (e) {
+          debugPrint('Errore parsing userId post-register: $e');
+        }
+
+        if (userId != null) {
+          await AuthService.saveUserId(userId);
+          await DatabaseService.saveUserId(userId);
+        }
       }
       return data;
     } on ApiException {
@@ -114,21 +159,39 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
-  // GET /api/plans/{email}  [PROTETTO — richiede JWT]
+  // GET /api/plans/{user_id}  [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
+  static Future<Map<String, dynamic>> getPlans(int userId) async {
+    final url = ApiConfig.plans(userId);
+    final headers = await AuthService.authHeaders();
 
-  static Future<Map<String, dynamic>> getPlans(String email) async {
+    // ── LOG REQUEST ─────────────────────────────────────────────────────────
+    debugPrint('🚀 [ApiService] GET $url');
+    debugPrint('📋 [ApiService] Headers: $headers');
+    // ────────────────────────────────────────────────────────────────────────
+
     try {
-      final headers = await AuthService.authHeaders();
       final response = await http
-          .get(Uri.parse(ApiConfig.plans(email)), headers: headers)
+          .get(Uri.parse(url), headers: headers)
           .timeout(_timeout);
+
+      // ── LOG RESPONSE ────────────────────────────────────────────────────────
+      debugPrint('📥 [ApiService] Status: ${response.statusCode}');
+      if (response.statusCode >= 300) {
+        debugPrint('❌ [ApiService] Error Body: ${response.body}');
+      }
+      // ────────────────────────────────────────────────────────────────────────
 
       _checkUnauthorized(response);
       return _handleResponse(response);
-    } on ApiException {
+    } on ApiException catch (e) {
+      debugPrint('⚠️ [ApiService] ApiException (${e.statusCode}): ${e.message}');
+      if (e.statusCode == 404) {
+        throw const ApiException(statusCode: 404, message: 'Nessuna scheda trovata per questo utente.');
+      }
       rethrow;
     } catch (e) {
+      debugPrint('🚨 [ApiService] Unexpected Error: $e');
       throw Exception('Impossibile raggiungere il server: $e');
     }
   }

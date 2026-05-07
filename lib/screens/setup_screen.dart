@@ -25,14 +25,14 @@ class _SetupScreenState extends State<SetupScreen> {
   /// Riscarica la scheda dal server e la salva in memoria.
   /// Utile quando il trainer aggiorna il piano dell'utente.
   Future<void> _syncScheda() async {
-    final email = DatabaseService.getUserEmail();
-    if (email == null || email.isEmpty) {
-      _showSnackBar('Nessun account. Completa prima la registrazione.', Colors.red.shade700);
+    final userId = DatabaseService.getUserId();
+    if (userId == null) {
+      _showSnackBar('Nessun account. Effettua prima il login.', Colors.red.shade700);
       return;
     }
     setState(() => _isSyncing = true);
     try {
-      final response = await ApiService.getPlans(email);
+      final response = await ApiService.getPlans(userId);
       final rawPlan = response['plan'];
       if (rawPlan == null) {
         _showSnackBar('Nessuna scheda disponibile. Contatta il trainer.', Colors.orange);

@@ -292,7 +292,10 @@ class _RegisterFormState extends State<_RegisterForm> {
   final _pettoCtrl      = TextEditingController();
   final _vitaCtrl       = TextEditingController();
   final _cosciaCtrl     = TextEditingController();
-  final _addomeCtrl     = TextEditingController();
+  final _fianchiCtrl    = TextEditingController();
+  final _polpaccioCtrl  = TextEditingController();
+  final _colloCtrl      = TextEditingController();
+  final _polsoCtrl      = TextEditingController();
 
   DateTime? _selectedDate;
   String?   _sesso;
@@ -305,7 +308,8 @@ class _RegisterFormState extends State<_RegisterForm> {
     for (final c in [
       _emailCtrl, _passwordCtrl, _confirmCtrl, _nomeCtrl, _cognomeCtrl,
       _altezzaCtrl, _pesoCtrl, _bicipiteCtrl, _pettoCtrl,
-      _vitaCtrl, _cosciaCtrl, _addomeCtrl,
+      _vitaCtrl, _cosciaCtrl, _fianchiCtrl, _polpaccioCtrl,
+      _colloCtrl, _polsoCtrl,
     ]) {
       c.dispose();
     }
@@ -366,7 +370,10 @@ class _RegisterFormState extends State<_RegisterForm> {
         'petto':    double.tryParse(_pettoCtrl.text)    ?? 0.0,
         'vita':     double.tryParse(_vitaCtrl.text)     ?? 0.0,
         'coscia':   double.tryParse(_cosciaCtrl.text)   ?? 0.0,
-        'addome':   double.tryParse(_addomeCtrl.text)   ?? 0.0,
+        'fianchi':  double.tryParse(_fianchiCtrl.text)  ?? 0.0,
+        'polpaccio': double.tryParse(_polpaccioCtrl.text) ?? 0.0,
+        'collo':    double.tryParse(_colloCtrl.text)    ?? 0.0,
+        'polso':    double.tryParse(_polsoCtrl.text)    ?? 0.0,
       };
 
       await ApiService.register(payload);
@@ -382,9 +389,14 @@ class _RegisterFormState extends State<_RegisterForm> {
       await DatabaseService.saveBiometricRecord(BiometricRecord(
         date:    DateTime.now(),
         weight:  double.tryParse(_pesoCtrl.text)     ?? 0.0,
-        abdomen: double.tryParse(_addomeCtrl.text)   ?? 0.0,
+        hips:    double.tryParse(_fianchiCtrl.text)  ?? 0.0,
         biceps:  double.tryParse(_bicipiteCtrl.text) ?? 0.0,
         chest:   double.tryParse(_pettoCtrl.text)    ?? 0.0,
+        waist:   double.tryParse(_vitaCtrl.text)     ?? 0.0,
+        thigh:   double.tryParse(_cosciaCtrl.text)   ?? 0.0,
+        calf:    double.tryParse(_polpaccioCtrl.text) ?? 0.0,
+        neck:    double.tryParse(_colloCtrl.text)    ?? 0.0,
+        wrist:   double.tryParse(_polsoCtrl.text)    ?? 0.0,
       ));
 
       if (mounted) widget.onSuccess();
@@ -512,8 +524,17 @@ class _RegisterFormState extends State<_RegisterForm> {
             _section('Misurazioni Iniziali', AppTheme.legsAccent, Icons.monitor_weight, [
               _field('Peso (kg) *', _pesoCtrl, TextInputType.number),
               const SizedBox(height: 12),
-              _field('Circ. Addome (cm)', _addomeCtrl, TextInputType.number,
-                  required: false),
+              _field('Circ. Fianchi (cm)', _fianchiCtrl, TextInputType.number,
+                  required: false,
+                  tooltip: "Misura nel punto più sporgente dei glutei."),
+              const SizedBox(height: 12),
+              _field('Circ. Vita (cm)', _vitaCtrl, TextInputType.number,
+                  required: false,
+                  tooltip: "Misura nel punto più stretto del busto."),
+              const SizedBox(height: 12),
+              _field('Circ. Polpaccio (cm)', _polpaccioCtrl, TextInputType.number,
+                  required: false,
+                  tooltip: "Misura sul punto più largo del polpaccio a muscolo rilassato."),
               const SizedBox(height: 12),
               _field('Circ. Bicipite (cm)', _bicipiteCtrl, TextInputType.number,
                   required: false),
@@ -521,11 +542,16 @@ class _RegisterFormState extends State<_RegisterForm> {
               _field('Circ. Petto (cm)', _pettoCtrl, TextInputType.number,
                   required: false),
               const SizedBox(height: 12),
-              _field('Circ. Vita (cm)', _vitaCtrl, TextInputType.number,
-                  required: false),
-              const SizedBox(height: 12),
               _field('Circ. Coscia (cm)', _cosciaCtrl, TextInputType.number,
                   required: false),
+              const SizedBox(height: 12),
+              _field('Circ. Collo (cm)', _colloCtrl, TextInputType.number,
+                  required: false,
+                  tooltip: "Misura appena sotto il pomo di Adamo."),
+              const SizedBox(height: 12),
+              _field('Circ. Polso (cm)', _polsoCtrl, TextInputType.number,
+                  required: false,
+                  tooltip: "Misura nel punto più stretto tra mano e avambraccio."),
             ]),
 
             const SizedBox(height: 24),
@@ -592,37 +618,60 @@ class _RegisterFormState extends State<_RegisterForm> {
     bool required = true,
     bool obscure = false,
     Widget? suffix,
+    String? tooltip,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: ctrl,
-      keyboardType: type,
-      obscureText: obscure,
-      inputFormatters: type == TextInputType.number
-          ? [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))]
-          : null,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-        suffixIcon: suffix,
-        isDense: true,
-        filled: true,
-        fillColor: Colors.black26,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.white12)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.white12)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppTheme.cyan)),
-      ),
-      validator: validator ??
-          (required
-              ? (v) => (v == null || v.isEmpty) ? 'Campo obbligatorio' : null
-              : null),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: ctrl,
+                keyboardType: type,
+                obscureText: obscure,
+                inputFormatters: type == TextInputType.number
+                    ? [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))]
+                    : null,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: label,
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  suffixIcon: suffix,
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.white12)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.white12)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppTheme.cyan)),
+                ),
+                validator: validator ??
+                    (required
+                        ? (v) => (v == null || v.isEmpty) ? 'Campo obbligatorio' : null
+                        : null),
+              ),
+            ),
+            if (tooltip != null)
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: AppTheme.cyan, size: 18),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(tooltip),
+                    backgroundColor: AppTheme.surfaceVariant,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                },
+              ),
+          ],
+        ),
+      ],
     );
   }
 

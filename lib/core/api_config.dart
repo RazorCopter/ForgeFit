@@ -22,8 +22,8 @@ class ApiConfig {
   /// POST  /api/auth/login    → login con email+password (restituisce JWT)
   static const String login = '$baseUrl/api/auth/login';
 
-  /// GET   /api/plans/{email} → recupero scheda di allenamento
-  static String plans(String email) => '$baseUrl/api/plans/$email';
+  /// GET   /api/plans/{user_id} → recupero scheda di allenamento
+  static String plans(int userId) => '$baseUrl/api/plans/$userId';
 
   /// POST  /api/plans/generate-ai → genera scheda tramite AI
   static const String generateAIPlan = '$baseUrl/api/plans/generate-ai';

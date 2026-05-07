@@ -172,7 +172,10 @@ class _NewUserFormState extends State<_NewUserForm> {
   final _pettoController   = TextEditingController();
   final _vitaController    = TextEditingController();
   final _cosciaController  = TextEditingController();
-  final _addomeController  = TextEditingController();
+  final _fianchiController = TextEditingController();
+  final _polpaccioController = TextEditingController();
+  final _colloController   = TextEditingController();
+  final _polsoController   = TextEditingController();
 
   DateTime? _selectedDate;
   bool _isLoading = false;
@@ -190,7 +193,10 @@ class _NewUserFormState extends State<_NewUserForm> {
     _pettoController.dispose();
     _vitaController.dispose();
     _cosciaController.dispose();
-    _addomeController.dispose();
+    _fianchiController.dispose();
+    _polpaccioController.dispose();
+    _colloController.dispose();
+    _polsoController.dispose();
     super.dispose();
   }
 
@@ -246,6 +252,10 @@ class _NewUserFormState extends State<_NewUserForm> {
         'petto':    double.tryParse(_pettoController.text) ?? 0.0,
         'vita':     double.tryParse(_vitaController.text) ?? 0.0,
         'coscia':   double.tryParse(_cosciaController.text) ?? 0.0,
+        'fianchi':  double.tryParse(_fianchiController.text) ?? 0.0,
+        'polpaccio': double.tryParse(_polpaccioController.text) ?? 0.0,
+        'collo':    double.tryParse(_colloController.text) ?? 0.0,
+        'polso':    double.tryParse(_polsoController.text) ?? 0.0,
       };
 
       await ApiService.register(payload);
@@ -260,9 +270,14 @@ class _NewUserFormState extends State<_NewUserForm> {
       await DatabaseService.saveBiometricRecord(BiometricRecord(
         date:    DateTime.now(),
         weight:  double.tryParse(_pesoController.text) ?? 0.0,
-        abdomen: double.tryParse(_addomeController.text) ?? 0.0,
+        hips:    double.tryParse(_fianchiController.text) ?? 0.0,
         biceps:  double.tryParse(_bicipiteController.text) ?? 0.0,
         chest:   double.tryParse(_pettoController.text) ?? 0.0,
+        waist:   double.tryParse(_vitaController.text) ?? 0.0,
+        thigh:   double.tryParse(_cosciaController.text) ?? 0.0,
+        calf:    double.tryParse(_polpaccioController.text) ?? 0.0,
+        neck:    double.tryParse(_colloController.text) ?? 0.0,
+        wrist:   double.tryParse(_polsoController.text) ?? 0.0,
       ));
 
       if (mounted) {
@@ -419,13 +434,31 @@ class _NewUserFormState extends State<_NewUserForm> {
                           const SizedBox(height: 16),
                           _buildField('Peso (kg) *', _pesoController, TextInputType.number),
                           const SizedBox(height: 12),
+                          _buildField('Circ. Fianchi (cm)', _fianchiController, TextInputType.number,
+                              required: false,
+                              tooltip: "Punto di massima sporgenza dei glutei."),
+                          const SizedBox(height: 12),
+                          _buildField('Circ. Vita (cm)', _vitaController, TextInputType.number,
+                              required: false,
+                              tooltip: "Punto più stretto del busto."),
+                          const SizedBox(height: 12),
+                          _buildField('Circ. Polpaccio (cm)', _polpaccioController, TextInputType.number,
+                              required: false,
+                              tooltip: "Punto più largo del polpaccio."),
+                          const SizedBox(height: 12),
                           _buildField('Circ. Bicipite (cm)', _bicipiteController, TextInputType.number, required: false),
                           const SizedBox(height: 12),
                           _buildField('Circ. Petto (cm)', _pettoController, TextInputType.number, required: false),
                           const SizedBox(height: 12),
-                          _buildField('Circ. Vita (cm)', _vitaController, TextInputType.number, required: false),
-                          const SizedBox(height: 12),
                           _buildField('Circ. Coscia (cm)', _cosciaController, TextInputType.number, required: false),
+                          const SizedBox(height: 12),
+                          _buildField('Circ. Collo (cm)', _colloController, TextInputType.number, 
+                              required: false, 
+                              tooltip: "Sotto il pomo di Adamo, orizzontale."),
+                          const SizedBox(height: 12),
+                          _buildField('Circ. Polso (cm)', _polsoController, TextInputType.number, 
+                              required: false, 
+                              tooltip: "Nel punto più stretto tra mano e avambraccio."),
                         ],
                       ),
                     ).animate().slideY(begin: 0.1, delay: 400.ms),
@@ -479,22 +512,45 @@ class _NewUserFormState extends State<_NewUserForm> {
     TextEditingController controller,
     TextInputType type, {
     bool required = true,
+    String? tooltip,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: type,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: AppTheme.textSecondary),
-        filled: true,
-        fillColor: Colors.black26,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white12)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white12)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.cyan)),
-      ),
-      validator: validator ?? (required ? (v) => (v == null || v.isEmpty) ? 'Campo obbligatorio' : null : null),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                keyboardType: type,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: label,
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white12)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white12)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppTheme.cyan)),
+                ),
+                validator: validator ?? (required ? (v) => (v == null || v.isEmpty) ? 'Campo obbligatorio' : null : null),
+              ),
+            ),
+            if (tooltip != null)
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: AppTheme.cyan, size: 18),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(tooltip),
+                    backgroundColor: AppTheme.surfaceVariant,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                },
+              ),
+          ],
+        ),
+      ],
     );
   }
 

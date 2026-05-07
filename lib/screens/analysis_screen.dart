@@ -16,11 +16,14 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final TextEditingController _goalController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _abdomenController = TextEditingController();
+  final TextEditingController _fianchiController = TextEditingController();
+  final TextEditingController _polpaccioController = TextEditingController();
   final TextEditingController _chestController = TextEditingController();
   final TextEditingController _bicepsController = TextEditingController();
   final TextEditingController _vitaController = TextEditingController();
   final TextEditingController _cosciaController = TextEditingController();
+  final TextEditingController _colloController = TextEditingController();
+  final TextEditingController _polsoController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -47,34 +50,41 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     // 1. Prova da Hive
     var localProfile = DatabaseService.getUserProfile();
     
-    // 2. Se manca o dati parziali, prova dal backend
-    if (localProfile == null || localProfile.height == 0) {
-      try {
-        final userData = await ApiService.getMe();
-        // Mappatura dati backend -> UserProfile local
-        final int eta = userData['age'] ?? 0;
-        final newProfile = UserProfile(
-          name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim(),
-          dateOfBirth: DateTime(DateTime.now().year - eta, 1, 1),
-          height: (userData['height'] as num?)?.toDouble() ?? 0.0,
-          sesso: userData['gender'] ?? '',
-        );
-        localProfile = newProfile;
-        await DatabaseService.saveUserProfile(newProfile);
+    // Sempre tentiamo il fetch dal backend per avere le metriche derivate più aggiornate
+    try {
+      final userData = await ApiService.getMe();
+      final int eta = userData['age'] ?? 0;
+      final newProfile = UserProfile(
+        name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim(),
+        dateOfBirth: DateTime(DateTime.now().year - eta, 1, 1),
+        height: (userData['height'] as num?)?.toDouble() ?? 0.0,
+        sesso: userData['gender'] ?? '',
+        bmi: (userData['bmi'] as num?)?.toDouble(),
+        bmr: userData['bmr'] as int?,
+        whr: (userData['whr'] as num?)?.toDouble(),
+        acquaLitri: (userData['acqua_litri'] as num?)?.toDouble(),
+        proteineMin: userData['proteine_min'] as int?,
+        proteineMax: userData['proteine_max'] as int?,
+        bodyFatPerc: (userData['body_fat_perc'] as num?)?.toDouble(),
+      );
+      localProfile = newProfile;
+      await DatabaseService.saveUserProfile(newProfile);
 
-        // Popoliamo i controller biometrici con gli ultimi dati dal server (se presenti)
-        if (mounted) {
-          _weightController.text = (userData['weight'] ?? '').toString();
-          _chestController.text = (userData['chest'] ?? '').toString();
-          _abdomenController.text = (userData['abdomen'] ?? '').toString();
-          _bicepsController.text = (userData['biceps'] ?? '').toString();
-          _vitaController.text = (userData['waist'] ?? '').toString();
-          _cosciaController.text = (userData['thigh'] ?? '').toString();
-        }
-      } catch (e) {
-        debugPrint('Errore recupero profilo backend: $e');
-        // Se Hive è vuoto e API fallisce, creiamo un profilo dummy per sbloccare l'UI
-        localProfile ??= UserProfile(
+      if (mounted) {
+        _weightController.text = (userData['weight'] ?? '').toString();
+        _chestController.text = (userData['chest'] ?? '').toString();
+        _fianchiController.text = (userData['hips'] ?? userData['fianchi'] ?? userData['abdomen'] ?? '').toString();
+        _polpaccioController.text = (userData['calf'] ?? userData['polpaccio'] ?? '').toString();
+        _colloController.text = (userData['neck'] ?? userData['collo'] ?? '').toString();
+        _polsoController.text = (userData['wrist'] ?? userData['polso'] ?? '').toString();
+        _bicepsController.text = (userData['biceps'] ?? '').toString();
+        _vitaController.text = (userData['waist'] ?? '').toString();
+        _cosciaController.text = (userData['thigh'] ?? '').toString();
+      }
+    } catch (e) {
+      debugPrint('Errore recupero profilo backend: $e');
+      if (localProfile == null || localProfile.height == 0) {
+        localProfile = UserProfile(
           name: 'Atleta',
           dateOfBirth: DateTime(1990),
           height: 0,
@@ -136,19 +146,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final record = DatabaseService.getLatestBiometricRecord();
     if (record != null) {
       _weightController.text = record.weight.toString();
-      _abdomenController.text = record.abdomen.toString();
+      _fianchiController.text = record.hips.toString();
+      _polpaccioController.text = record.calf?.toString() ?? '';
       _chestController.text = record.chest.toString();
       _bicepsController.text = record.biceps.toString();
       _vitaController.text = record.waist?.toString() ?? '';
       _cosciaController.text = record.thigh?.toString() ?? '';
+      _colloController.text = record.neck?.toString() ?? '';
+      _polsoController.text = record.wrist?.toString() ?? '';
     }
   }
 
   /// Task 3: Logica di salvataggio indipendente
   Future<void> _saveProgress() async {
-    if (_weightController.text.isEmpty || _abdomenController.text.isEmpty) {
+    if (_weightController.text.isEmpty || _fianchiController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inserisci almeno Peso e Addome!'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Inserisci almeno Peso e Fianchi!'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -158,11 +171,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       final record = BiometricRecord(
         date: DateTime.now(),
         weight: double.tryParse(_weightController.text) ?? 0.0,
-        abdomen: double.tryParse(_abdomenController.text) ?? 0.0,
+        hips: double.tryParse(_fianchiController.text) ?? 0.0,
         biceps: double.tryParse(_bicepsController.text) ?? 0.0,
         chest: double.tryParse(_chestController.text) ?? 0.0,
         waist: double.tryParse(_vitaController.text) ?? 0.0,
         thigh: double.tryParse(_cosciaController.text) ?? 0.0,
+        calf: double.tryParse(_polpaccioController.text) ?? 0.0,
+        neck: double.tryParse(_colloController.text) ?? 0.0,
+        wrist: double.tryParse(_polsoController.text) ?? 0.0,
       );
 
       // Salva locale (Hive)
@@ -171,13 +187,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       // Invia al backend (usa chiavi inglesi come da schema MeasurementCreate)
       await ApiService.postMeasurements({
         'weight': record.weight,
-        'abdomen': record.abdomen,
+        'hips': record.hips,
+        'calf': record.calf,
         'chest': record.chest,
         'biceps': record.biceps,
         'waist': record.waist,
         'thigh': record.thigh,
+        'neck': record.neck,
+        'wrist': record.wrist,
         'goal': _goalController.text.trim(),
       });
+      
+      // Ricarica per ottenere le nuove metriche calcolate dal backend
+      await _fetchUserProfile();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -312,6 +334,41 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
 
               const SizedBox(height: 24),
 
+              if (_profile?.bmi != null || _profile?.bodyFatPerc != null || _profile?.bmr != null)
+                AppTheme.glassContainer(
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  borderColor: AppTheme.pullAccent.withOpacity(0.3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.analytics, color: AppTheme.pullAccent),
+                          SizedBox(width: 8),
+                          Text(
+                            'Le tue Metriche Avanzate',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.pullAccent),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: [
+                          if (_profile?.bmi != null) _buildAdvancedMetric('Indice Massa Corporea (BMI)', _profile!.bmi.toString()),
+                          if (_profile?.bodyFatPerc != null) _buildAdvancedMetric('Body Fat Stimata (%)', '${_profile!.bodyFatPerc}%'),
+                          if (_profile?.bmr != null) _buildAdvancedMetric('Metabolismo Basale (BMR)', '${_profile!.bmr} kcal'),
+                          if (_profile?.acquaLitri != null) _buildAdvancedMetric('Acqua Consigliata', '${_profile!.acquaLitri} L/giorno'),
+                          if (_profile?.proteineMin != null && _profile?.proteineMax != null) _buildAdvancedMetric('Target Proteico', '${_profile!.proteineMin} - ${_profile!.proteineMax} g/giorno'),
+                          if (_profile?.whr != null) _buildAdvancedMetric('Rapporto Vita-Fianchi (WHR)', _profile!.whr.toString()),
+                        ],
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),
+
               // Aggiorna Dati Fisiologici
               AppTheme.glassContainer(
                 padding: const EdgeInsets.all(20),
@@ -340,7 +397,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                       children: [
                         Expanded(child: _buildInput('Peso (kg)', _weightController)),
                         const SizedBox(width: 16),
-                        Expanded(child: _buildInput('Addome (cm)', _abdomenController)),
+                        Expanded(child: _buildInput('Fianchi (cm)', _fianchiController, tooltip: "Punto di massima sporgenza dei glutei.")),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -354,9 +411,25 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildInput('Vita (cm)', _vitaController)),
+                        Expanded(child: _buildInput('Vita (cm)', _vitaController, tooltip: "Punto più stretto del busto.")),
                         const SizedBox(width: 16),
+                        Expanded(child: _buildInput('Polpaccio (cm)', _polpaccioController, tooltip: "Punto più largo del polpaccio.")),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
                         Expanded(child: _buildInput('Coscia (cm)', _cosciaController)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildInput('Collo (cm)', _colloController, tooltip: "Misura appena sotto il pomo di Adamo.")),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildInput('Polso (cm)', _polsoController, tooltip: "Misura nel punto più stretto.")),
+                        const SizedBox(width: 16),
+                        const Spacer(),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -518,11 +591,48 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
     );
   }
 
-  Widget _buildInput(String label, TextEditingController controller, {bool isNumber = true}) {
+  Widget _buildAdvancedMetric(String label, String value) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 64) / 2,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInput(String label, TextEditingController controller, {bool isNumber = true, String? tooltip}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        Row(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            if (tooltip != null) ...[
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(tooltip),
+                    backgroundColor: AppTheme.surfaceVariant,
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                },
+                child: const Icon(Icons.info_outline, color: AppTheme.cyan, size: 14),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
