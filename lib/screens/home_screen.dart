@@ -123,6 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // ─────────────────────────────────────────────────────────────
 
+      // Ordinamento dei giorni per nome (es. "Giorno 1", "Giorno 2", "Giorno 3")
+      parsedDays.sort((a, b) => a.title.compareTo(b.title));
+
       // Aggiornamento reattivo dell'UI
       setState(() => _days = parsedDays);
 

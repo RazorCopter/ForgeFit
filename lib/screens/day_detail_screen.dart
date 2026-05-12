@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../models/training_data.dart';
+import '../models/completed_workout.dart';
+import '../data/database_service.dart';
 import '../core/theme.dart';
 import 'active_session_screen.dart';
 
@@ -16,6 +19,64 @@ class DayDetailScreen extends StatefulWidget {
 
 class _DayDetailScreenState extends State<DayDetailScreen> {
   int? _expandedIndex;
+  DateTime? _workoutStartTime;
+  final List<CompletedExercise> _completedExercises = [];
+
+  void _startExercise(Exercise exercise, Color accentColor) async {
+    if (_workoutStartTime == null) {
+      _workoutStartTime = DateTime.now();
+      setState(() {});
+    }
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActiveSessionScreen(
+          exercise: exercise,
+          accentColor: accentColor,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final CompletedExercise completed = result['data'];
+      _completedExercises.add(completed);
+      setState(() {});
+
+      if (result['action'] == 'finish') {
+        _finishWorkout();
+      }
+    }
+  }
+
+  Future<void> _finishWorkout() async {
+    if (_completedExercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Nessun esercizio completato. Allenamento annullato.'),
+        backgroundColor: Colors.redAccent,
+      ));
+      Navigator.pop(context);
+      return;
+    }
+
+    final duration = DateTime.now().difference(_workoutStartTime ?? DateTime.now()).inSeconds;
+
+    await DatabaseService.saveWorkout(CompletedWorkout(
+      id: const Uuid().v4(),
+      title: widget.day.title,
+      date: DateTime.now(),
+      durationSeconds: duration,
+      exercises: _completedExercises,
+    ));
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Allenamento salvato! Durata: ${duration ~/ 60}m'),
+        backgroundColor: AppTheme.vividPurple,
+      ));
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,45 +132,40 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 itemBuilder: (context, index) {
                   final exercise = widget.day.exercises[index];
                   final isExpanded = _expandedIndex == index;
+                  final isCompleted = _completedExercises.any((e) => e.name == exercise.name);
                   
                   return _ExpandableExerciseCard(
                     exercise: exercise,
                     index: index,
                     accentColor: accentColor,
                     isExpanded: isExpanded,
+                    isCompleted: isCompleted,
                     onToggle: () {
                       setState(() {
                         _expandedIndex = isExpanded ? null : index;
                       });
                     },
+                    onStart: () => _startExercise(exercise, accentColor),
                   );
                 },
               ),
             ),
           ],
         ),
-        floatingActionButton: AppTheme.glassContainer(
-          borderRadius: BorderRadius.circular(30),
-          padding: const EdgeInsets.all(4),
-          child: FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ActiveSessionScreen(
-                    day: widget.day,
-                    accentColor: accentColor,
-                  ),
+        floatingActionButton: _workoutStartTime != null
+            ? AppTheme.glassContainer(
+                borderRadius: BorderRadius.circular(30),
+                padding: const EdgeInsets.all(4),
+                child: FloatingActionButton.extended(
+                  onPressed: _finishWorkout,
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  icon: const Icon(Icons.stop_circle),
+                  label: const Text('TERMINA ALLENAMENTO', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-              );
-            },
-            backgroundColor: accentColor,
-            foregroundColor: AppTheme.bgTop,
-            elevation: 0,
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('INIZIA WORKOUT', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
+              )
+            : null,
       ),
     );
   }
@@ -120,14 +176,18 @@ class _ExpandableExerciseCard extends StatefulWidget {
   final int index;
   final Color accentColor;
   final bool isExpanded;
+  final bool isCompleted;
   final VoidCallback onToggle;
+  final VoidCallback onStart;
 
   const _ExpandableExerciseCard({
     required this.exercise,
     required this.index,
     required this.accentColor,
     required this.isExpanded,
+    required this.isCompleted,
     required this.onToggle,
+    required this.onStart,
   });
 
   @override
@@ -153,7 +213,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
           curve: Curves.easeInOut,
           child: AppTheme.glassContainer(
             padding: const EdgeInsets.all(16),
-            borderColor: widget.isExpanded ? widget.accentColor : widget.accentColor.withOpacity(0.3),
+            borderColor: widget.isCompleted ? Colors.green : (widget.isExpanded ? widget.accentColor : widget.accentColor.withOpacity(0.3)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -164,18 +224,20 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: widget.accentColor.withOpacity(0.2),
+                        color: widget.isCompleted ? Colors.green.withOpacity(0.2) : widget.accentColor.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
-                        child: Text(
-                          '${widget.index + 1}',
-                          style: TextStyle(
-                            color: widget.accentColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
+                        child: widget.isCompleted
+                            ? const Icon(Icons.check, color: Colors.green)
+                            : Text(
+                                '${widget.index + 1}',
+                                style: TextStyle(
+                                  color: widget.accentColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -185,10 +247,10 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                         children: [
                           Text(
                             widget.exercise.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: AppTheme.textPrimary,
+                              color: widget.isCompleted ? Colors.green : AppTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -204,7 +266,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                     ),
                     Icon(
                       widget.isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                      color: widget.accentColor,
+                      color: widget.isCompleted ? Colors.green : widget.accentColor,
                     ),
                   ],
                 ),
@@ -229,7 +291,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                               style: const TextStyle(color: AppTheme.textSecondary),
                             ),
                             const SizedBox(height: 16),
-                            if (widget.exercise.videoUrl.isNotEmpty)
+                            if (widget.exercise.videoUrl.isNotEmpty) ...[
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton.icon(
@@ -251,6 +313,29 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 12),
+                            ],
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: widget.isCompleted ? null : widget.onStart,
+                                icon: const Icon(Icons.play_arrow, size: 24),
+                                label: Text(
+                                  widget.isCompleted ? 'COMPLETATO' : 'INIZIA ESERCIZIO',
+                                  style: const TextStyle(letterSpacing: 1.2, fontWeight: FontWeight.w900),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.accentColor,
+                                  foregroundColor: AppTheme.bgTop,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: widget.accentColor.withOpacity(0.5),
+                                ),
+                              ),
+                            ),
                           ],
                         )
                       : const SizedBox.shrink(),

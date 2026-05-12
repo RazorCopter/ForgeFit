@@ -1,4 +1,6 @@
-import 'dart:async';
+import os
+
+content = """import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/training_data.dart';
@@ -514,3 +516,9 @@ class _StatBox extends StatelessWidget {
     );
   }
 }
+"""
+
+with open("lib/screens/active_session_screen.dart", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Done")
