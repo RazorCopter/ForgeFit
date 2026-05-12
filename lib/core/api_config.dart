@@ -42,4 +42,7 @@ class ApiConfig {
 
   /// GET   /api/auth/me → recupero dati profilo utente loggato
   static const String userMe = '$baseUrl/api/auth/me';
+
+  /// POST  /api/workouts/save → salvataggio allenamento completato
+  static const String saveWorkout = '$baseUrl/api/workouts/save';
 }

@@ -5,8 +5,8 @@ import '../models/training_data.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
 import '../core/theme.dart';
+import '../core/api_service.dart';
 import 'active_session_screen.dart';
-
 
 class DayDetailScreen extends StatefulWidget {
   final TrainingDay day;
@@ -59,22 +59,49 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       return;
     }
 
-    final duration = DateTime.now().difference(_workoutStartTime ?? DateTime.now()).inSeconds;
+    // Mostra il loading spinner
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppTheme.vividPurple)),
+    );
 
-    await DatabaseService.saveWorkout(CompletedWorkout(
+    final duration = DateTime.now().difference(_workoutStartTime ?? DateTime.now()).inSeconds;
+    
+    final completedWorkout = CompletedWorkout(
       id: const Uuid().v4(),
       title: widget.day.title,
       date: DateTime.now(),
       durationSeconds: duration,
       exercises: _completedExercises,
-    ));
+    );
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Allenamento salvato! Durata: ${duration ~/ 60}m'),
-        backgroundColor: AppTheme.vividPurple,
-      ));
-      Navigator.pop(context);
+    try {
+      // 1. Salvataggio locale
+      await DatabaseService.saveWorkout(completedWorkout);
+
+      // 2. Sincronizzazione con il Cloud (FastAPI Backend)
+      await ApiService.saveWorkout(completedWorkout);
+
+      if (mounted) {
+        Navigator.pop(context); // chiude lo spinner
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Allenamento salvato e sincronizzato col Cloud! Durata: ${duration ~/ 60}m'),
+          backgroundColor: Colors.green,
+        ));
+        Navigator.pop(context); // esce dalla vista del giorno
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // chiude lo spinner
+        // In caso di errore API, avvisa l'utente ma non bloccare, il salvataggio locale è avvenuto.
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Salvato offline. Errore sincronizzazione Cloud: $e'),
+          backgroundColor: Colors.orangeAccent,
+          duration: const Duration(seconds: 4),
+        ));
+        Navigator.pop(context); // esce dalla vista del giorno
+      }
     }
   }
 

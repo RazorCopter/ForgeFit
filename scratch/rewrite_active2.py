@@ -1,4 +1,6 @@
-import 'dart:async';
+import os
+
+content = """import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/training_data.dart';
@@ -171,64 +173,63 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
       sets: setsData,
     );
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: AppTheme.surfaceVariant,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) {
-        return Dialog(
-          backgroundColor: AppTheme.surfaceVariant,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.emoji_events, color: Colors.amber, size: 64),
-                const SizedBox(height: 16),
-                const Text('Ottimo Lavoro!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _StatBox(title: 'Volume', value: '${volume.toStringAsFixed(1)} kg', color: widget.accentColor),
-                    _StatBox(title: 'Tempo', value: timeStr, color: Colors.blueAccent),
-                    _StatBox(title: 'Kcal', value: '$kcal', color: Colors.orangeAccent),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // chiudi dialog
-                      Navigator.pop(context, {'action': 'continue', 'data': completedExercise});
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.accentColor,
-                      foregroundColor: AppTheme.bgTop,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('CONTINUA ALLENAMENTO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.emoji_events, color: Colors.amber, size: 64),
+              const SizedBox(height: 16),
+              const Text('Ottimo Lavoro!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _StatBox(title: 'Volume', value: '${volume.toStringAsFixed(1)} kg', color: widget.accentColor),
+                  _StatBox(title: 'Tempo', value: timeStr, color: Colors.blueAccent),
+                  _StatBox(title: 'Kcal', value: '$kcal', color: Colors.orangeAccent),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // chiudi modal
+                    Navigator.pop(context, {'action': 'continue', 'data': completedExercise});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.accentColor,
+                    foregroundColor: AppTheme.bgTop,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                  child: const Text('CONTINUA ALLENAMENTO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // chiudi dialog
-                      Navigator.pop(context, {'action': 'finish', 'data': completedExercise});
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text('TERMINA SESSIONE E SALVA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // chiudi modal
+                    Navigator.pop(context, {'action': 'finish', 'data': completedExercise});
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
+                  child: const Text('TERMINA SESSIONE E SALVA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -331,15 +332,22 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Text(
-                'Serie ${si + 1} di ${widget.exercise.sets.length}',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: widget.accentColor.withOpacity(0.2)),
+                      child: Center(child: Text('${si + 1}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: widget.accentColor))),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('SERIE IN CORSO', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: widget.accentColor)),
+                  ],
                 ),
-              ),
+                Text('di ${widget.exercise.sets.length}', style: const TextStyle(fontSize: 14, color: Colors.white54, fontWeight: FontWeight.bold)),
+              ],
             ),
             const SizedBox(height: 12),
             if (lastSet != null)
@@ -436,3 +444,9 @@ class _StatBox extends StatelessWidget {
     );
   }
 }
+"""
+
+with open("lib/screens/active_session_screen.dart", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Done")

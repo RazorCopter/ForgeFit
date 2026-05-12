@@ -197,6 +197,49 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // POST /api/workouts/save [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+  static Future<void> saveWorkout(dynamic workout) async {
+    final userId = await AuthService.getUserId();
+    if (userId == null) throw Exception("Utente non autenticato o ID mancante.");
+
+    // Assume workout is an instance of CompletedWorkout. We serialize it to JSON.
+    // Convert to the exact payload expected by backend.
+    final payload = {
+      'user_id': userId,
+      'duration_seconds': workout.durationSeconds,
+      'exercises': workout.exercises.map((e) => e.toJson()).toList(),
+    };
+
+    final headers = await AuthService.authHeaders();
+
+    debugPrint('🚀 [ApiService] POST ${ApiConfig.saveWorkout}');
+    
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.saveWorkout),
+            headers: headers,
+            body: jsonEncode(payload),
+          )
+          .timeout(_timeout);
+
+      debugPrint('📥 [ApiService] saveWorkout Status: ${response.statusCode}');
+      if (response.statusCode >= 300) {
+        debugPrint('❌ [ApiService] Error Body: ${response.body}');
+      }
+
+      _checkUnauthorized(response);
+      _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      debugPrint('🚨 [ApiService] saveWorkout Error: $e');
+      throw Exception('Errore di connessione: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // PUT /api/auth/change-password [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
 
