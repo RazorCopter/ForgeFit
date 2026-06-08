@@ -7,7 +7,7 @@ services:
     container_name: forgefit-backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8100:8000"
     volumes:
       - backend_data:/app/data
     environment:
