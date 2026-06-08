@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.1.7] — 2026-06-08
+
+### Fixed
+- **Installazione App (PWA)**: Corretto un errore di sintassi nel file `manifest.json` (parentesi mancante) che impediva ai browser di riconoscere l'app come installabile e di mostrare il popup di installazione su Android e desktop.
+
+---
+
 ## [1.1.6] — 2026-06-08
 
 ### Added

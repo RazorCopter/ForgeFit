@@ -312,7 +312,7 @@ def seed_catalog() -> None:
 app = FastAPI(
     title="Forge Fit API",
     description="Backend per la gestione di utenti, schede di allenamento e catalogo esercizi.",
-    version="1.1.6",
+    version="1.1.7",
 )
 
 
@@ -610,7 +610,7 @@ def auth_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
                 refresh_token=refresh,
                 role="admin",
                 user_id=0,
-                version="1.1.6",
+                version="1.1.7",
                 user=schemas.UserResponse(
                     id=0,
                     email=data.username,
@@ -648,7 +648,7 @@ def auth_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         refresh_token=refresh,
         role=user.role,
         user_id=user.id,
-        version="1.1.6",
+        version="1.1.7",
         user=schemas.UserResponse.model_validate(user)
     )
 
