@@ -340,7 +340,10 @@ def on_startup():
 # Middleware CORS - domini autorizzati via env var ALLOWED_ORIGINS
 # Formato: lista separata da virgole, es. "https://app.example.com,http://localhost:8083"
 # ---------------------------------------------------------------------------
-_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8083,http://localhost:3000")
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:8083,http://localhost:3000,https://forgefit.ghome.it,http://10.0.0.105:8083,https://fitconsole.ghome.it"
+)
 allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
