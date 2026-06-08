@@ -51,6 +51,14 @@ backend/.env
 # ── Docker ───────────────────────────────────────────────────
 .env
 
+# ── Escludi cartelle desktop/junk ────────────────────────────
+linux/
+macos/
+windows/
+scratch/
+mock/
+push.bat
+
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
