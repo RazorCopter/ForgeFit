@@ -5,7 +5,7 @@
 /// deve premere il pulsante "Sincronizza Scheda" per scaricare
 /// il proprio piano dal server REST.
 /// ============================================================
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,6 +13,7 @@ import '../models/training_data.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../data/database_service.dart';
+import '../services/plan_service.dart';
 import 'day_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -35,6 +36,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final cached = DatabaseService.loadCachedPlan();
     if (cached != null && cached.isNotEmpty) {
       _days = cached;
+    }
+    _autoSyncIfStale();
+  }
+
+  Future<void> _autoSyncIfStale() async {
+    final userId = DatabaseService.getUserId();
+    if (userId == null) return;
+    final lastSync = DatabaseService.getLastSyncTimestamp();
+    final isStale = lastSync == null ||
+        DateTime.now().difference(lastSync).inHours >= 4;
+    if (isStale) {
+      await _syncScheda(silent: true);
     }
   }
 
@@ -63,16 +76,14 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 3. Estrae il campo `plan` dalla risposta
   /// 4. Parsa il JSON in oggetti [TrainingDay] tramite [DatabaseService]
   /// 5. Chiama [setState] per aggiornare la UI
-  Future<void> _syncScheda() async {
+  Future<void> _syncScheda({bool silent = false}) async {
     // Recupera l'ID utente: è necessario per la chiamata REST
     final userId = DatabaseService.getUserId();
-    debugPrint('🔄 [HomeScreen] _syncScheda called. userId from Hive: $userId');
+    if (kDebugMode) debugPrint('🔄 [HomeScreen] _syncScheda called. userId from Hive: $userId');
 
     if (userId == null) {
-      debugPrint('❌ [HomeScreen] userId is NULL. Showing error snackbar.');
-      _showErrorSnackBar(
-        'Nessun account trovato. Effettua il login o riavvia l\'app.',
-      );
+      if (kDebugMode) debugPrint('❌ [HomeScreen] userId is NULL.');
+      if (!silent) _showErrorSnackBar('Nessun account trovato. Effettua il login o riavvia l\'app.');
       return;
     }
 
@@ -80,69 +91,19 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isSyncing = true);
 
     try {
-      // Chiamata REST al backend FastAPI usando l'ID numerico
-      final response = await ApiService.getPlans(userId);
-
-      // Estrazione del campo "plan" dalla risposta del backend.
-      // Il backend restituisce: { "plan": { "titolo": "...", "giorni": [...] } }
-      // NOTA: la chiave è "plan", NON "plan_json".
-      final rawPlanJson = response['plan'];
-
-      debugPrint('[HomeScreen] rawPlanJson runtimeType: ${rawPlanJson?.runtimeType}');
-
-      if (rawPlanJson == null) {
-        // Il server ha risposto ma senza scheda: l'utente non ha ancora
-        // un piano assegnato dal trainer.
-        _showInfoSnackBar('Nessuna scheda disponibile. Contatta il tuo trainer.');
-        return;
-      }
-
-      // ── Decodifica difensiva ──────────────────────────────────────────────
-      // Caso 1: plan_json è già una Map (backend lo ha serializzato come JSON annidato)
-      // Caso 2: plan_json è una String (backend lo ha salvato come testo e restituito as-is)
-      Map<String, dynamic> planMap;
-      if (rawPlanJson is Map<String, dynamic>) {
-        planMap = rawPlanJson;
-      } else if (rawPlanJson is String) {
-        // Double-decode: la stringa è essa stessa JSON da parsare
-        debugPrint('[HomeScreen] plan_json è una String → eseguo jsonDecode');
-        planMap = jsonDecode(rawPlanJson) as Map<String, dynamic>;
-      } else {
-        // Tipo inatteso — stampa e mostra errore
-        debugPrint('[HomeScreen] plan_json tipo inatteso: ${rawPlanJson.runtimeType} — valore: $rawPlanJson');
-        _showErrorSnackBar('Formato scheda non riconosciuto. Contatta il supporto.');
-        return;
-      }
-      // ─────────────────────────────────────────────────────────────
-
-      // Persiste il piano grezzo su Hive per ricaricarlo al prossimo avvio
-      await DatabaseService.saveRawPlan(planMap);
-
-      // Parsing del JSON in modelli Flutter.
-      // parseTrainingDaysFromJson accetta la Map completa e ne estrae "giorni".
-      final List<TrainingDay> parsedDays =
-          DatabaseService.parseTrainingDaysFromJson(planMap);
-
-      debugPrint('[HomeScreen] Giorni parsati: ${parsedDays.length}');
-
-      // Aggiornamento reattivo dell'UI
+      final List<TrainingDay> parsedDays = await PlanService.syncPlan(userId);
+      await DatabaseService.saveLastSyncTimestamp();
       setState(() => _days = parsedDays);
-
-      // Feedback positivo all'utente
-      _showSuccessSnackBar(
-        'Scheda sincronizzata! ${parsedDays.length} giorni caricati.',
-      );
+      if (!silent) _showSuccessSnackBar('Scheda sincronizzata! ${parsedDays.length} giorni caricati.');
     } on ApiException catch (e) {
-      // Errore HTTP specifico (es. 401 Unauthorized, 404 Not Found)
-      debugPrint('❌ [HomeScreen] ApiException: ${e.statusCode} - ${e.message}');
-      _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
-    } catch (e, stack) {
-      // Errore di parsing, rete o inatteso
-      debugPrint('❌ [HomeScreen] Errore inatteso: $e');
-      debugPrint('🥞 [HomeScreen] StackTrace: $stack');
-      _showErrorSnackBar('Errore di sistema: $e');
+      if (!silent) _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
+    } catch (e) {
+      if (e.toString().contains('no_plan')) {
+        if (!silent) _showInfoSnackBar('Nessuna scheda disponibile. Contatta il tuo trainer.');
+      } else {
+        if (!silent) _showErrorSnackBar('Errore di sistema: $e');
+      }
     } finally {
-      // Nasconde il loading in ogni caso (successo o errore)
       if (mounted) setState(() => _isSyncing = false);
     }
   }
@@ -296,6 +257,52 @@ class _HomeScreenState extends State<HomeScreen> {
               ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
 
               const SizedBox(height: 24),
+
+              // Banner streak (mostrato solo se streak >= 2)
+              ValueListenableBuilder(
+                valueListenable: DatabaseService.workoutBoxListenable(),
+                builder: (context, _, __) {
+                  final streak = DatabaseService.getCurrentStreak();
+                  if (streak < 2) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: AppTheme.glassContainer(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      borderColor: Colors.orangeAccent.withOpacity(0.5),
+                      child: Row(
+                        children: [
+                          const Text('🔥', style: TextStyle(fontSize: 28)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$streak giorni di fila!',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  streak >= 7
+                                      ? 'Una settimana intera. Sei inarrestabile!'
+                                      : 'Continua così, stai andando alla grande!',
+                                  style: const TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                  );
+                },
+              ),
 
               // ── Lista giorni o placeholder ───────────────────────
               Expanded(

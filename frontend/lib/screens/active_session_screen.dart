@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/training_data.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
@@ -54,6 +55,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   late final List<Map<String, TextEditingController>> _controllers;
   double? _suggestedWeight;
   String? _suggestionReason;
+  double? _currentPR;
 
   @override
   void initState() {
@@ -62,6 +64,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     _activeSetIndex = widget.initialSetIndex;
 
     _historyCache = DatabaseService.getLastExerciseHistory(widget.exercise.name);
+    _currentPR = DatabaseService.getPersonalRecord(widget.exercise.name);
     _loadOverloadSuggestion();
 
     _liveSets = List.generate(widget.exercise.sets.length, (si) {
@@ -136,11 +139,18 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   }
 
   void _completeActiveSet() {
+    HapticFeedback.mediumImpact();
     _stopStopwatch();
 
     final si = _activeSetIndex;
     final kgVal = double.tryParse(_controllers[si]['kg']!.text) ?? _liveSets[si].kg;
     final repsVal = int.tryParse(_controllers[si]['reps']!.text) ?? _liveSets[si].reps;
+
+    final isNewPR = kgVal > 0 && (_currentPR == null || kgVal > _currentPR!);
+    if (isNewPR) {
+      _currentPR = kgVal;
+      _showPRCelebration(kgVal);
+    }
 
     setState(() {
       _liveSets[si]
@@ -263,6 +273,74 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     );
   }
 
+  void _showPRCelebration(double weight) {
+    HapticFeedback.heavyImpact();
+
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.25,
+        left: 32,
+        right: 32,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.amber.withOpacity(0.9),
+                  Colors.orange.withOpacity(0.9),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withOpacity(0.5),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('🏆', style: TextStyle(fontSize: 48)),
+                const SizedBox(height: 8),
+                const Text(
+                  'NUOVO RECORD!',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                Text(
+                  '${weight.toStringAsFixed(weight == weight.roundToDouble() ? 0 : 1)} kg',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ).animate()
+            .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.0, 1.0),
+                   duration: 400.ms, curve: Curves.elasticOut)
+            .fadeIn(duration: 200.ms),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      entry.remove();
+    });
+  }
+
   Future<bool> _onWillPop() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -382,6 +460,55 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            if (widget.exercise.loadNote.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: widget.accentColor.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.bar_chart, size: 14, color: widget.accentColor),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.exercise.loadNote,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: widget.accentColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (widget.exercise.externalNote != null &&
+                widget.exercise.externalNote!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.notes, size: 13, color: Colors.white38),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      widget.exercise.externalNote!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (lastSet != null)
               Text('Record precedente: ${lastSet.weight}kg × ${lastSet.reps}', style: const TextStyle(fontSize: 13, color: Colors.white54, fontStyle: FontStyle.italic)),
             if (_suggestedWeight != null) ...[

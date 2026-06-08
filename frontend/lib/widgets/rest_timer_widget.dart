@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 
@@ -55,6 +56,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
         });
       } else {
         _timer?.cancel();
+        HapticFeedback.heavyImpact();
         setState(() {
           _countdownFinished = true;
         });

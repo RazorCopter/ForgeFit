@@ -5,6 +5,7 @@
 /// (tranne login e register). Forza logout su 401.
 /// ============================================================
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
@@ -72,9 +73,9 @@ class ApiService {
 
       final data = _handleResponse(response);
       
-      // ── LOG LOGIN RESPONSE ──────────────────────────────────────────────────
-      debugPrint('🔑 [ApiService] Login Response Body: $data');
-      // ────────────────────────────────────────────────────────────────────────
+      if (kDebugMode) {
+        debugPrint('🔑 [ApiService] Login Response Body: $data');
+      }
 
       // Salva token e email in locale
       final token = data['access_token'] as String?;
@@ -97,15 +98,17 @@ class ApiService {
           debugPrint('❌ [ApiService] Errore parsing userId: $e');
         }
 
-        debugPrint('👤 [ApiService] Extracted userId: $userId');
-        debugPrint('🏷️ [ApiService] Backend Version: ${data['version'] ?? "Unknown (Old)"}');
+        if (kDebugMode) {
+          debugPrint('👤 [ApiService] Extracted userId: $userId');
+          debugPrint('🏷️ [ApiService] Backend Version: ${data['version'] ?? "Unknown (Old)"}');
+        }
 
         if (userId != null) {
           await AuthService.saveUserId(userId);
           await DatabaseService.saveUserId(userId);
-          debugPrint('✅ [ApiService] userId $userId saved to persistent storage.');
+          if (kDebugMode) debugPrint('✅ [ApiService] userId $userId saved to persistent storage.');
         } else {
-          debugPrint('⚠️ [ApiService] userId is NULL after extraction!');
+          if (kDebugMode) debugPrint('⚠️ [ApiService] userId is NULL after extraction!');
         }
       }
       return data;

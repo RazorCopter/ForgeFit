@@ -8,6 +8,8 @@ import '../data/database_service.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import 'active_session_screen.dart';
+import 'workout_session_screen.dart';
+import 'workout_summary_screen.dart';
 
 class DayDetailScreen extends StatefulWidget {
   final TrainingDay day;
@@ -22,8 +24,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   int? _expandedIndex;
   DateTime? _workoutStartTime;
   final List<CompletedExercise> _completedExercises = [];
+  final Set<int> _completedIndexes = {};
 
-  void _startExercise(Exercise exercise, Color accentColor) async {
+  void _startExercise(Exercise exercise, Color accentColor, int index) async {
     if (_workoutStartTime == null) {
       _workoutStartTime = DateTime.now();
       setState(() {});
@@ -42,6 +45,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     if (result != null && result is Map<String, dynamic>) {
       final CompletedExercise completed = result['data'];
       _completedExercises.add(completed);
+      _completedIndexes.add(index);
       setState(() {});
 
       if (result['action'] == 'finish') {
@@ -82,26 +86,31 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       await DatabaseService.saveWorkout(completedWorkout);
 
       // 2. Sincronizzazione con il Cloud (FastAPI Backend)
-      await ApiService.saveWorkout(completedWorkout);
+      try {
+        await ApiService.saveWorkout(completedWorkout);
+        await DatabaseService.markWorkoutSynced(completedWorkout.id);
+      } catch (_) {
+        // Sync fallita — workout salvato offline, retry al prossimo avvio
+      }
 
       if (mounted) {
         Navigator.pop(context); // chiude lo spinner
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Allenamento salvato e sincronizzato col Cloud! Durata: ${duration ~/ 60}m'),
-          backgroundColor: Colors.green,
-        ));
-        Navigator.pop(context); // esce dalla vista del giorno
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WorkoutSummaryScreen(workout: completedWorkout),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // chiude lo spinner
-        // In caso di errore API, avvisa l'utente ma non bloccare, il salvataggio locale è avvenuto.
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Salvato offline. Errore sincronizzazione Cloud: $e'),
-          backgroundColor: Colors.orangeAccent,
+          content: Text('Errore salvataggio: $e'),
+          backgroundColor: Colors.redAccent,
           duration: const Duration(seconds: 4),
         ));
-        Navigator.pop(context); // esce dalla vista del giorno
+        Navigator.pop(context);
       }
     }
   }
@@ -160,7 +169,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 itemBuilder: (context, index) {
                   final exercise = widget.day.exercises[index];
                   final isExpanded = _expandedIndex == index;
-                  final isCompleted = _completedExercises.any((e) => e.name == exercise.name);
+                  final isCompleted = _completedIndexes.contains(index);
                   
                   return _ExpandableExerciseCard(
                     exercise: exercise,
@@ -173,27 +182,51 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                         _expandedIndex = isExpanded ? null : index;
                       });
                     },
-                    onStart: () => _startExercise(exercise, accentColor),
+                    onStart: () => _startExercise(exercise, accentColor, index),
                   );
                 },
               ),
             ),
           ],
         ),
-        floatingActionButton: _workoutStartTime != null
-            ? AppTheme.glassContainer(
-                borderRadius: BorderRadius.circular(30),
-                padding: const EdgeInsets.all(4),
-                child: FloatingActionButton.extended(
-                  onPressed: _finishWorkout,
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  icon: const Icon(Icons.stop_circle),
-                  label: const Text('TERMINA ALLENAMENTO', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              )
-            : null,
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FloatingActionButton.extended(
+              heroTag: 'guided',
+              onPressed: () async {
+                final result = await Navigator.push<Map<String, dynamic>>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WorkoutSessionScreen(
+                      exercises: widget.day.exercises,
+                      accentColor: AppTheme.getAccentForDay(widget.day.id),
+                      dayTitle: widget.day.title,
+                    ),
+                  ),
+                );
+                if (result != null) {
+                  final exercises = result['completed'] as List<CompletedExercise>;
+                  _completedExercises.addAll(exercises);
+                  await _finishWorkout();
+                }
+              },
+              backgroundColor: AppTheme.getAccentForDay(widget.day.id),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('AVVIA TUTTO', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            if (_workoutStartTime != null) ...[
+              const SizedBox(height: 8),
+              FloatingActionButton.small(
+                heroTag: 'stop',
+                onPressed: _finishWorkout,
+                backgroundColor: Colors.redAccent,
+                child: const Icon(Icons.stop, color: Colors.white),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

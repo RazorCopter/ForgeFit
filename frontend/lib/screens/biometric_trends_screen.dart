@@ -5,9 +5,17 @@ import '../core/theme.dart';
 import '../data/database_service.dart';
 import '../models/biometric_record.dart';
 
-class BiometricTrendsScreen extends StatelessWidget {
+/// Metriche per cui un aumento è un risultato positivo (massa muscolare).
+const _positiveGrowthMetrics = {'Bicipite', 'Petto', 'Coscia', 'Polpaccio'};
+
+class BiometricTrendsScreen extends StatefulWidget {
   const BiometricTrendsScreen({super.key});
 
+  @override
+  State<BiometricTrendsScreen> createState() => _BiometricTrendsScreenState();
+}
+
+class _BiometricTrendsScreenState extends State<BiometricTrendsScreen> {
   static const _metrics = [
     _Metric('Peso', 'kg', Colors.cyanAccent, _w),
     _Metric('Fianchi', 'cm', AppTheme.vividPurple, _h),
@@ -36,10 +44,17 @@ class BiometricTrendsScreen extends StatelessWidget {
     return records;
   }
 
+  List<FlSpot> _buildSpots(List<BiometricRecord> records, double? Function(BiometricRecord) fn) {
+    final spots = <FlSpot>[];
+    for (int i = 0; i < records.length; i++) {
+      final v = fn(records[i]);
+      if (v != null && v > 0) spots.add(FlSpot(i.toDouble(), v));
+    }
+    return spots;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final records = _sortedRecords();
-
     return AppTheme.buildBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -48,39 +63,36 @@ class BiometricTrendsScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: records.isEmpty
-            ? const Center(
-                child: Text(
-                  'Nessuna misurazione registrata.\nAggiungi le tue misure dalla schermata Analisi.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
-                ),
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _metrics.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 20),
-                itemBuilder: (context, i) {
-                  final m = _metrics[i];
-                  final spots = _buildSpots(records, m.extractor);
-                  if (spots.length < 2) return const SizedBox.shrink();
-                  return _MetricCard(metric: m, spots: spots, records: records)
-                      .animate()
-                      .fadeIn(delay: Duration(milliseconds: i * 80))
-                      .slideY(begin: 0.1);
-                },
-              ),
+        body: ValueListenableBuilder(
+          valueListenable: DatabaseService.biometricBoxListenable(),
+          builder: (context, box, _) {
+            final records = _sortedRecords();
+            return records.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Nessuna misurazione registrata.\nAggiungi le tue misure dalla schermata Analisi.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _metrics.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 20),
+                    itemBuilder: (context, i) {
+                      final m = _metrics[i];
+                      final spots = _buildSpots(records, m.extractor);
+                      if (spots.length < 2) return const SizedBox.shrink();
+                      return _MetricCard(metric: m, spots: spots, records: records)
+                          .animate()
+                          .fadeIn(delay: Duration(milliseconds: i * 80))
+                          .slideY(begin: 0.1);
+                    },
+                  );
+          },
+        ),
       ),
     );
-  }
-
-  List<FlSpot> _buildSpots(List<BiometricRecord> records, double? Function(BiometricRecord) fn) {
-    final spots = <FlSpot>[];
-    for (int i = 0; i < records.length; i++) {
-      final v = fn(records[i]);
-      if (v != null && v > 0) spots.add(FlSpot(i.toDouble(), v));
-    }
-    return spots;
   }
 }
 
@@ -111,7 +123,15 @@ class _MetricCard extends StatelessWidget {
     final last  = spots.last.y;
     final delta = last - first;
     final deltaStr = delta >= 0 ? '+${delta.toStringAsFixed(1)}' : delta.toStringAsFixed(1);
-    final deltaColor = delta < 0 ? Colors.greenAccent : (delta > 0 ? Colors.redAccent : Colors.white54);
+    final isPositiveGrowth = _positiveGrowthMetrics.contains(metric.label);
+    final Color deltaColor;
+    if (delta == 0) {
+      deltaColor = Colors.white54;
+    } else if (isPositiveGrowth) {
+      deltaColor = delta > 0 ? Colors.greenAccent : Colors.redAccent;
+    } else {
+      deltaColor = delta < 0 ? Colors.greenAccent : Colors.redAccent;
+    }
 
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),

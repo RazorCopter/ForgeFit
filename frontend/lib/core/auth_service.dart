@@ -1,107 +1,82 @@
-/// ============================================================
-/// auth_service.dart
-/// Gestione persistenza token JWT e stato di autenticazione.
-/// Usa shared_preferences (compatibile web + mobile).
-/// ============================================================
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
   AuthService._();
+
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   static const String _keyToken        = 'jwt_token';
   static const String _keyRefreshToken = 'jwt_refresh_token';
   static const String _keyEmail        = 'auth_email';
   static const String _keyUserId       = 'auth_user_id';
 
-  // ── Salva access token ─────────────────────────────────────────────────────
-  static Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyToken, token);
-  }
+  static Future<void> saveToken(String token) =>
+      _storage.write(key: _keyToken, value: token);
 
-  // ── Legge access token (null se non loggato) ───────────────────────────────
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyToken);
-  }
+  static Future<String?> getToken() =>
+      _storage.read(key: _keyToken);
 
-  // ── Salva refresh token ────────────────────────────────────────────────────
-  static Future<void> saveRefreshToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyRefreshToken, token);
-  }
+  static Future<void> saveRefreshToken(String token) =>
+      _storage.write(key: _keyRefreshToken, value: token);
 
-  // ── Legge refresh token ────────────────────────────────────────────────────
-  static Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyRefreshToken);
-  }
+  static Future<String?> getRefreshToken() =>
+      _storage.read(key: _keyRefreshToken);
 
-  // ── Salva email corrente ───────────────────────────────────────────────────
-  static Future<void> saveEmail(String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyEmail, email);
-  }
+  static Future<void> saveEmail(String email) =>
+      _storage.write(key: _keyEmail, value: email);
 
-  static Future<String?> getEmail() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyEmail);
-  }
+  static Future<String?> getEmail() =>
+      _storage.read(key: _keyEmail);
 
-  // ── Salva ID utente ────────────────────────────────────────────────────────
-  static Future<void> saveUserId(int userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_keyUserId, userId);
-  }
+  // userId serializzato come stringa (FlutterSecureStorage non ha setInt)
+  static Future<void> saveUserId(int userId) =>
+      _storage.write(key: _keyUserId, value: userId.toString());
 
   static Future<int?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keyUserId);
+    final raw = await _storage.read(key: _keyUserId);
+    return raw != null ? int.tryParse(raw) : null;
   }
 
-  // ── Controlla se il token JWT è scaduto (decodifica payload base64) ───────
   static bool _isTokenExpired(String token) {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
-      final payload = utf8.decode(
-        base64Url.decode(base64Url.normalize(parts[1])),
-      );
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
       final data = jsonDecode(payload) as Map<String, dynamic>;
       final exp = data['exp'] as int?;
       if (exp == null) return false;
       return DateTime.now().millisecondsSinceEpoch ~/ 1000 >= exp;
     } catch (_) {
-      return false; // token non parsabile → non bloccare l'utente
+      return false;
     }
   }
 
-  // ── Controlla se l'utente è autenticato ───────────────────────────────────
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
     if (token == null || token.isEmpty) return false;
     if (_isTokenExpired(token)) {
-      await logout(); // pulizia automatica token scaduto
+      await logout();
       return false;
     }
     return true;
   }
 
-  // ── Logout: cancella tutti i token salvati ────────────────────────────────
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyToken);
-    await prefs.remove(_keyRefreshToken);
-    await prefs.remove(_keyEmail);
-    await prefs.remove(_keyUserId);
+    await _storage.delete(key: _keyToken);
+    await _storage.delete(key: _keyRefreshToken);
+    await _storage.delete(key: _keyEmail);
+    await _storage.delete(key: _keyUserId);
   }
 
-  // ── Header Authorization da iniettare nelle richieste ─────────────────────
   static Future<Map<String, String>> authHeaders() async {
     final token = await getToken();
-    debugPrint('🔑 [AuthService] authHeaders() -> Token found: ${token != null ? "SI" : "NO"}');
+    if (kDebugMode) {
+      debugPrint('🔑 [AuthService] authHeaders() -> Token: ${token != null ? "presente" : "assente"}');
+    }
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',

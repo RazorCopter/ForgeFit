@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../core/auth_service.dart';
 import '../data/database_service.dart';
+import '../services/plan_service.dart';
 import 'auth_screen.dart';
 
 class SetupScreen extends StatefulWidget {
@@ -32,27 +33,16 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     setState(() => _isSyncing = true);
     try {
-      final response = await ApiService.getPlans(userId);
-      final rawPlan = response['plan'];
-      if (rawPlan == null) {
-        _showSnackBar('Nessuna scheda disponibile. Contatta il trainer.', Colors.orange);
-        return;
-      }
-      // Il server può restituire il piano come Map o come stringa JSON
-      final planMap = rawPlan is String
-          ? jsonDecode(rawPlan) as Map<String, dynamic>
-          : rawPlan as Map<String, dynamic>;
-      // Persiste su Hive: l'HomeScreen la caricherà al prossimo initState
-      await DatabaseService.saveRawPlan(planMap);
-      final days = DatabaseService.parseTrainingDaysFromJson(planMap);
-      _showSnackBar(
-        'Scheda aggiornata! ${days.length} giorni caricati.',
-        Colors.green.shade700,
-      );
+      final days = await PlanService.syncPlan(userId);
+      _showSnackBar('Scheda aggiornata! ${days.length} giorni caricati.', Colors.green.shade700);
     } on ApiException catch (e) {
       _showSnackBar('Errore dal server: ${e.message}', Colors.red.shade700);
-    } catch (_) {
-      _showSnackBar('Server non raggiungibile.', Colors.red.shade700);
+    } catch (e) {
+      if (e.toString().contains('no_plan')) {
+        _showSnackBar('Nessuna scheda disponibile. Contatta il trainer.', Colors.orange);
+      } else {
+        _showSnackBar('Server non raggiungibile.', Colors.red.shade700);
+      }
     } finally {
       if (mounted) setState(() => _isSyncing = false);
     }
@@ -113,20 +103,11 @@ class _SetupScreenState extends State<SetupScreen> {
       final jsonString = DatabaseService.exportDatabaseJson();
       final bytes = utf8.encode(jsonString);
       final fileName = 'forgefit_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-
-      if (kIsWeb) {
-        await FileSaver.instance.saveFile(
-          name: fileName,
-          bytes: bytes,
-          mimeType: MimeType.json,
-        );
-      } else {
-        await FileSaver.instance.saveFile(
-          name: fileName,
-          bytes: bytes,
-          mimeType: MimeType.json,
-        );
-      }
+      await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: bytes,
+        mimeType: MimeType.json,
+      );
       _showSnackBar('Backup esportato con successo!', Colors.green.shade700);
     } catch (e) {
       _showSnackBar('Errore durante l\'export: $e', Colors.red.shade700);

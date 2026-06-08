@@ -5,6 +5,24 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.2.0] — 2026-06-08
+
+### Changed / Fixed
+- Eseguite modifiche strutturali da lista task:
+  - Protezione cancellazione dati Hive su errore apertura box
+  - JWT spostati da SharedPreferences a flutter_secure_storage
+  - Wrappati log sensibili con kDebugMode
+  - Colore delta biometrico corretto
+  - Rimosso dead code in _exportBackup
+  - Deduplicata la logica di sincronizzazione della scheda (PlanService)
+  - Aggiunte le note esercizio durante la sessione attiva
+  - Aggiunte etichette date sull'asse X del grafico volume
+  - Haptic feedback alla conferma della serie e scadenza del timer
+  - Fix tracking esercizi completati tramite indice per supportare esercizi duplicati
+  - BiometricTrendsScreen reso reattivo ai nuovi inserimenti
+
+---
+
 ## [1.1.8] — 2026-06-08
 
 ### Fixed

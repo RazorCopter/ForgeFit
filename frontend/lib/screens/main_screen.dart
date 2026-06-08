@@ -5,6 +5,8 @@ import 'statistics_screen.dart';
 import 'analysis_screen.dart';
 import 'setup_screen.dart';
 import '../core/theme.dart';
+import '../core/api_service.dart';
+import '../data/database_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,6 +17,24 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _retryUnsyncedWorkouts();
+  }
+
+  Future<void> _retryUnsyncedWorkouts() async {
+    final unsynced = DatabaseService.getUnsyncedWorkouts();
+    for (final workout in unsynced) {
+      try {
+        await ApiService.saveWorkout(workout);
+        await DatabaseService.markWorkoutSynced(workout.id);
+      } catch (_) {
+        // Riproverà al prossimo avvio
+      }
+    }
+  }
 
   final List<Widget> _screens = [
     const HomeScreen(),

@@ -13,6 +13,7 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
+  String? _selectedExercise;
   String _bestSet(List<CompletedWorkout> workouts) {
     if (workouts.isEmpty) return 'N/A';
     double maxLoad = 0;
@@ -137,6 +138,49 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return frequency.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
   }
 
+  List<String> _getAllExerciseNames(List<CompletedWorkout> workouts) {
+    final names = <String>{};
+    for (final w in workouts) {
+      for (final ex in w.exercises) {
+        names.add(ex.name);
+      }
+    }
+    final sorted = names.toList()..sort();
+    return sorted;
+  }
+
+  List<FlSpot> _getExerciseProgressSpots(String name, List<CompletedWorkout> workouts) {
+    final byDay = <DateTime, double>{};
+    for (final w in workouts) {
+      for (final ex in w.exercises) {
+        if (ex.name != name) continue;
+        double maxW = 0;
+        for (final s in ex.sets) {
+          if (s.weight > maxW) maxW = s.weight;
+        }
+        if (maxW > 0) {
+          final day = DateTime(w.date.year, w.date.month, w.date.day);
+          if ((byDay[day] ?? 0) < maxW) byDay[day] = maxW;
+        }
+      }
+    }
+    if (byDay.isEmpty) return [];
+    final sorted = byDay.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    return sorted.asMap().entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
+        .toList();
+  }
+
+  List<String> _getVolumeLabels(List<CompletedWorkout> workouts) {
+    if (workouts.isEmpty) return [];
+    final sorted = List<CompletedWorkout>.from(workouts)
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final recent = sorted.reversed.take(7).toList().reversed.toList();
+    return recent.map((w) =>
+      '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}'
+    ).toList();
+  }
+
   Map<String, double> _getMuscleGroupVolumes(List<CompletedWorkout> workouts) {
     // Chiavi allineate esattamente ai valori che arrivano dall'API
     Map<String, double> volumes = {
@@ -186,6 +230,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           builder: (context, box, _) {
             final workouts = box.values.toList().cast<CompletedWorkout>();
             final muscleVolumes = _getMuscleGroupVolumes(workouts);
+            final volumeLabels = _getVolumeLabels(workouts);
             
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -225,7 +270,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: (val, meta) => Text(val.toInt().toString(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10)))),
-                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 20,
+                            getTitlesWidget: (val, meta) {
+                              final idx = val.toInt();
+                              if (idx >= 0 && idx < volumeLabels.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    volumeLabels[idx],
+                                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 9),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
                         rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
@@ -356,6 +419,107 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ),
                   ).animate().slideX(begin: 0.1);
                 }).toList(),
+
+              const SizedBox(height: 32),
+              const Text(
+                'Progressione per Esercizio',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              ).animate().fade(delay: 700.ms),
+              const SizedBox(height: 12),
+
+              Builder(builder: (context) {
+                final exerciseNames = _getAllExerciseNames(workouts);
+                if (exerciseNames.isEmpty) {
+                  return const Text('Nessun esercizio registrato.',
+                      style: TextStyle(color: AppTheme.textSecondary));
+                }
+                if (_selectedExercise == null || !exerciseNames.contains(_selectedExercise)) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) setState(() => _selectedExercise = exerciseNames.first);
+                  });
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppTheme.glassContainer(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      borderColor: AppTheme.cyan.withOpacity(0.3),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedExercise,
+                          isExpanded: true,
+                          dropdownColor: AppTheme.surfaceVariant,
+                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                          items: exerciseNames
+                              .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                              .toList(),
+                          onChanged: (val) => setState(() => _selectedExercise = val),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_selectedExercise != null) Builder(builder: (_) {
+                      final spots = _getExerciseProgressSpots(_selectedExercise!, workouts);
+                      return AppTheme.glassContainer(
+                        padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 24),
+                        child: SizedBox(
+                          height: 200,
+                          child: spots.length < 2
+                              ? const Center(
+                                  child: Text('Servono almeno 2 sessioni per vedere la progressione.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                                )
+                              : LineChart(LineChartData(
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawVerticalLine: false,
+                                    getDrawingHorizontalLine: (_) =>
+                                        FlLine(color: AppTheme.textSecondary.withOpacity(0.1), strokeWidth: 1),
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 40,
+                                      getTitlesWidget: (v, _) => Text(
+                                        '${v.toInt()}kg',
+                                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 9),
+                                      ),
+                                    )),
+                                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  ),
+                                  borderData: FlBorderData(show: false),
+                                  lineBarsData: [
+                                    LineChartBarData(
+                                      spots: spots,
+                                      isCurved: true,
+                                      color: AppTheme.legsAccent,
+                                      barWidth: 3,
+                                      isStrokeCapRound: true,
+                                      dotData: FlDotData(show: true),
+                                      belowBarData: BarAreaData(
+                                        show: true,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppTheme.legsAccent.withOpacity(0.3),
+                                            AppTheme.legsAccent.withOpacity(0.0),
+                                          ],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )),
+                        ),
+                      ).animate().fade(delay: 800.ms).scale();
+                    }),
+                  ],
+                );
+              }).animate().fade(delay: 750.ms),
 
               const SizedBox(height: 60),
             ],

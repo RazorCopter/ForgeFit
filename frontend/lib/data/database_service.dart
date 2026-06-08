@@ -13,46 +13,28 @@ class DatabaseService {
   static const String _settingsBoxName = 'settings';
   static const String _planBoxName = 'training_plan';
 
-  static Future<void> openBox() async {
-    try {
-      await Hive.openBox<CompletedWorkout>(_workoutBoxName);
-    } catch (e) {
-      debugPrint('Error opening $_workoutBoxName: $e. Recreating...');
-      await Hive.deleteBoxFromDisk(_workoutBoxName);
-      await Hive.openBox<CompletedWorkout>(_workoutBoxName);
+  /// Apre tutti i box Hive. Restituisce la lista di nomi di box che hanno
+  /// fallito l'apertura senza cancellare nulla — il chiamante decide se
+  /// cancellare i dati dopo aver avvisato l'utente.
+  static Future<List<String>> openBox() async {
+    final List<String> failedBoxes = [];
+
+    Future<void> tryOpen(String name, Future<Box> Function() opener) async {
+      try {
+        await opener();
+      } catch (e) {
+        debugPrint('Error opening $name: $e');
+        failedBoxes.add(name);
+      }
     }
 
-    try {
-      await Hive.openBox<UserProfile>(_userProfileBoxName);
-    } catch (e) {
-      debugPrint('Error opening $_userProfileBoxName: $e. Recreating...');
-      await Hive.deleteBoxFromDisk(_userProfileBoxName);
-      await Hive.openBox<UserProfile>(_userProfileBoxName);
-    }
+    await tryOpen(_workoutBoxName,     () => Hive.openBox<CompletedWorkout>(_workoutBoxName));
+    await tryOpen(_userProfileBoxName, () => Hive.openBox<UserProfile>(_userProfileBoxName));
+    await tryOpen(_biometricBoxName,   () => Hive.openBox<BiometricRecord>(_biometricBoxName));
+    await tryOpen(_settingsBoxName,    () => Hive.openBox(_settingsBoxName));
+    await tryOpen(_planBoxName,        () => Hive.openBox(_planBoxName));
 
-    try {
-      await Hive.openBox<BiometricRecord>(_biometricBoxName);
-    } catch (e) {
-      debugPrint('Error opening $_biometricBoxName: $e. Recreating...');
-      await Hive.deleteBoxFromDisk(_biometricBoxName);
-      await Hive.openBox<BiometricRecord>(_biometricBoxName);
-    }
-
-    try {
-      await Hive.openBox(_settingsBoxName);
-    } catch (e) {
-      debugPrint('Error opening $_settingsBoxName: $e. Recreating...');
-      await Hive.deleteBoxFromDisk(_settingsBoxName);
-      await Hive.openBox(_settingsBoxName);
-    }
-
-    try {
-      await Hive.openBox(_planBoxName);
-    } catch (e) {
-      debugPrint('Error opening $_planBoxName: $e. Recreating...');
-      await Hive.deleteBoxFromDisk(_planBoxName);
-      await Hive.openBox(_planBoxName);
-    }
+    return failedBoxes;
   }
 
   static Box<CompletedWorkout> get _workoutBox => Hive.box<CompletedWorkout>(_workoutBoxName);
@@ -93,6 +75,15 @@ class DatabaseService {
     final dateStr = _settingsBox.get('ai_activation_date') as String?;
     if (dateStr == null) return null;
     return DateTime.tryParse(dateStr);
+  }
+
+  static Future<void> saveLastSyncTimestamp() async {
+    await _settingsBox.put('last_plan_sync', DateTime.now().toIso8601String());
+  }
+
+  static DateTime? getLastSyncTimestamp() {
+    final raw = _settingsBox.get('last_plan_sync') as String?;
+    return raw != null ? DateTime.tryParse(raw) : null;
   }
 
   // --- EMAIL UTENTE ---
@@ -310,14 +301,73 @@ class DatabaseService {
     await _workoutBox.add(workout);
   }
 
+  static List<CompletedWorkout> getUnsyncedWorkouts() =>
+      _workoutBox.values.where((w) => !w.isSynced).toList();
+
+  static Future<void> markWorkoutSynced(String workoutId) async {
+    final key = _workoutBox.keys.firstWhere(
+      (k) => _workoutBox.get(k)?.id == workoutId,
+      orElse: () => null,
+    );
+    if (key != null) {
+      final w = _workoutBox.get(key)!;
+      w.isSynced = true;
+      await _workoutBox.put(key, w);
+    }
+  }
+
   static List<CompletedWorkout> getAllWorkouts() {
     return _workoutBox.values.toList();
+  }
+
+  /// Calcola il numero di giorni consecutivi con almeno un allenamento fino a oggi.
+  static int getCurrentStreak() {
+    if (_workoutBox.isEmpty) return 0;
+
+    final Set<String> daysWithWorkout = _workoutBox.values
+        .map((w) => '${w.date.year}-${w.date.month.toString().padLeft(2, '0')}-${w.date.day.toString().padLeft(2, '0')}')
+        .toSet();
+
+    int streak = 0;
+    final today = DateTime.now();
+
+    for (int i = 0; i <= 365; i++) {
+      final d = today.subtract(Duration(days: i));
+      final key = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+      if (daysWithWorkout.contains(key)) {
+        streak++;
+      } else if (i == 0) {
+        // Oggi senza allenamento non interrompe la streak
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   static List<CompletedWorkout> getWorkoutsForMonth(DateTime month) {
     return _workoutBox.values.where((workout) {
       return workout.date.year == month.year && workout.date.month == month.month;
     }).toList();
+  }
+
+  /// Restituisce il massimo peso mai sollevato per un dato esercizio.
+  /// Restituisce null se non esistono sessioni precedenti.
+  static double? getPersonalRecord(String exerciseName) {
+    double? maxWeight;
+    for (final w in _workoutBox.values) {
+      for (final ex in w.exercises) {
+        if (ex.name != exerciseName) continue;
+        for (final s in ex.sets) {
+          if (s.weight > 0 && (maxWeight == null || s.weight > maxWeight)) {
+            maxWeight = s.weight;
+          }
+        }
+      }
+    }
+    return maxWeight;
   }
 
   static CompletedExercise? getLastExerciseHistory(String exerciseName) {

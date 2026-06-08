@@ -6,6 +6,7 @@ class CompletedWorkout {
   final DateTime date;
   final int durationSeconds;
   final List<CompletedExercise> exercises;
+  bool isSynced;
 
   CompletedWorkout({
     required this.id,
@@ -13,6 +14,7 @@ class CompletedWorkout {
     required this.date,
     required this.durationSeconds,
     required this.exercises,
+    this.isSynced = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -93,12 +95,22 @@ class CompletedWorkoutAdapter extends TypeAdapter<CompletedWorkout> {
 
   @override
   CompletedWorkout read(BinaryReader reader) {
+    final id = reader.readString();
+    final title = reader.readString();
+    final date = DateTime.fromMillisecondsSinceEpoch(reader.readInt());
+    final durationSeconds = reader.readInt();
+    final exercises = reader.readList().cast<CompletedExercise>();
+    bool isSynced = false;
+    try {
+      isSynced = reader.read() as bool? ?? false;
+    } catch (_) {}
     return CompletedWorkout(
-      id: reader.readString(),
-      title: reader.readString(),
-      date: DateTime.fromMillisecondsSinceEpoch(reader.readInt()),
-      durationSeconds: reader.readInt(),
-      exercises: reader.readList().cast<CompletedExercise>(),
+      id: id,
+      title: title,
+      date: date,
+      durationSeconds: durationSeconds,
+      exercises: exercises,
+      isSynced: isSynced,
     );
   }
 
@@ -109,6 +121,7 @@ class CompletedWorkoutAdapter extends TypeAdapter<CompletedWorkout> {
     writer.writeInt(obj.date.millisecondsSinceEpoch);
     writer.writeInt(obj.durationSeconds);
     writer.writeList(obj.exercises);
+    writer.write(obj.isSynced);
   }
 }
 
