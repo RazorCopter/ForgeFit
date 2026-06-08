@@ -243,6 +243,13 @@ class DatabaseService {
       ));
     }
 
+    // Ordina i giorni per numero (estrae cifre dal titolo, es. "Giorno 1" → 1)
+    days.sort((a, b) {
+      final numA = int.tryParse(RegExp(r'\d+').firstMatch(a.title)?.group(0) ?? '') ?? 999;
+      final numB = int.tryParse(RegExp(r'\d+').firstMatch(b.title)?.group(0) ?? '') ?? 999;
+      return numA.compareTo(numB);
+    });
+
     return days;
   }
 

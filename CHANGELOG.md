@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.1.5] — 2026-06-08
+
+### Fixed
+- **Ordinamento giorni scheda**: I giorni di allenamento ora vengono ordinati numericamente (Giorno 1, 2, 3…) dopo il parsing del JSON, indipendentemente dall'ordine in cui il backend li restituisce.
+
+---
+
 ## [1.1.4] — 2026-06-08
 
 ### Fixed
