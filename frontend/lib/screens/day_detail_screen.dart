@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import '../models/training_data.dart';
@@ -321,26 +322,9 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                             if (widget.exercise.videoUrl.isNotEmpty) ...[
                               SizedBox(
                                 width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: () => _launchUrl(widget.exercise.videoUrl),
-                                  icon: const Icon(Icons.play_circle_fill, size: 24),
-                                  label: const Text(
-                                    'GUARDA TUTORIAL',
-                                    style: TextStyle(letterSpacing: 1.2, fontWeight: FontWeight.w900),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.cyan,
-                                    foregroundColor: AppTheme.bgTop,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 8,
-                                    shadowColor: AppTheme.cyan.withOpacity(0.5),
-                                  ),
-                                ),
+                                child: _YoutubeEmbedWidget(videoUrl: widget.exercise.videoUrl),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                             ],
                             SizedBox(
                               width: double.infinity,
@@ -371,6 +355,74 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _YoutubeEmbedWidget extends StatefulWidget {
+  final String videoUrl;
+
+  const _YoutubeEmbedWidget({Key? key, required this.videoUrl}) : super(key: key);
+
+  @override
+  State<_YoutubeEmbedWidget> createState() => _YoutubeEmbedWidgetState();
+}
+
+class _YoutubeEmbedWidgetState extends State<_YoutubeEmbedWidget> {
+  late YoutubePlayerController _controller;
+  bool _isValidUrl = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
+    if (videoId == null) {
+      _isValidUrl = false;
+      return;
+    }
+    _controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        mute: false,
+        showFullscreenButton: true,
+        loop: false,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    if (_isValidUrl) {
+      _controller.close();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isValidUrl) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+        ),
+        child: const Text(
+          'URL video non valido.',
+          style: TextStyle(color: Colors.redAccent),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: YoutubePlayer(
+        controller: _controller,
+        aspectRatio: 16 / 9,
       ),
     );
   }
