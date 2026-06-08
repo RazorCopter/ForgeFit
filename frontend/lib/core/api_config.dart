@@ -48,4 +48,10 @@ class ApiConfig {
 
   /// POST  /api/auth/unlock-ai → verifica codice sblocco AI (lato server)
   static const String unlockAI = '$baseUrl/api/auth/unlock-ai';
+
+  /// POST  /api/auth/refresh → rinnova access token tramite refresh token
+  static const String refreshToken = '$baseUrl/api/auth/refresh';
+
+  /// GET   /api/workouts/suggestions/{user_id} → suggerimenti progressive overload
+  static String overloadSuggestions(int userId) => '$baseUrl/api/workouts/suggestions/$userId';
 }

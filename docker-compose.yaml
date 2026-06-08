@@ -12,8 +12,9 @@ services:
       - backend_data:/app/data
     environment:
       - TZ=Europe/Rome
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change_me_in_production}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8083}
     networks:
       - forgefit-net
 

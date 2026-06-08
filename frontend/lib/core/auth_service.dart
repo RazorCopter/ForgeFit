@@ -10,20 +10,33 @@ import 'package:flutter/material.dart';
 class AuthService {
   AuthService._();
 
-  static const String _keyToken   = 'jwt_token';
-  static const String _keyEmail   = 'auth_email';
-  static const String _keyUserId  = 'auth_user_id';
+  static const String _keyToken        = 'jwt_token';
+  static const String _keyRefreshToken = 'jwt_refresh_token';
+  static const String _keyEmail        = 'auth_email';
+  static const String _keyUserId       = 'auth_user_id';
 
-  // ── Salva token dopo login/register ────────────────────────────────────────
+  // ── Salva access token ─────────────────────────────────────────────────────
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyToken, token);
   }
 
-  // ── Legge token salvato (null se non loggato) ──────────────────────────────
+  // ── Legge access token (null se non loggato) ───────────────────────────────
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyToken);
+  }
+
+  // ── Salva refresh token ────────────────────────────────────────────────────
+  static Future<void> saveRefreshToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyRefreshToken, token);
+  }
+
+  // ── Legge refresh token ────────────────────────────────────────────────────
+  static Future<String?> getRefreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyRefreshToken);
   }
 
   // ── Salva email corrente ───────────────────────────────────────────────────
@@ -76,10 +89,11 @@ class AuthService {
     return true;
   }
 
-  // ── Logout: cancella token e email ────────────────────────────────────────
+  // ── Logout: cancella tutti i token salvati ────────────────────────────────
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);
+    await prefs.remove(_keyRefreshToken);
     await prefs.remove(_keyEmail);
     await prefs.remove(_keyUserId);
   }

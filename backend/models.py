@@ -138,22 +138,21 @@ class Measurement(Base):
 
 class WorkoutPlan(Base):
     """
-    Tabella 'workout_plans': contiene la scheda di allenamento associata a ogni utente.
-    La scheda è salvata come testo JSON per massima flessibilità nel formato dei dati.
+    Tabella 'workout_plans': storicizza tutte le versioni delle schede per ogni utente.
+    Ogni assegnazione crea un nuovo record; la scheda attiva è quella con created_at più recente.
     """
     __tablename__ = "workout_plans"
 
-    # Chiave primaria auto-incrementale
     id = Column(Integer, primary_key=True, index=True)
-
-    # Chiave esterna che collega la scheda all'utente proprietario
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # La scheda di allenamento viene salvata come stringa JSON (testo libero)
-    # per permettere qualsiasi struttura definita dal Personal Trainer
     plan_json = Column(Text, nullable=False)
 
-    # Relazione inversa verso il modello User
+    # Numero versione progressivo per utente (1, 2, 3 …)
+    version = Column(Integer, nullable=False, default=1)
+    # Etichetta opzionale assegnata dal PT (es. "Fase 1 — Ipertrofia")
+    label = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
     owner = relationship("User", back_populates="workout_plans")
 
 

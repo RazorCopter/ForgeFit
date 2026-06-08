@@ -157,8 +157,10 @@ class DatabaseService {
         final String ripetizioniStr = (exMap['ripetizioni'] as String?) ?? '10';
         final int targetReps = _parseRepsFromString(ripetizioniStr);
 
-        // "recupero_secondi" è già un int
-        final int recupero = (exMap['recupero_secondi'] as int?) ?? 90;
+        // Accetta sia "recupero_secondi" (formato corretto) che "recupero" (legacy AI)
+        final int recupero = (exMap['recupero_secondi'] as int?)
+            ?? (exMap['recupero'] as int?)
+            ?? 90;
 
         // Genera le [numSerie] serie partendo da 1
         final List<ExerciseSet> sets = List.generate(
@@ -245,6 +247,9 @@ class DatabaseService {
       ..sort((a, b) => b.date.compareTo(a.date));
     return records.first;
   }
+
+  static List<BiometricRecord> getAllBiometricRecords() =>
+      _biometricBox.values.toList();
 
   static String getBiometricHistoryForAI() {
     if (_biometricBox.isEmpty) return 'Nessun dato biometrico registrato.';

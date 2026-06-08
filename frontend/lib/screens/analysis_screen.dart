@@ -5,6 +5,7 @@ import '../core/api_service.dart';
 import '../data/database_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
+import 'biometric_trends_screen.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -54,9 +55,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     try {
       final userData = await ApiService.getMe();
       final int eta = userData['age'] ?? 0;
+      // Usa il compleanno stimato al 1° luglio per ridurre l'errore medio a ~3 mesi
+      final int birthYear = DateTime.now().year - eta;
       final newProfile = UserProfile(
         name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim(),
-        dateOfBirth: DateTime(DateTime.now().year - eta, 1, 1),
+        dateOfBirth: DateTime(birthYear, 7, 1),
         height: (userData['height'] as num?)?.toDouble() ?? 0.0,
         sesso: userData['gender'] ?? '',
         bmi: (userData['bmi'] as num?)?.toDouble(),
@@ -469,6 +472,27 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                   ],
                 ),
               ).animate().fadeIn(delay: 150.ms, duration: 500.ms).slideY(begin: 0.1),
+
+              const SizedBox(height: 16),
+
+              // Trend Misure Corporee
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BiometricTrendsScreen()),
+                  ),
+                  icon: const Icon(Icons.show_chart, color: AppTheme.cyan),
+                  label: const Text('Vedi Trend Misure Corporee',
+                      style: TextStyle(color: AppTheme.cyan, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.cyan, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05),
 
               const SizedBox(height: 32),
 

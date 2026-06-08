@@ -17,6 +17,13 @@ import '../data/database_service.dart';
 typedef UnauthorizedCallback = void Function();
 UnauthorizedCallback? onUnauthorized;
 
+/// Segnale interno usato da [ApiService._checkUnauthorizedAsync] per indicare
+/// che l'access token è stato rinnovato e la richiesta va ritentata.
+class _RetryWithNewToken implements Exception {
+  final String newToken;
+  const _RetryWithNewToken(this.newToken);
+}
+
 /// Eccezione personalizzata lanciata quando il server risponde
 /// con uno status code diverso da 2xx.
 class ApiException implements Exception {
@@ -73,6 +80,8 @@ class ApiService {
       final token = data['access_token'] as String?;
       if (token != null) {
         await AuthService.saveToken(token);
+        final refreshToken = data['refresh_token'] as String?;
+        if (refreshToken != null) await AuthService.saveRefreshToken(refreshToken);
         await AuthService.saveEmail(email);
         await DatabaseService.saveUserEmail(email); // Sincronizza con Hive
         
@@ -163,35 +172,27 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<Map<String, dynamic>> getPlans(int userId) async {
     final url = ApiConfig.plans(userId);
-    final headers = await AuthService.authHeaders();
-
-    // ── LOG REQUEST ─────────────────────────────────────────────────────────
-    debugPrint('🚀 [ApiService] GET $url');
-    debugPrint('📋 [ApiService] Headers: $headers');
-    // ────────────────────────────────────────────────────────────────────────
+    Future<http.Response> doRequest(Map<String, String> headers) =>
+        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
 
     try {
-      final response = await http
-          .get(Uri.parse(url), headers: headers)
-          .timeout(_timeout);
-
-      // ── LOG RESPONSE ────────────────────────────────────────────────────────
-      debugPrint('📥 [ApiService] Status: ${response.statusCode}');
-      if (response.statusCode >= 300) {
-        debugPrint('❌ [ApiService] Error Body: ${response.body}');
+      var headers = await AuthService.authHeaders();
+      var response = await doRequest(headers);
+      try {
+        await _checkUnauthorizedAsync(response);
+      } on _RetryWithNewToken catch (r) {
+        headers = await AuthService.authHeaders();
+        response = await doRequest(headers);
+        _checkUnauthorized(response);
       }
-      // ────────────────────────────────────────────────────────────────────────
-
-      _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException catch (e) {
-      debugPrint('⚠️ [ApiService] ApiException (${e.statusCode}): ${e.message}');
       if (e.statusCode == 404) {
         throw const ApiException(statusCode: 404, message: 'Nessuna scheda trovata per questo utente.');
       }
       rethrow;
     } catch (e) {
-      debugPrint('🚨 [ApiService] Unexpected Error: $e');
+      if (e is ApiException) rethrow;
       throw Exception('Impossibile raggiungere il server: $e');
     }
   }
@@ -398,6 +399,26 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // GET /api/workouts/suggestions/{user_id} [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+
+  /// Recupera i suggerimenti di progressive overload per l'utente.
+  static Future<Map<String, dynamic>> getOverloadSuggestions(int userId) async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final response = await http
+          .get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: headers)
+          .timeout(_timeout);
+      _checkUnauthorized(response);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Impossibile recuperare suggerimenti: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // POST /api/ai/analyze [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
 
@@ -429,14 +450,50 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
-  // Helper: controlla 401 e forza logout
+  // Helper: controlla 401 — tenta refresh, poi logout se fallisce
   // ------------------------------------------------------------------
 
-  /// Se il server risponde 401, svuota il token e chiama [onUnauthorized]
-  /// per riportare l'utente alla schermata di login.
+  /// Se il server risponde 401, prova a rinnovare l'access token via refresh token.
+  /// Se il refresh riesce, salva il nuovo token e lancia [_RetryWithNewToken].
+  /// Se fallisce, fa logout e chiama [onUnauthorized].
+  static Future<void> _checkUnauthorizedAsync(http.Response response) async {
+    if (response.statusCode != 401) return;
+
+    final refreshToken = await AuthService.getRefreshToken();
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        final refreshResponse = await http.post(
+          Uri.parse(ApiConfig.refreshToken),
+          headers: {'Content-Type': 'application/json; charset=UTF-8'},
+          body: jsonEncode({'refresh_token': refreshToken}),
+        ).timeout(_timeout);
+
+        if (refreshResponse.statusCode == 200) {
+          final body = jsonDecode(utf8.decode(refreshResponse.bodyBytes)) as Map<String, dynamic>;
+          final newToken = body['access_token'] as String?;
+          if (newToken != null) {
+            await AuthService.saveToken(newToken);
+            throw _RetryWithNewToken(newToken);
+          }
+        }
+      } catch (e) {
+        if (e is _RetryWithNewToken) rethrow;
+        // Refresh fallito — cadere nel logout sotto
+      }
+    }
+
+    await AuthService.logout();
+    onUnauthorized?.call();
+    throw const ApiException(
+      statusCode: 401,
+      message: 'Sessione scaduta. Effettua nuovamente il login.',
+    );
+  }
+
+  /// Versione sincrona mantenuta per retrocompatibilità dove non serve retry.
   static void _checkUnauthorized(http.Response response) {
     if (response.statusCode == 401) {
-      AuthService.logout(); // fire-and-forget: non serve await
+      AuthService.logout();
       onUnauthorized?.call();
       throw const ApiException(
         statusCode: 401,

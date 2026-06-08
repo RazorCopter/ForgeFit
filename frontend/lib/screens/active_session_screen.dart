@@ -4,8 +4,13 @@ import 'package:flutter/services.dart';
 import '../models/training_data.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
+import '../core/api_service.dart';
+import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/rest_timer_widget.dart';
+
+// MET per allenamento con pesi (intensità moderata, ACSM)
+const double _kMET = 5.0;
 
 class _LiveSet {
   double kg;
@@ -47,6 +52,8 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   late final DateTime _startTime;
   CompletedExercise? _historyCache;
   late final List<Map<String, TextEditingController>> _controllers;
+  double? _suggestedWeight;
+  String? _suggestionReason;
 
   @override
   void initState() {
@@ -55,6 +62,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     _activeSetIndex = widget.initialSetIndex;
 
     _historyCache = DatabaseService.getLastExerciseHistory(widget.exercise.name);
+    _loadOverloadSuggestion();
 
     _liveSets = List.generate(widget.exercise.sets.length, (si) {
       final s = widget.exercise.sets[si];
@@ -94,6 +102,24 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     final m = _stopwatchSeconds ~/ 60;
     final s = _stopwatchSeconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _loadOverloadSuggestion() async {
+    try {
+      final userId = await AuthService.getUserId();
+      if (userId == null) return;
+      final data = await ApiService.getOverloadSuggestions(userId);
+      final suggestions = data['suggestions'] as Map<String, dynamic>?;
+      final s = suggestions?[widget.exercise.name] as Map<String, dynamic>?;
+      if (s != null && mounted) {
+        setState(() {
+          _suggestedWeight = (s['suggested_weight'] as num?)?.toDouble();
+          _suggestionReason = s['reason'] as String?;
+        });
+      }
+    } catch (_) {
+      // Suggerimento non critico — ignora errori di rete
+    }
   }
 
   void _startStopwatch() {
@@ -156,7 +182,9 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
       }
     }
     
-    final int kcal = ((durationSeconds / 60.0) * 5 + (volume * 0.002)).round();
+    // kcal = MET × peso_kg × durata_ore  (ACSM). Fallback 70 kg se no biometrics.
+    final double userWeightKg = DatabaseService.getLatestBiometricRecord()?.weight ?? 70.0;
+    final int kcal = (_kMET * userWeightKg * (durationSeconds / 3600.0)).round();
     final String timeStr = '${durationSeconds ~/ 60}:${(durationSeconds % 60).toString().padLeft(2, '0')}';
 
     final setsData = _liveSets.where((s) => s.isDone).map((s) => CompletedSet(
@@ -344,6 +372,29 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
             const SizedBox(height: 12),
             if (lastSet != null)
               Text('Record precedente: ${lastSet.weight}kg × ${lastSet.reps}', style: const TextStyle(fontSize: 13, color: Colors.white54, fontStyle: FontStyle.italic)),
+            if (_suggestedWeight != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    _suggestionReason == 'target_reached' ? Icons.trending_up : Icons.trending_flat,
+                    size: 14,
+                    color: _suggestionReason == 'target_reached' ? Colors.greenAccent : Colors.orangeAccent,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _suggestionReason == 'target_reached'
+                        ? 'Suggerimento: ${_suggestedWeight}kg (+2.5kg)'
+                        : 'Suggerimento: mantieni ${_suggestedWeight}kg',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _suggestionReason == 'target_reached' ? Colors.greenAccent : Colors.orangeAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 32),
             Center(
               child: Column(

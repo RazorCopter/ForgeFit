@@ -76,21 +76,33 @@ class UserResponse(BaseModel):
 
 class WorkoutPlanCreate(BaseModel):
     """
-    Schema per la creazione o aggiornamento di una scheda (POST /api/plans/{email}).
-    Il campo 'plan' accetta qualsiasi struttura JSON valida, garantendo flessibilità
-    al Personal Trainer nella definizione del formato degli esercizi.
+    Schema per la creazione di una nuova versione della scheda (POST /api/plans/{user_id}).
     """
     plan: Any = Field(..., description="Scheda di allenamento come oggetto JSON libero")
+    label: Optional[str] = Field(None, description="Etichetta opzionale (es. 'Fase 1 — Ipertrofia')")
 
 
 class WorkoutPlanResponse(BaseModel):
     """
-    Schema di risposta per la scheda di allenamento (GET /api/plans/{user_id}).
-    Restituisce la scheda già deserializzata come oggetto Python (dict/list).
+    Schema di risposta per la scheda attiva (GET /api/plans/{user_id}).
     """
     user_email: EmailStr
     user_id: int
     plan: Any = Field(..., description="Scheda di allenamento deserializzata da JSON")
+    version: int = 1
+    label: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WorkoutPlanHistoryItem(BaseModel):
+    """Una voce dello storico piani di un utente."""
+    id: int
+    version: int
+    label: Optional[str] = None
+    created_at: Any
+    plan: Any
 
     class Config:
         from_attributes = True
@@ -181,13 +193,25 @@ class LoginRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    """Schema di risposta del login: access_token JWT, tipo (bearer) e ruolo utente."""
+    """Schema di risposta del login: access_token JWT, refresh_token, tipo (bearer) e ruolo utente."""
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     role: str
     user_id: int
     version: str = "1.1.0"
     user: UserResponse
+
+
+class RefreshTokenRequest(BaseModel):
+    """Schema per la richiesta di rinnovo access token tramite refresh token."""
+    refresh_token: str
+
+
+class RefreshTokenResponse(BaseModel):
+    """Schema di risposta del refresh: nuovo access_token."""
+    access_token: str
+    token_type: str = "bearer"
 
 
 class ChangePasswordRequest(BaseModel):
@@ -265,7 +289,23 @@ class WorkoutLogResponse(BaseModel):
     user_id: int
     date: datetime
     duration_seconds: Optional[int]
-    exercises_json: str
+    exercises: Any = None
+
+    @classmethod
+    def from_orm_log(cls, log) -> "WorkoutLogResponse":
+        import json
+        exercises = []
+        try:
+            exercises = json.loads(log.exercises_json)
+        except Exception:
+            pass
+        return cls(
+            id=log.id,
+            user_id=log.user_id,
+            date=log.date,
+            duration_seconds=log.duration_seconds,
+            exercises=exercises,
+        )
 
     class Config:
         from_attributes = True

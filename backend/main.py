@@ -337,11 +337,15 @@ def on_startup():
     logger.info("Inizializzazione completata con successo.")
 
 # ---------------------------------------------------------------------------
-# Middleware CORS - permette chiamate da web e da app mobilde
+# Middleware CORS - domini autorizzati via env var ALLOWED_ORIGINS
+# Formato: lista separata da virgole, es. "https://app.example.com,http://localhost:8083"
 # ---------------------------------------------------------------------------
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8083,http://localhost:3000")
+allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # In produzione specificare i domini autorizzati
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -596,17 +600,19 @@ def auth_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if admin_config and admin_config.get("username") == data.username:
         if auth.verify_password(data.password, admin_config["hashed_password"]):
             token = auth.create_access_token(subject=data.username)
+            refresh = auth.create_refresh_token(subject=data.username)
             logger.info(f"Login PT (File Config) riuscito: {data.username}")
             return schemas.TokenResponse(
-                access_token=token, 
-                role="admin", 
+                access_token=token,
+                refresh_token=refresh,
+                role="admin",
                 user_id=0,
                 version="1.1.0",
                 user=schemas.UserResponse(
-                    id=0, 
-                    email=data.username, 
-                    first_name=admin_config["pt_name"], 
-                    last_name="PT", 
+                    id=0,
+                    email=data.username,
+                    first_name=admin_config["pt_name"],
+                    last_name="PT",
                     age=30
                 )
             )
@@ -632,10 +638,12 @@ def auth_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = auth.create_access_token(subject=user.email)
+    refresh = auth.create_refresh_token(subject=user.email)
     logger.info(f"Login cliente riuscito: {user.email} (Ruolo: {user.role})")
     return schemas.TokenResponse(
-        access_token=token, 
-        role=user.role, 
+        access_token=token,
+        refresh_token=refresh,
+        role=user.role,
         user_id=user.id,
         version="1.1.0",
         user=schemas.UserResponse.model_validate(user)
@@ -721,6 +729,34 @@ def change_password(
 
 
 # ===========================================================================
+# POST /api/auth/refresh — Rinnova access token tramite refresh token
+# ===========================================================================
+@app.post(
+    "/api/auth/refresh",
+    response_model=schemas.RefreshTokenResponse,
+    summary="Rinnova l'access token usando il refresh token",
+    tags=["Autenticazione"],
+)
+def refresh_access_token(data: schemas.RefreshTokenRequest, db: Session = Depends(get_db)):
+    """
+    Verifica il refresh token e restituisce un nuovo access token senza richiedere
+    nuovamente le credenziali. Il refresh token rimane valido fino alla sua scadenza (30 giorni).
+    """
+    subject = auth.decode_refresh_token(data.refresh_token)
+
+    # Verifica che l'utente esista ancora (potrebbe essere stato eliminato)
+    admin_config = config_manager.get_admin_config()
+    if not (admin_config and admin_config.get("username") == subject):
+        user = db.query(models.User).filter(models.User.email == subject).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utente non trovato.")
+
+    new_token = auth.create_access_token(subject=subject)
+    logger.info(f"Access token rinnovato per: {subject}")
+    return schemas.RefreshTokenResponse(access_token=new_token)
+
+
+# ===========================================================================
 # GET /api/auth/me - Restituisce il profilo dell'utente autenticato
 # ===========================================================================
 @app.get(
@@ -751,17 +787,24 @@ def unlock_ai(
 ):
     """
     Riceve un codice di sblocco AI dal client autenticato e lo verifica
-    server-side. L'algoritmo (settimana ISO) non viene mai esposto al client.
+    server-side. Il codice è un HMAC-SHA256 troncato a 8 char derivato dalla
+    JWT_SECRET_KEY + anno + settimana ISO. Non è indovinabile senza la chiave.
     """
+    import hmac
+    import hashlib
     from datetime import datetime, timezone, timedelta
+    from auth import SECRET_KEY
 
     now = datetime.now(timezone.utc)
-    iso_week = now.isocalendar()[1]
-    expected_code = f"forza{iso_week}"
+    iso_year, iso_week, _ = now.isocalendar()
+    # Deriva il codice: HMAC-SHA256(secret, "YYYY-WXX") troncato a 8 caratteri esadecimali
+    message = f"{iso_year}-W{iso_week:02d}".encode()
+    expected_code = hmac.new(SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:8]
 
-    if data.code.strip() != expected_code:
-        logger.info(f"Codice AI non valido per utente {current_user.email} (settimana {iso_week})")
+    if not hmac.compare_digest(data.code.strip().lower(), expected_code):
+        logger.info(f"Codice AI non valido per utente {current_user.email} (settimana {iso_year}-W{iso_week:02d})")
         return schemas.UnlockAIResponse(valid=False)
+
 
     # Scadenza: domenica della settimana corrente alle 23:59:59 UTC
     days_until_sunday = 6 - now.weekday()
@@ -773,6 +816,29 @@ def unlock_ai(
 
     logger.info(f"Sblocco AI concesso a {current_user.email} fino a {expires.isoformat()}")
     return schemas.UnlockAIResponse(valid=True, expires_at=expires.isoformat())
+
+
+# ===========================================================================
+# GET /api/auth/ai-unlock-code — Mostra il codice corrente (solo Admin)
+# ===========================================================================
+@app.get(
+    "/api/auth/ai-unlock-code",
+    summary="Restituisce il codice di sblocco AI della settimana corrente (Solo Admin)",
+    tags=["Autenticazione"],
+)
+def get_ai_unlock_code(current_user: models.User = Depends(get_current_user)):
+    """Usato dalla dashboard PT per comunicare il codice settimanale ai clienti."""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Accesso negato.")
+    import hmac as _hmac
+    import hashlib
+    from datetime import datetime, timezone
+    from auth import SECRET_KEY
+    now = datetime.now(timezone.utc)
+    iso_year, iso_week, _ = now.isocalendar()
+    message = f"{iso_year}-W{iso_week:02d}".encode()
+    code = _hmac.new(SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:8]
+    return {"week": f"{iso_year}-W{iso_week:02d}", "code": code}
 
 
 # ===========================================================================
@@ -871,7 +937,7 @@ def generate_ai_plan(
     {exercise_list}
     2. NUMERO GIORNI: Devi generare ESATTAMENTE {data.training_days} giorni di allenamento (né uno in più, né uno in meno).
     3. DURATA SESSIONE: La sessione deve durare massimo {data.training_time} minuti inclusi i recuperi.
-    4. RECUPERO: Il campo recupero deve essere ESCLUSIVAMENTE un numero intero che rappresenta i secondi (es. 90, 120).
+    4. RECUPERO: Il campo "recupero_secondi" deve essere ESCLUSIVAMENTE un numero intero che rappresenta i secondi (es. 90, 120). USA SEMPRE la chiave "recupero_secondi", non "recupero".
     5. GRUPPO: Specifica sempre il gruppo muscolare principale dell'esercizio.
     6. FORMATO: Restituisci la risposta ESCLUSIVAMENTE in formato JSON valido, senza testo prima o dopo.
 
@@ -886,7 +952,7 @@ def generate_ai_plan(
             "nome": "Nome esatto dal catalogo",
             "serie": 4,
             "ripetizioni": "8-10",
-            "recupero": 90,
+            "recupero_secondi": 90,
             "note": "Spiegazione tecnica."
             }}
         ]
@@ -941,21 +1007,30 @@ def save_or_update_plan(
 
     plan_json_str = json.dumps(plan_data.plan, ensure_ascii=False)
 
-    existing_plan = db.query(models.WorkoutPlan).filter(
+    # Calcola il prossimo numero di versione per questo utente
+    last = db.query(models.WorkoutPlan).filter(
         models.WorkoutPlan.user_id == user.id
-    ).first()
+    ).order_by(models.WorkoutPlan.version.desc()).first()
+    next_version = (last.version + 1) if last else 1
 
-    if existing_plan:
-        existing_plan.plan_json = plan_json_str
-        db.commit()
-        logger.info(f"Scheda aggiornata per utente ID: {user.id}")
-    else:
-        new_plan = models.WorkoutPlan(user_id=user.id, plan_json=plan_json_str)
-        db.add(new_plan)
-        db.commit()
-        logger.info(f"Scheda creata per utente ID: {user.id}")
+    new_plan = models.WorkoutPlan(
+        user_id=user.id,
+        plan_json=plan_json_str,
+        version=next_version,
+        label=plan_data.label,
+    )
+    db.add(new_plan)
+    db.commit()
+    db.refresh(new_plan)
+    logger.info(f"Scheda v{next_version} creata per utente ID: {user.id} (label: {plan_data.label!r})")
 
-    return schemas.WorkoutPlanResponse(user_email=user.email, user_id=user.id, plan=plan_data.plan)
+    return schemas.WorkoutPlanResponse(
+        user_email=user.email,
+        user_id=user.id,
+        plan=plan_data.plan,
+        version=next_version,
+        label=plan_data.label,
+    )
 
 
 # ===========================================================================
@@ -983,8 +1058,8 @@ def get_plan(user_id: int, db: Session = Depends(get_db),
 
     plan = db.query(models.WorkoutPlan).filter(
         models.WorkoutPlan.user_id == user.id
-    ).first()
-    
+    ).order_by(models.WorkoutPlan.version.desc()).first()
+
     if not plan:
         raise HTTPException(status_code=404, detail=f"Nessuna scheda attiva trovata per l'utente {user.first_name}.")
 
@@ -1006,7 +1081,45 @@ def get_plan(user_id: int, db: Session = Depends(get_db),
         user_email=user.email,
         user_id=user.id,
         plan=plan_data,
+        version=plan.version,
+        label=plan.label,
     )
+
+
+# ===========================================================================
+# GET /api/plans/{user_id}/history - Storico versioni schede
+# ===========================================================================
+@app.get(
+    "/api/plans/{user_id}/history",
+    response_model=list[schemas.WorkoutPlanHistoryItem],
+    summary="Storico versioni schede di un utente",
+    tags=["Schede"],
+)
+def get_plan_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Restituisce tutte le versioni delle schede assegnate a un utente, dalla più recente.
+    Accessibile dall'admin per qualsiasi utente; dal cliente solo per sé stesso.
+    """
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Accesso negato.")
+    plans = db.query(models.WorkoutPlan).filter(
+        models.WorkoutPlan.user_id == user_id
+    ).order_by(models.WorkoutPlan.version.desc()).all()
+
+    return [
+        schemas.WorkoutPlanHistoryItem(
+            id=p.id,
+            version=p.version,
+            label=p.label,
+            created_at=p.created_at,
+            plan=json.loads(p.plan_json),
+        )
+        for p in plans
+    ]
 
 
 # ===========================================================================
@@ -1026,26 +1139,28 @@ def list_users(db: Session = Depends(get_db),
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Accesso negato: solo il Personal Trainer può vedere la lista utenti.")
     users = db.query(models.User).all()
-    
+
+    result = []
     for user in users:
-        # Recupera la misurazione più recente per l'utente
         latest = db.query(models.Measurement).filter(
             models.Measurement.user_id == user.id
         ).order_by(models.Measurement.created_at.desc()).first()
-        
+
+        # Costruisce la risposta senza toccare l'oggetto ORM in sessione
+        response = schemas.UserResponse.model_validate(user)
         if latest:
-            # Sincronizzazione con l'ultima misurazione (già in inglese nel DB)
-            user.weight = latest.weight if latest.weight is not None else user.weight
-            user.chest = latest.chest if latest.chest is not None else user.chest
-            user.hips = latest.hips if latest.hips is not None else user.hips
-            user.waist = latest.waist if latest.waist is not None else user.waist
-            user.biceps = latest.biceps if latest.biceps is not None else user.biceps
-            user.thigh = latest.thigh if latest.thigh is not None else user.thigh
-            user.calf = latest.calf if latest.calf is not None else user.calf
-            user.neck = latest.neck if latest.neck is not None else user.neck
-            user.wrist = latest.wrist if latest.wrist is not None else user.wrist
-            
-    return users
+            response.weight = latest.weight if latest.weight is not None else response.weight
+            response.chest  = latest.chest  if latest.chest  is not None else response.chest
+            response.hips   = latest.hips   if latest.hips   is not None else response.hips
+            response.waist  = latest.waist  if latest.waist  is not None else response.waist
+            response.biceps = latest.biceps if latest.biceps is not None else response.biceps
+            response.thigh  = latest.thigh  if latest.thigh  is not None else response.thigh
+            response.calf   = latest.calf   if latest.calf   is not None else response.calf
+            response.neck   = latest.neck   if latest.neck   is not None else response.neck
+            response.wrist  = latest.wrist  if latest.wrist  is not None else response.wrist
+        result.append(response)
+
+    return result
 
 
 # ===========================================================================
@@ -1090,12 +1205,14 @@ def delete_user(email: str, db: Session = Depends(get_db),
     response_class=StreamingResponse,
 )
 def export_users_csv(db: Session = Depends(get_db),
-                     _current: models.User = Depends(get_current_user)):
+                     current_user: models.User = Depends(get_current_user)):
     """
     Genera e scarica un file CSV con tutti gli utenti registrati.
     Le colonne esportate sono: id, email, nome, cognome, eta, peso, altezza,
     bicipite, petto, vita, coscia.
     """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Accesso negato: solo il Personal Trainer può esportare i dati.")
     users = db.query(models.User).all()
     output = io.StringIO()
     writer = csv.writer(output)
@@ -1416,7 +1533,7 @@ async def restore_database_backup(
 
 
 @app.get("/api/system/models", response_model=list[schemas.AIModelResponse], summary="Ottieni modelli AI supportati (Whitelist)", tags=["Sistema"])
-def get_supported_ai_models(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+def get_supported_ai_models(current_user: models.User = Depends(get_current_user)):
     """Ritorna una lista curata di modelli AI supportati ufficialmente."""
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Permesso negato.")
@@ -1597,6 +1714,7 @@ def generate_athlete_analysis(
 )
 def ai_analyze_passthrough(
     request: schemas.AIAnalyzeRequest,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     """
@@ -1666,9 +1784,82 @@ def save_workout(
     db.refresh(new_log)
 
     logger.info(f"Allenamento salvato per utente {payload.user_id} (Log ID: {new_log.id})")
-    
-    return new_log
+    return schemas.WorkoutLogResponse.from_orm_log(new_log)
 
+
+
+# ===========================================================================
+# GET /api/workouts/suggestions/{user_id} — Progressive overload automatico
+# ===========================================================================
+@app.get(
+    "/api/workouts/suggestions/{user_id}",
+    summary="Suggerimenti progressive overload per ogni esercizio",
+    tags=["Allenamento"],
+)
+def get_overload_suggestions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Analizza le ultime 3 sessioni per ogni esercizio e restituisce:
+    - il peso suggerito per la prossima sessione
+    - il motivo (target raggiunto, sotto target, nessun dato)
+
+    Regola: se nelle ultime 3 sessioni tutte le serie erano >= target reps
+    con quel peso, suggerisce +2.5 kg. Altrimenti mantiene.
+    """
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Accesso negato.")
+
+    logs = db.query(models.WorkoutLog).filter(
+        models.WorkoutLog.user_id == user_id
+    ).order_by(models.WorkoutLog.date.desc()).limit(20).all()
+
+    # Raggruppa le ultime 3 sessioni per esercizio
+    exercise_sessions: dict[str, list[dict]] = {}
+    for log in logs:
+        try:
+            exercises = json.loads(log.exercises_json)
+        except Exception:
+            continue
+        for ex in exercises:
+            name = ex.get("name", "")
+            if not name:
+                continue
+            if name not in exercise_sessions:
+                exercise_sessions[name] = []
+            if len(exercise_sessions[name]) < 3:
+                exercise_sessions[name].append(ex)
+
+    suggestions = {}
+    for ex_name, sessions in exercise_sessions.items():
+        if not sessions:
+            continue
+        last_session = sessions[0]
+        sets = last_session.get("sets", [])
+        if not sets:
+            suggestions[ex_name] = {"suggested_weight": None, "reason": "no_data"}
+            continue
+
+        last_weight = max((s.get("weight", 0) for s in sets), default=0)
+        # Controlla se in tutte le sessioni disponibili le reps erano on-target
+        all_on_target = True
+        for session in sessions:
+            for s in session.get("sets", []):
+                target = s.get("targetReps", s.get("target_reps", 0))
+                actual = s.get("reps", s.get("actualReps", 0))
+                if target and actual and actual < target:
+                    all_on_target = False
+                    break
+
+        if all_on_target and len(sessions) >= 2:
+            suggested = round((last_weight + 2.5) * 2) / 2  # arrotonda a 0.5
+            suggestions[ex_name] = {"suggested_weight": suggested, "reason": "target_reached", "last_weight": last_weight}
+        else:
+            suggestions[ex_name] = {"suggested_weight": last_weight, "reason": "maintain", "last_weight": last_weight}
+
+    return {"suggestions": suggestions}
 
 
 # ===========================================================================

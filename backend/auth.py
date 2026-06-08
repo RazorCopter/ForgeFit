@@ -25,9 +25,15 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Configurazione
 # ---------------------------------------------------------------------------
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super_secret_cyberpunk_key")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET_KEY non impostata. "
+        "Aggiungila al file .env o alle variabili d'ambiente prima di avviare il server."
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
+REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Schema HTTP Bearer per l'estrazione del token dall'header Authorization
 bearer_scheme = HTTPBearer(auto_error=True)
@@ -55,14 +61,36 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def create_access_token(subject: str) -> str:
-    """
-    Genera un JWT con:
-      - sub: email dell'utente autenticato
-      - exp: scadenza a 7 giorni
-    """
+    """Genera un access JWT con scadenza 7 giorni."""
     expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
-    payload = {"sub": subject, "exp": expire}
+    payload = {"sub": subject, "exp": expire, "type": "access"}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def create_refresh_token(subject: str) -> str:
+    """Genera un refresh JWT con scadenza 30 giorni."""
+    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    payload = {"sub": subject, "exp": expire, "type": "refresh"}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_refresh_token(token: str) -> str:
+    """
+    Decodifica un refresh token e restituisce il subject (email).
+    Solleva HTTPException 401 se il token è scaduto, non valido, o non è di tipo refresh.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token non è un refresh token.")
+        subject: str = payload.get("sub")
+        if not subject:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token malformato.")
+        return subject
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token scaduto. Effettua nuovamente il login.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token non valido.")
 
 
 def decode_token(token: str) -> dict:
