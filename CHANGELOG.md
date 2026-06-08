@@ -5,6 +5,17 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.3.0] — 2026-06-08
+
+### Changed / Fixed
+- **Architettura Backend Modulare**: Refactoring totale di main.py in moduli dedicati dentro ackend/routers/ (i.py, uth.py, catalog.py, measurements.py, plans.py, system.py, users.py, workouts.py).
+- **Supporto Offline (PWA)**: Implementato lutter_service_worker.js custom con policy Network-First per consentire l'utilizzo dell'app anche senza connessione internet in palestra.
+- **Sicurezza & UX**: Aggiunto modulo slowapi in FastAPI per rate limiting.
+- **Pulizia Bundle**: Rimosso definitivamente youtube_player_iframe da Flutter e shared_preferences, alleggerendo il pacchetto e risolvendo dipendenze obsolete.
+- Risoluzione finale punti audit: Confirmation dialogs per cancellazione account e storico, Splash Screen logic async, BottomBar Gradient corretto, timer globale unificato in day_detail_screen.dart, e feedback ultima sincronizzazione UI.
+
+---
+
 ## [1.2.0] — 2026-06-08
 
 ### Changed / Fixed

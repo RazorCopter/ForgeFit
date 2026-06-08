@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-08. Riferimento: branch `main`.
-> **v3 — Post fix & feature session**.
-> 13 bug risolti + 4 feature implementate. Deploy su Portainer via Git.
+> **v4 — Modularity & PWA session**.
+> Refactoring massivo FastAPI (8 routers), PWA offline service worker, rate limiting, UI feedback.
 
 ---
 
