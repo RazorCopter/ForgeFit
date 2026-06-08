@@ -1,0 +1,3573 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Fitness Manager</title>
+  <meta name="description" content="Dashboard Cyberpunk per Personal Trainer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a26;
+      --cyan: #00e5ff;
+      --violet: #b400ff;
+      --pink: #ff00aa;
+      --cyan-dim: rgba(0, 229, 255, .12);
+      --violet-dim: rgba(180, 0, 255, .12);
+      --text: #e0e8ff;
+      --muted: #6a7090;
+      --border: rgba(0, 229, 255, .15);
+      --r: 12px;
+      --glow: 0 0 18px rgba(0, 229, 255, .4);
+      --glow-v: 0 0 18px rgba(180, 0, 255, .4);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 229, 255, .08), transparent), radial-gradient(ellipse 60% 40% at 90% 80%, rgba(180, 0, 255, .06), transparent);
+      pointer-events: none;
+      z-index: 0
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 10, 15, .8);
+      backdrop-filter: blur(20px)
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--cyan);
+      text-shadow: var(--glow);
+      letter-spacing: .1em
+    }
+
+    .logo span {
+      color: var(--violet)
+    }
+
+    .tagline {
+      margin-left: auto;
+      font-size: .75rem;
+      color: var(--muted);
+      letter-spacing: .05em
+    }
+
+    /* NAV */
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      gap: .5rem;
+      padding: .75rem 2rem;
+      background: rgba(17, 17, 24, .9);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .nav-btn {
+      padding: .55rem 1.3rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .03em
+    }
+
+    .nav-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan)
+    }
+
+    .nav-btn.active {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: var(--glow)
+    }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden
+    }
+
+    .section {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 1.5rem 1.5rem 6rem 1.5rem
+    }
+
+    .section.active {
+      display: flex
+    }
+
+    /* CARD */
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      transition: border-color .2s
+    }
+
+    .card:hover {
+      border-color: rgba(0, 229, 255, .3)
+    }
+
+    .card-fill {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      transition: border-color .2s;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1
+    }
+
+    .card-fill:hover {
+      border-color: rgba(0, 229, 255, .3)
+    }
+
+    .card-title {
+      font-family: 'Orbitron', monospace;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .08em;
+      margin-bottom: .3rem;
+      text-transform: uppercase
+    }
+
+    .card-sub {
+      color: var(--muted);
+      font-size: .78rem;
+      margin-bottom: 1.25rem
+    }
+
+    /* FORM */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem
+    }
+
+    .fg {
+      margin-bottom: 1rem
+    }
+
+    label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: .35rem
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      padding: .6rem .85rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px var(--cyan-dim)
+    }
+
+    select option {
+      background: var(--bg3)
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-size: .82rem
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: .65rem 1.3rem;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      letter-spacing: .02em
+    }
+
+    .btn-c {
+      background: linear-gradient(135deg, var(--cyan), #00b8cc);
+      color: #000
+    }
+
+    .btn-c:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow)
+    }
+
+    /* AI Loading Modal */
+    .ai-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 10, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(12px);
+    }
+
+    .ai-modal-content {
+      text-align: center;
+      max-width: 550px;
+      width: 90%;
+      animation: fadeInScale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .ai-loader-container {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      margin: 0 auto 2.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 40px var(--cyan), 0 0 80px rgba(180, 0, 255, 0.2);
+      border: 3px solid rgba(0, 229, 255, 0.1);
+      background: rgba(5, 5, 10, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #aiParticleCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .ai-loading-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.2rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .ai-loading-msg {
+      font-size: 1rem;
+      color: var(--text);
+      min-height: 4.5em;
+      opacity: 0.85;
+      line-height: 1.6;
+      font-weight: 300;
+      transition: opacity 0.5s ease;
+    }
+
+    .ai-progress-bg {
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 2rem;
+    }
+
+    .ai-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      box-shadow: 0 0 15px var(--cyan);
+      transition: width 0.5s ease;
+    }
+
+    .btn-v {
+      background: linear-gradient(135deg, var(--violet), #7700cc);
+      color: #fff
+    }
+
+    .btn-v:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-v)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: .8rem;
+      padding: .45rem .9rem
+    }
+
+    .btn-ghost:hover {
+      color: var(--pink);
+      border-color: var(--pink)
+    }
+
+    .btn-danger {
+      background: rgba(255, 50, 80, .15);
+      color: #ff3250;
+      border: 1px solid rgba(255, 50, 80, .3);
+      font-size: .78rem;
+      padding: .35rem .75rem;
+      border-radius: 6px
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 50, 80, .3)
+    }
+
+    .btn-edit {
+      background: rgba(0, 229, 255, .1);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, .25);
+      font-size: .78rem;
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .btn-edit:hover {
+      background: rgba(0, 229, 255, .25);
+      box-shadow: 0 0 10px rgba(0, 229, 255, .3)
+    }
+
+    .btn-progress {
+      background: rgba(0, 229, 255, 0.15) !important;
+      border-color: rgba(0, 229, 255, 0.4) !important;
+      color: var(--cyan) !important;
+    }
+
+    .btn-progress:hover {
+      background: var(--cyan) !important;
+      color: #000 !important;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+    }
+
+    .btn-sm {
+      font-size: .78rem;
+      padding: .4rem .85rem
+    }
+
+    .w100 {
+      width: 100%
+    }
+
+    /* MODAL EDIT */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .75);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .modal {
+      background: var(--bg3);
+      border: 1px solid rgba(0, 229, 255, .3);
+      border-radius: 16px;
+      padding: 2rem;
+      width: min(540px, 95vw);
+      box-shadow: 0 0 40px rgba(0, 229, 255, .15), 0 20px 60px rgba(0, 0, 0, .6);
+      transform: translateY(24px);
+      transition: transform .25s
+    }
+
+    .modal-lg {
+      width: min(1280px, 95vw);
+    }
+
+    .modal-backdrop.open .modal {
+      transform: translateY(0)
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem
+    }
+
+    .modal-title {
+      font-family: 'Orbitron', monospace;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .08em;
+      text-shadow: var(--glow)
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+      transition: color .2s
+    }
+
+    .modal-close:hover {
+      color: var(--pink)
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem
+    }
+
+    th {
+      text-align: left;
+      padding: .6rem .8rem;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border)
+    }
+
+    td {
+      padding: .7rem .8rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      vertical-align: middle
+    }
+
+    tr:hover td {
+      background: rgba(0, 229, 255, .03)
+    }
+
+    /* Specifica per tabella Catalogo */
+    #catalogTable {
+      table-layout: fixed;
+    }
+    #catalogTable th:nth-child(1), #catalogTable td:nth-child(1) { width: 45px; text-align: center; }
+    #catalogTable th:nth-child(2), #catalogTable td:nth-child(2) { width: auto; font-weight: 600; color: var(--text); }
+    #catalogTable th:nth-child(3), #catalogTable td:nth-child(3) { width: 60px; text-align: center; }
+    #catalogTable th:nth-child(4), #catalogTable td:nth-child(4) { width: 80px; text-align: center; }
+    #catalogTable th:nth-child(5), #catalogTable td:nth-child(5) { width: 80px; text-align: center; }
+    #catalogTable th:nth-child(6), #catalogTable td:nth-child(6) { width: 180px; font-size: 0.78rem; color: var(--muted); }
+    #catalogTable th:nth-child(7), #catalogTable td:nth-child(7) { width: 60px; text-align: center; }
+    #catalogTable th:nth-child(8), #catalogTable td:nth-child(8) { width: 50px; text-align: center; }
+    
+    #catalogTable td {
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+
+    /* ACCORDION CATALOGO */
+    .catalog-row-main {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .catalog-row-main:hover {
+      background: rgba(0, 229, 255, 0.05) !important;
+    }
+    .catalog-row-details {
+      display: none;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .catalog-row-details.active {
+      display: table-row;
+    }
+    .details-container {
+      padding: 1.2rem 2.5rem;
+      display: grid;
+      grid-template-columns: 220px 1fr 220px;
+      gap: 2rem;
+      border-left: 3px solid var(--cyan);
+      align-items: start;
+      max-width: 1400px;
+    }
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .detail-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .detail-value {
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .chevron-icon {
+      transition: transform 0.3s ease;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+    .catalog-row-main.active .chevron-icon {
+      transform: rotate(90deg);
+      color: var(--cyan);
+    }
+
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    /* ANIMAZIONE PULSAZIONE TASTO SALVA (ROSSO/DANGER) */
+    @keyframes pulse-red-glow {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 170, 0.7); transform: scale(1); }
+      70% { box-shadow: 0 0 0 20px rgba(255, 0, 170, 0); transform: scale(1.08); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 170, 0); transform: scale(1); }
+    }
+    .btn-pulse-danger {
+      animation: pulse-red-glow 1.2s infinite !important;
+      background: var(--pink) !important;
+      border-color: var(--pink) !important;
+      color: white !important;
+      font-weight: 800 !important;
+      z-index: 100;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      font-size: .68rem;
+      font-weight: 600;
+      letter-spacing: .04em
+    }
+
+    .badge-c {
+      background: var(--cyan-dim);
+      color: var(--cyan)
+    }
+
+    .badge-v {
+      background: var(--violet-dim);
+      color: var(--violet)
+    }
+
+    /* ALERT */
+    .alert {
+      margin-top: .75rem;
+      padding: .65rem .9rem;
+      border-radius: 8px;
+      font-size: .82rem;
+      display: none;
+      gap: .4rem;
+      align-items: flex-start
+    }
+
+    .alert.show {
+      display: flex
+    }
+
+    .alert-ok {
+      background: rgba(0, 229, 255, .1);
+      border: 1px solid rgba(0, 229, 255, .3);
+      color: var(--cyan)
+    }
+
+    .alert-err {
+      background: rgba(255, 50, 80, .1);
+      border: 1px solid rgba(255, 50, 80, .3);
+      color: #ff3250
+    }
+
+    /* CATALOG FILTER PILLS */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-bottom: .85rem
+    }
+
+    .pill {
+      padding: .28rem .8rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .04em;
+      transition: all .2s
+    }
+
+    .pill:hover {
+      color: var(--cyan);
+      border-color: var(--cyan)
+    }
+
+    .pill.active {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 8px rgba(0, 229, 255, .25)
+    }
+
+    /* GROUP HEADER ROW in catalog table */
+    .tr-group-hdr td {
+      background: rgba(0, 229, 255, .05);
+      color: var(--cyan);
+      font-family: 'Orbitron', monospace;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      padding: .45rem .8rem;
+      border-bottom: 1px solid rgba(0, 229, 255, .2);
+      border-top: 1px solid rgba(0, 229, 255, .1)
+    }
+
+    /* CATALOG LAYOUT - 3 colonne stile Mail Client */
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: 280px 180px 1fr;
+      gap: 1.25rem;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch
+    }
+
+    .filter-sidebar {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .filter-bar-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+
+    .filter-bar-vertical .pill {
+      width: 100%;
+      text-align: left;
+      justify-content: flex-start;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .filter-bar-vertical .pill:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .catalog-right-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      transition: border-color .2s;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0 /* Fix Grid Blowout */
+    }
+
+    .catalog-right-card:hover {
+      border-color: rgba(0, 229, 255, .3)
+    }
+
+    .catalog-table-wrap {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      /* Nascondi barre di scorrimento */
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    .catalog-table-wrap::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* BUILDER */
+    .day-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.25rem;
+      margin-bottom: 1rem
+    }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1rem
+    }
+
+    .day-title {
+      font-family: 'Orbitron', monospace;
+      font-size: .8rem;
+      color: var(--violet);
+      font-weight: 700;
+      flex: 1
+    }
+
+    /* 2-row exercise layout: top row = gruppo + esercizio, bottom row = params */
+    .ex-block {
+      border: 1px solid rgba(0, 229, 255, .08);
+      border-radius: 8px;
+      padding: .75rem;
+      margin-bottom: .6rem;
+      background: rgba(0, 0, 0, .2)
+    }
+
+    .ex-selects {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      gap: .5rem;
+      align-items: end;
+      margin-bottom: .5rem
+    }
+
+    .ex-params {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: .5rem;
+      align-items: end
+    }
+
+    .ex-block select,
+    .ex-block input {
+      font-size: .8rem;
+      padding: .42rem .6rem
+    }
+
+    /* YouTube badge */
+    .yt-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      background: rgba(255, 0, 0, .15);
+      border: 1px solid rgba(255, 0, 0, .35);
+      color: #ff4444;
+      border-radius: 6px;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .2rem .55rem;
+      text-decoration: none;
+      letter-spacing: .03em;
+      transition: all .2s;
+      white-space: nowrap
+    }
+
+    .yt-badge:hover {
+      background: rgba(255, 0, 0, .3);
+      box-shadow: 0 0 10px rgba(255, 0, 0, .3)
+    }
+
+    /* CSV buttons */
+    .btn-csv {
+      background: rgba(0, 229, 255, .08);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, .3);
+      font-size: .78rem;
+      padding: .42rem .85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem
+    }
+
+    .btn-csv:hover {
+      background: rgba(0, 229, 255, .2);
+      box-shadow: 0 0 10px rgba(0, 229, 255, .2)
+    }
+
+    .btn-csv-imp {
+      background: rgba(180, 0, 255, .08);
+      color: var(--violet);
+      border: 1px solid rgba(180, 0, 255, .3);
+    }
+
+    .btn-csv-imp:hover {
+      background: rgba(180, 0, 255, .2);
+      box-shadow: 0 0 10px rgba(180, 0, 255, .2)
+    }
+
+    /* ─── AI TOOLS COLLAPSE ─── */
+    .ai-tools-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, opacity 0.3s, margin 0.3s;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+
+    .ai-tools-wrapper.open {
+      max-height: 500px;
+      opacity: 1;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-ai-toggle {
+      background: rgba(0, 229, 255, 0.05);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      font-size: 0.78rem;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    .btn-ai-toggle:hover {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+
+    .btn-primary-cta {
+      background: linear-gradient(135deg, var(--cyan), #00b8cc) !important;
+      color: #000 !important;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+      font-weight: 800 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── BUILDER TABS LAYOUT ─── */
+    .builder-container {
+      display: flex;
+      gap: 1.5rem;
+      min-height: 550px;
+      margin-top: 1rem;
+    }
+
+    .builder-sidebar {
+      flex: 0 0 240px;
+      background: rgba(255, 255, 255, 0.02);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      padding-right: 1.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .builder-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tab-item {
+      padding: 0.85rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .tab-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      transform: translateX(4px);
+    }
+
+    .tab-item.active {
+      background: rgba(0, 229, 255, 0.1);
+      border-color: rgba(0, 229, 255, 0.4);
+      color: var(--cyan);
+      box-shadow: 0 4px 15px rgba(0, 229, 255, 0.1);
+    }
+
+    .tab-item .tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .tab-item .tab-remove {
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: var(--pink);
+      font-size: 1.1rem;
+      margin-left: 0.5rem;
+    }
+
+    .tab-item:hover .tab-remove {
+      opacity: 1;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      font-weight: 800;
+    }
+
+    /* ─── ACCORDION EXERCISES ─── */
+    .ex-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.25rem 0;
+      user-select: none;
+    }
+
+    .ex-header:hover .ex-title-text {
+      color: var(--cyan);
+    }
+
+    .ex-title-text {
+      flex: 1;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: color 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ex-chevron {
+      font-size: 0.75rem;
+      color: var(--muted);
+      transition: transform 0.3s;
+      margin-right: 0.5rem;
+    }
+
+    .ex-block.expanded .ex-chevron {
+      transform: rotate(180deg);
+      color: var(--cyan);
+    }
+
+    .ex-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .ex-block.expanded .ex-body {
+      max-height: 500px;
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .ex-block {
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .ex-block.expanded {
+      border-color: rgba(0, 229, 255, 0.25);
+      background: rgba(0, 229, 255, 0.02);
+    }
+
+    /* LOGIN OVERLAY */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 15, .97);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(8px)
+    }
+
+    .login-overlay.hidden {
+      display: none
+    }
+
+    .login-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 0 60px rgba(0, 229, 255, .08)
+    }
+
+    .login-box .logo {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: .15em;
+      color: var(--cyan);
+      text-shadow: 0 0 20px rgba(0, 229, 255, .5);
+      margin-bottom: .3rem
+    }
+
+    .login-box p {
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: 1.5rem
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem
+    }
+
+    .login-tab {
+      flex: 1;
+      padding: .5rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 600;
+      transition: all .2s
+    }
+
+    .login-tab.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0, 229, 255, .08)
+    }
+
+    /* logout btn */
+    .btn-logout {
+      background: rgba(255, 60, 60, .1);
+      border: 1px solid rgba(255, 60, 60, .3);
+      color: #ff6b6b;
+      padding: .35rem .85rem;
+      border-radius: 8px;
+      font-size: .75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .04em
+    }
+
+    .btn-logout:hover {
+      background: rgba(255, 60, 60, .25);
+      box-shadow: 0 0 10px rgba(255, 60, 60, .2)
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .75rem;
+      color: var(--muted)
+    }
+
+    .user-chip span {
+      color: var(--cyan);
+      font-weight: 600
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem;
+      color: var(--muted);
+      font-size: .72rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 1
+    }
+
+    footer span {
+      color: var(--cyan)
+    }
+
+    /* Touch Targets & Base Settings */
+    input,
+    select,
+    textarea,
+    .btn,
+    .nav-btn,
+    .pill {
+      min-height: 44px;
+      /* Aumenta l'area di tocco per mobile */
+    }
+
+    /* Hamburger Menu Toggle */
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--cyan);
+      font-size: 1.8rem;
+      cursor: pointer;
+      padding: 0 0.5rem;
+    }
+
+    @media(max-width:768px) {
+
+      /* Header & Nav Drawer */
+      header {
+        flex-wrap: wrap;
+        padding: 1rem;
+        gap: 0.5rem;
+      }
+
+      .tagline {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .user-chip {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      nav {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        padding: 1rem;
+        gap: 0.8rem;
+      }
+
+      nav.open {
+        display: flex;
+      }
+
+      /* Layout: From Grid to 1 Column */
+      .catalog-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .ex-row {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+
+      /* Builder: Force params to be vertical or 2-col */
+      .ex-selects {
+        grid-template-columns: 1fr;
+      }
+
+      .ex-params {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* Modals */
+      .modal {
+        padding: 1.5rem 1rem;
+        width: 100%;
+        margin: 1rem;
+      }
+
+      /* Tables: Force horizontal scroll, no column squish */
+      th,
+      td {
+        white-space: nowrap;
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      /* Avoid text overflow breaking containers */
+      .card-sub,
+      td {
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AI Loading Modal -->
+  <div id="aiLoadingModal" class="ai-modal-overlay">
+    <div class="ai-modal-content">
+      <div class="ai-loader-container">
+        <canvas id="aiParticleCanvas" width="250" height="250"></canvas>
+      </div>
+      <div class="ai-loading-title">Neural Engine Active</div>
+      <div id="aiLoadingMsg" class="ai-loading-msg">Inizializzazione modelli biometrici...</div>
+      <div class="ai-progress-bg">
+        <div id="aiProgressBar" class="ai-progress-bar"></div>
+      </div>
+      <div
+        style="font-size: 0.65rem; color: var(--muted); margin-top: 1rem; text-transform: uppercase; letter-spacing: 2px">
+        Gemini Pro • Multi-modal Analysis
+      </div>
+    </div>
+  </div>
+  <header>
+    <div>
+      <div class="logo">FITNESS<span>.</span>MANAGER</div>
+      <div style="font-size:.65rem;color:var(--muted);letter-spacing:.12em;margin-top:.1rem">PERSONAL TRAINER DASHBOARD
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;flex:1;justify-content:flex-end;">
+      <div class="tagline" id="clock"></div>
+      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    </div>
+    <div class="user-chip" id="userChip" style="display:none;width:100%;">
+      <span id="loggedEmail" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap;"></span>
+      <button class="btn btn-ghost" style="padding:.35rem .6rem;font-size:1rem" onclick="openServerSetupModal()"
+        title="Configura Server">🌐</button>
+      <button class="btn btn-ghost" style="padding:.35rem .6rem;font-size:1rem" onclick="openSettingsModal()"
+        title="Impostazioni">⚙️</button>
+      <button class="btn-logout" onclick="logout()">&#x23CF; Logout</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════ SERVER SETUP MODAL ══════════════════════ -->
+  <div class="login-overlay hidden" id="serverSetupOverlay">
+    <div class="login-box">
+      <div class="logo">SETUP<span>.</span>SERVER</div>
+      <p>Inserisci l'indirizzo del server remoto per connettere la dashboard.</p>
+      <div class="fg">
+        <label for="serverUrlInput">URL Server Backend</label>
+        <input type="url" id="serverUrlInput" placeholder="https://fitconsole.ghome.it"
+          value="https://fitconsole.ghome.it" />
+      </div>
+      <button class="btn btn-c w100" onclick="saveServerUrl()">⚡ Connetti</button>
+      <div class="alert" id="alertServerSetup"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ SETUP OVERLAY (PRIMO AVVIO) ══════════════════════ -->
+  <div class="login-overlay hidden" id="setupOverlay">
+    <div class="login-box">
+      <div class="logo">Fitness Console<span></div>
+      <p>Benvenuto! Configura il tuo account Personal Trainer per iniziare.</p>
+      <form id="setupForm" onsubmit="doSetup(event)">
+        <div class="fg">
+          <label for="setupPTName">Nome Personal Trainer</label>
+          <input type="text" id="setupPTName" placeholder="Es. Mario Rossi" required />
+        </div>
+        <div class="fg">
+          <label for="setupUsername">Email/Nome Utente Accesso</label>
+          <input type="email" id="setupUsername" placeholder="mario@gym.it" required />
+        </div>
+        <div class="fg">
+          <label for="setupPassword">Password</label>
+          <input type="password" id="setupPassword" placeholder="••••••" required />
+        </div>
+        <div class="fg">
+          <label for="setupConfirmPassword">Conferma Password</label>
+          <input type="password" id="setupConfirmPassword" placeholder="••••••" required />
+        </div>
+        <button type="submit" id="btnSetup" class="btn btn-c w100" style="margin-top:.5rem">⚡ Registrati</button>
+      </form>
+      <div class="alert" id="alertSetup" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ LOGIN OVERLAY ══════════════════════ -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.3rem">
+        <div class="logo">Fitness<span style="color:var(--violet)">.</span>CONSOLE</div>
+        <button class="btn btn-ghost" style="padding:.35rem .6rem; font-size:1rem; border:none"
+          onclick="openServerSetupModal()" title="Configura Server">🌐</button>
+      </div>
+      <p>Backoffice Amministratore — Accedi per gestire il sistema</p>
+      <!-- LOGIN FORM -->
+      <form id="loginForm" onsubmit="doLogin(event)">
+        <div class="fg">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="pt@studio.com" required />
+        </div>
+        <div class="fg">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••" required />
+        </div>
+        <button type="submit" class="btn btn-c w100" style="margin-top:.5rem">⚡ Accedi</button>
+      </form>
+      <div class="alert" id="alertLogin" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+
+  <nav id="mainNav">
+    <button class="nav-btn active" onclick="showSection('clienti',this)" id="nav-clienti">👥 CLIENTI</button>
+    <button class="nav-btn" onclick="showSection('catalogo',this)" id="nav-catalogo">📚 CATALOGO</button>
+    <button class="nav-btn" onclick="showSection('builder',this)" id="nav-builder">🏗️ BUILDER SCHEDA</button>
+    <button class="nav-btn" onclick="showSection('settings',this)" id="nav-settings">⚙️ IMPOSTAZIONI</button>
+  </nav>
+
+  <main>
+
+    <!-- ═══════════════════════════════ SEZIONE IMPOSTAZIONI ═══════════════════════ -->
+    <section class="section" id="sec-settings">
+      <div style="display:grid;grid-template-columns:1fr;gap:1.25rem;max-width:600px;margin:0 auto;width:100%;">
+
+        <!-- Configurazione Intelligenza Artificiale -->
+        <div class="card">
+          <div class="card-title">🤖 Configurazione Intelligenza Artificiale</div>
+          <p class="card-sub">Seleziona il modello da utilizzare e opzionalmente inserisci un'API Key sostitutiva.</p>
+          <form id="formAiSettings" onsubmit="saveSettings(event)">
+            <div class="fg">
+              <label for="aiModelSelect">Modello AI Attivo</label>
+              <select id="aiModelSelect" required>
+                <option value="">Caricamento modelli in corso...</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label for="aiKeyOverride">Override API Key Google (Opzionale)</label>
+              <input type="password" id="aiKeyOverride" placeholder="Lascia vuoto per usare la chiave di sistema..." />
+            </div>
+            <button type="submit" class="btn btn-v w100">💾 Salva Impostazioni AI</button>
+          </form>
+          <div class="alert" id="alertSettings" style="margin-top:.75rem"></div>
+        </div>
+
+        <!-- Backup Sistema -->
+        <div class="card">
+          <div class="card-title">💾 Backup di Sistema</div>
+          <p class="card-sub">Scarica uno snapshot completo del database (utenti, schede, catalogo) in formato SQLite
+            per un restore di emergenza.</p>
+          <button class="btn btn-ghost w100" onclick="downloadBackup()">📥 Scarica Snapshot Completo</button>
+        </div>
+
+        <!-- Ripristino Sistema -->
+        <div class="card">
+          <div class="card-title">🔄 Ripristino Sistema</div>
+          <p class="card-sub">Carica un file .db per ripristinare uno snapshot precedente. <br>
+            <span style="color:var(--pink)">ATTENZIONE: Questa operazione sovrascrive tutti i dati attuali!</span>
+          </p>
+          <div style="display:flex; gap:0.5rem">
+            <input type="file" id="restoreFile" accept=".db" style="display:none" onchange="doRestore(this)" />
+            <button class="btn btn-danger w100" onclick="document.getElementById('restoreFile').click()">📤 Carica e
+              Ripristina Database</button>
+          </div>
+          <div class="alert" id="alertRestore" style="margin-top:.75rem"></div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════ SEZIONE CLIENTI ═══════════════════════ -->
+    <section class="section active" id="sec-clienti">
+      <div style="display:grid;grid-template-columns:1fr 2.5fr;gap:1.25rem">
+
+        <!-- Form registrazione -->
+        <div class="card">
+          <div class="card-title">➕ Nuovo Cliente</div>
+          <p class="card-sub">Registra un nuovo cliente nel sistema.</p>
+          <form id="formRegister" onsubmit="registerUser(event)">
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regNome">Nome</label>
+                <input type="text" id="regNome" placeholder="Es. Mario" required />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regCognome">Cognome</label>
+                <input type="text" id="regCognome" placeholder="Es. Rossi" required />
+              </div>
+            </div>
+            <div class="fg">
+              <label for="regEmail">Email</label>
+              <input type="email" id="regEmail" placeholder="mario@rossi.it" required />
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regEta">Età</label>
+                <input type="number" id="regEta" placeholder="30" min="1" max="120" required />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regSesso">Sesso</label>
+                <select id="regSesso">
+                  <option value="">— Seleziona —</option>
+                  <option value="Maschio">Maschio</option>
+                  <option value="Femmina">Femmina</option>
+                  <option value="Altro">Altro</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regPeso">Peso (kg)</label>
+                <input type="number" id="regPeso" placeholder="Es. 75" step="0.1" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regAltezza">Altezza (cm)</label>
+                <input type="number" id="regAltezza" placeholder="Es. 180" step="0.1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regFianchi">Circ. Fianchi (cm) <i class="fas fa-info-circle"
+                    title="Misurare nel punto di massima sporgenza dei glutei, mantenendo il metro orizzontale."></i></label>
+                <input type="number" id="regFianchi" placeholder="Es. 95" step="0.1" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regBicipite">Circ. Bicipite (cm)</label>
+                <input type="number" id="regBicipite" placeholder="Es. 35" step="0.1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regPetto">Circ. Petto (cm)</label>
+                <input type="number" id="regPetto" placeholder="Es. 100" step="0.1" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regVita">Circ. Vita (cm) <i class="fas fa-info-circle"
+                    title="Misurare nel punto più stretto del busto, poco sopra l'ombelico."></i></label>
+                <input type="number" id="regVita" placeholder="Es. 85" step="0.1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regCoscia">Circ. Coscia (cm)</label>
+                <input type="number" id="regCoscia" placeholder="Es. 55" step="0.1" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regPolso">Circ. Polso (cm) <i class="fas fa-info-circle"
+                    title="Misurare nel punto più stretto tra mano e avambraccio."></i></label>
+                <input type="number" id="regPolso" placeholder="Es. 17" step="0.1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="regPolpaccio">Circ. Polpaccio (cm) <i class="fas fa-info-circle"
+                    title="Misurare nel punto di massima circonferenza del polpaccio, con il muscolo rilassato."></i></label>
+                <input type="number" id="regPolpaccio" placeholder="Es. 38" step="0.1" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="regCollo">Circ. Collo (cm) <i class="fas fa-info-circle"
+                    title="Misurare sotto il pomo di Adamo, orizzontale."></i></label>
+                <input type="number" id="regCollo" placeholder="Es. 38" step="0.1" />
+              </div>
+            </div>
+            <div class="fg">
+              <label for="regPassword">Password Temporanea</label>
+              <input type="text" id="regPassword" placeholder="Password iniziale" required />
+            </div>
+            <button type="submit" class="btn btn-c w100">⚡ Registra Cliente</button>
+          </form>
+          <div class="alert" id="alertRegister"></div>
+        </div>
+
+        <!-- Lista clienti -->
+        <div class="card">
+          <div class="card-title">⚡ Clienti Registrati</div>
+          <p class="card-sub">Lista di tutti gli utenti nel sistema.</p>
+          <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-c btn-sm" onclick="loadUsers()">↻ Aggiorna</button>
+            <button class="btn-csv" onclick="exportCSV()">⬇️ Esporta CSV</button>
+            <button class="btn-csv btn-csv-imp" onclick="document.getElementById('importFileInput').click()">⬆️ Importa
+              CSV</button>
+            <input type="file" id="importFileInput" accept=".csv" style="display:none" onchange="importCSV(this)" />
+          </div>
+          <div style="overflow-x:auto">
+            <table id="usersTable">
+              <thead>
+                <tr>
+                  <th>NOME</th>
+                  <th>CONTATTO</th>
+                  <th>BIOMETRIA</th>
+                  <th style="text-align:right; padding-right:1.5rem">AZIONI</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody">
+                <tr>
+                  <td colspan="7" style="color:var(--muted);text-align:center;padding:2rem">Caricamento…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert" id="alertClienti"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ SEZIONE CATALOGO ══════════════════════════ -->
+    <section class="section" id="sec-catalogo">
+      <div class="catalog-grid">
+        <!-- Colonna 1: Form di inserimento -->
+        <div class="card" style="margin:0; display:flex; flex-direction:column">
+          <div class="card-title">➕ Nuovo Esercizio</div>
+          <p class="card-sub">Aggiungi un esercizio al catalogo globale.</p>
+          <form id="formCatalog">
+            <div class="fg">
+              <label for="exNome">Nome Esercizio</label>
+              <input type="text" id="exNome" placeholder="Es. Panca Piana" required />
+            </div>
+            <div class="fg">
+              <label for="exGruppo">Gruppo Muscolare</label>
+              <select id="exGruppo" required>
+                <option value="">— Seleziona —</option>
+                <option value="Petto">Petto</option>
+                <option value="Schiena">Schiena</option>
+                <option value="Gambe">Gambe</option>
+                <option value="Glutei">Glutei</option>
+                <option value="Spalle">Spalle</option>
+                <option value="Braccia">Braccia</option>
+                <option value="Altro">Altro</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="exSerie">Serie</label>
+                <input type="number" id="exSerie" placeholder="Es. 4" min="1" max="20" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="exRipetizioni">Ripetizioni</label>
+                <input type="text" id="exRipetizioni" placeholder="Es. 10 o 8-12" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg" style="margin:0">
+                <label for="exRecupero">Recupero (sec)</label>
+                <input type="number" id="exRecupero" placeholder="Es. 90" min="0" />
+              </div>
+              <div class="fg" style="margin:0">
+                <label for="exNote">Note</label>
+                <input type="text" id="exNote" placeholder="Es. Presa larga" />
+              </div>
+            </div>
+            <div class="fg">
+              <label for="exVideoUrl">🎥 URL Video YouTube (opzionale)</label>
+              <input type="url" id="exVideoUrl" placeholder="https://youtu.be/..." />
+            </div>
+            <button type="submit" class="btn btn-c w100">⚡ Aggiungi al Catalogo</button>
+          </form>
+          <div class="alert" id="alertCatalogForm"></div>
+        </div>
+
+        <!-- Colonna 2: Navigazione / Filtri Verticali -->
+        <div class="filter-sidebar">
+          <div class="card-title">📂 Filtra per</div>
+          <p class="card-sub">Seleziona una categoria</p>
+          <div class="filter-bar-vertical" id="catalogFilterBar">
+            <button class="pill active" onclick="filterCatalog('',this)">📁 Tutti gli Esercizi</button>
+            <button class="pill" onclick="filterCatalog('Petto',this)">💪 Petto</button>
+            <button class="pill" onclick="filterCatalog('Schiena',this)">🔙 Schiena</button>
+            <button class="pill" onclick="filterCatalog('Gambe',this)">🦵 Gambe</button>
+            <button class="pill" onclick="filterCatalog('Spalle',this)">🏋️ Spalle</button>
+            <button class="pill" onclick="filterCatalog('Braccia',this)">💪 Braccia</button>
+            <button class="pill" onclick="filterCatalog('Glutei',this)">🍑 Glutei</button>
+            <button class="pill" onclick="filterCatalog('Core',this)">⚡ Core</button>
+            <button class="pill" onclick="filterCatalog('Altro',this)">➕ Altro</button>
+          </div>
+        </div>
+
+        <!-- Colonna 3: Lista Dati -->
+        <div class="catalog-right-card" style="margin:0; height:100%; display:flex; flex-direction:column">
+          <div class="card-title">📚 Catalogo Esercizi</div>
+          <p class="card-sub">Revisiona e gestisci gli esercizi esistenti.</p>
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.8rem">
+            <button class="btn btn-ghost btn-sm" onclick="loadCatalog()">↻ Aggiorna Tabella</button>
+          </div>
+          <div class="catalog-table-wrap">
+            <table id="catalogTable">
+              <thead>
+                <tr>
+                  <th style="width: 50px; text-align: center">#</th>
+                  <th>ESERCIZIO</th>
+                  <th style="width: 100px; text-align: right; padding-right: 2rem">DETTAGLI</th>
+                </tr>
+              </thead>
+              <tbody id="catalogTbody">
+                <tr>
+                  <td colspan="8" style="color:var(--muted);text-align:center;padding:2rem">Caricamento…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert" id="alertCatalog"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════ SEZIONE BUILDER ══════════════════════════ -->
+    <section class="section" id="sec-builder">
+      <div class="card">
+        <div class="card-title">🏗️ Builder Scheda Allenamento</div>
+        <p class="card-sub">Seleziona un cliente, crea i giorni e aggiungi esercizi dal catalogo.</p>
+
+        <div style="display:grid;grid-template-columns:1.5fr auto auto;gap:1rem;margin-bottom:1.25rem">
+          <div class="fg" style="margin:0">
+            <label for="builderUserId">Cliente</label>
+            <select id="builderUserId">
+              <option value="">— Seleziona cliente —</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:.5rem">
+            <button class="btn-ai-toggle" onclick="toggleAiTools()">✨ Strumenti IA</button>
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:flex-end">
+            <button id="btnSaveWorkout" class="btn btn-primary-cta" onclick="saveScheda()" style="width:180px; height:44px">💾 Salva Scheda</button>
+          </div>
+        </div>
+
+        <!-- AI Generation Assistant -->
+        <div id="aiToolsWrapper" class="ai-tools-wrapper">
+          <div
+            style="background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.2); border-radius:12px; padding:1.25rem">
+            <div
+              style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1rem; color:var(--cyan); font-weight:600; font-size:0.9rem">
+              <span>✨ GENERAZIONE INTELLIGENTE (GEMINI AI)</span>
+            </div>
+            <div style="display:grid; grid-template-columns:0.6fr 0.6fr 1.2fr 2fr auto; gap:1rem; align-items:flex-end">
+              <div class="fg" style="margin:0">
+                <label style="font-size:0.75rem; color:var(--muted)">GIORNI</label>
+                <input type="number" id="aiTrainingDays" class="form-input" value="3" min="1" max="7">
+              </div>
+              <div class="fg" style="margin:0">
+                <label style="font-size:0.75rem; color:var(--muted)">DURATA (MIN)</label>
+                <input type="number" id="aiTrainingTime" class="form-input" value="60" min="20" max="120">
+              </div>
+              <div class="fg" style="margin:0">
+                <label style="font-size:0.75rem; color:var(--muted)">LIVELLO</label>
+                <select id="aiExperienceLevel" class="form-input">
+                  <option value="Principiante">Principiante (Focus tecnica)</option>
+                  <option value="Intermedio">Intermedio (Focus ipertrofia)</option>
+                  <option value="Avanzato">Avanzato (Focus intensità)</option>
+                </select>
+              </div>
+              <div class="fg" style="margin:0">
+                <label style="font-size:0.75rem; color:var(--muted)">NOTE EXTRA (OBBIETTIVI, LIMITAZIONI)</label>
+                <input type="text" id="aiPtNotes" class="form-input"
+                  placeholder="Es: Focus spalle, evita squat causa infortunio...">
+              </div>
+              <button id="btnAiGen" class="btn btn-c" onclick="generateAIPlan()">⚡ GENERA BOZZA</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="builder-container">
+          <aside class="builder-sidebar">
+            <div class="sidebar-title">GIORNI</div>
+            <div id="tabsContainer"></div>
+            <button class="btn btn-v btn-sm" style="margin-top:1rem; width:100%" onclick="addDay()">+ Aggiungi Giorno</button>
+          </aside>
+          
+          <main class="builder-main">
+            <div id="activeDayContent">
+              <div style="color:var(--muted); text-align:center; padding:4rem; border:2px dashed rgba(255,255,255,0.05); border-radius:12px">
+                <div style="font-size:2.5rem; margin-bottom:1rem; opacity:0.3">🏗️</div>
+                Seleziona un giorno a sinistra o clicca "+ Giorno" per iniziare.
+              </div>
+            </div>
+          </main>
+        </div>
+
+        <div id="hiddenDaysStorage" style="display:none"></div>
+        <div class="alert" id="alertBuilder"></div>
+        <div class="alert" id="alertBuilder"></div>
+      </div>
+    </section>
+
+  </main>
+  <!-- ═══════════════════ MODAL MODIFICA ESERCIZIO ═══════════════════ -->
+  <div class="modal-backdrop" id="editModal" onclick="closeEditModalOnBackdrop(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">✏️ MODIFICA ESERCIZIO</div>
+        <button class="modal-close" onclick="closeEditModal()" aria-label="Chiudi">&times;</button>
+      </div>
+      <input type="hidden" id="editExId" />
+      <div class="fg">
+        <label for="editNome">Nome Esercizio</label>
+        <input type="text" id="editNome" placeholder="Es. Panca Piana" required />
+      </div>
+      <div class="fg">
+        <label for="editGruppo">Gruppo Muscolare</label>
+        <select id="editGruppo" required>
+          <option value="Petto">Petto</option>
+          <option value="Schiena">Schiena</option>
+          <option value="Gambe">Gambe</option>
+          <option value="Spalle">Spalle</option>
+          <option value="Braccia">Braccia</option>
+          <option value="Glutei">Glutei</option>
+          <option value="Core">Core</option>
+          <option value="Altro">Altro</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="fg" style="margin:0">
+          <label for="editSerie">Serie</label>
+          <input type="number" id="editSerie" min="1" max="20" />
+        </div>
+        <div class="fg" style="margin:0">
+          <label for="editRipetizioni">Ripetizioni</label>
+          <input type="text" id="editRipetizioni" placeholder="Es. 10 o 8-12" />
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:.75rem">
+        <div class="fg" style="margin:0">
+          <label for="editRecupero">Recupero (sec)</label>
+          <input type="number" id="editRecupero" min="0" />
+        </div>
+        <div class="fg" style="margin:0">
+          <label for="editNote">Note</label>
+          <input type="text" id="editNote" placeholder="Es. Presa larga" />
+        </div>
+      </div>
+      <div class="fg" style="margin-top:.75rem">
+        <label for="editVideoUrl">🎥 URL Video YouTube (opzionale)</label>
+        <input type="url" id="editVideoUrl" placeholder="https://youtu.be/..." />
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+        <button class="btn btn-c" style="flex:1" onclick="saveEditExercise()">💾 Salva Modifiche</button>
+        <button class="btn btn-ghost" onclick="closeEditModal()">Annulla</button>
+      </div>
+      <div class="alert" id="alertEditModal" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MODAL IMPOSTAZIONI ══════════════════════ -->
+  <div class="modal-backdrop" id="settingsModal" onclick="closeSettingsModalOnBackdrop(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Impostazioni Account</div>
+        <button class="btn btn-ghost" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <p class="card-sub">Cambia la password del tuo account amministratore.</p>
+
+      <div class="fg">
+        <label for="oldPwd">Vecchia Password</label>
+        <input type="password" id="oldPwd" placeholder="••••••••" required />
+      </div>
+      <div class="fg">
+        <label for="newPwd">Nuova Password</label>
+        <input type="password" id="newPwd" placeholder="Minimo 6 caratteri" required />
+      </div>
+      <div class="fg">
+        <label for="confirmPwd">Conferma Nuova Password</label>
+        <input type="password" id="confirmPwd" placeholder="••••••••" required />
+      </div>
+
+      <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+        <button class="btn btn-c" style="flex:1" onclick="changePassword()">⚡ Aggiorna Password</button>
+        <button class="btn btn-ghost" onclick="closeSettingsModal()">Annulla</button>
+      </div>
+      <div class="alert" id="alertSettingsModal" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="progressModal" onclick="closeProgressModalOnBackdrop(event)">
+    <div class="modal modal-lg" style="max-height: 95vh; overflow-y: auto;">
+      <div class="modal-header">
+        <div class="modal-title" id="progressTitle">📈 Analisi Progressi</div>
+        <button class="btn btn-ghost" onclick="closeProgressModal()">✕</button>
+      </div>
+
+      <!-- Top Section: Chart (70%) and Summary Cards (30%) -->
+      <div style="display:grid; grid-template-columns: 2.3fr 1fr; gap: 1.5rem">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem">
+            <div class="card-title" style="margin:0">Andamento Biometrico</div>
+            <div style="width: 200px">
+              <select id="chartMetricSelector" onchange="updateChartMetric()"
+                style="padding: 0.4rem 0.6rem; font-size: 0.8rem">
+                <option value="weight">Peso (kg)</option>
+                <option value="chest">Petto (cm)</option>
+                <option value="waist">Vita (cm)</option>
+                <option value="hips">Fianchi (cm)</option>
+                <option value="biceps">Bicipite (cm)</option>
+                <option value="thigh">Coscia (cm)</option>
+                <option value="calf">Polpaccio (cm)</option>
+                <option value="neck">Collo (cm)</option>
+                <option value="wrist">Polso (cm)</option>
+              </select>
+            </div>
+          </div>
+          <div
+            style="height: 400px; background: var(--bg2); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); position: relative">
+            <canvas id="progressChart"></canvas>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem">
+          <div>
+            <div class="card-title">Stato Atleta</div>
+            <div class="card" style="padding: 1rem; margin-bottom: 0; background: rgba(0,229,255,0.05)">
+              <div id="progressStatus" style="font-size: 0.85rem; line-height: 1.5"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title">Ultima Scheda</div>
+            <div class="card" style="padding: 1rem; margin-bottom: 0; background: rgba(180,0,255,0.05)">
+              <div id="lastPlanSummary" style="font-size: 0.78rem; color: var(--text)"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title">Indici Biometrici</div>
+            <div class="card" style="padding: 1rem; margin-bottom: 0; background: rgba(0,255,180,0.05)">
+              <div id="derivedMetrics" style="font-size: 0.85rem; line-height: 1.5"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem">
+        <div class="card-title">Storico Misurazioni</div>
+        <div class="catalog-table-wrap" style="max-height: 250px">
+          <table id="progressTable">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Peso (kg)</th>
+                <th>Petto</th>
+                <th>Vita</th>
+                <th>Fianchi</th>
+                <th>Bicipite</th>
+                <th>Coscia</th>
+                <th>Polpaccio</th>
+                <th>Collo</th>
+                <th>Polso</th>
+                <th style="width: 80px">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="progressTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MODAL MODIFICA MISURAZIONE ══════════════════════ -->
+  <div class="modal-backdrop" id="editMeasurementModal" onclick="closeEditMeasurementModalOnBackdrop(event)">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Modifica Misurazione</div>
+        <button class="btn btn-ghost" onclick="closeEditMeasurementModal()">✕</button>
+      </div>
+      <p class="card-sub">Aggiorna tutti i parametri della misurazione selezionata.</p>
+
+      <form id="formEditMeasurement" onsubmit="saveEditedMeasurement(event)">
+        <input type="hidden" id="editMeasId">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1rem">
+          <div class="fg">
+            <label>Peso (kg)</label>
+            <input type="number" id="editWeight" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Vita (cm)</label>
+            <input type="number" id="editWaist" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Fianchi (cm)</label>
+            <input type="number" id="editFianchi" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Petto (cm)</label>
+            <input type="number" id="editChest" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Bicipite (cm)</label>
+            <input type="number" id="editBiceps" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Coscia (cm)</label>
+            <input type="number" id="editThigh" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Polpaccio (cm)</label>
+            <input type="number" id="editPolpaccio" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Collo (cm)</label>
+            <input type="number" id="editCollo" step="0.1" placeholder="0.0">
+          </div>
+          <div class="fg">
+            <label>Polso (cm)</label>
+            <input type="number" id="editPolso" step="0.1" placeholder="0.0">
+          </div>
+        </div>
+        <div style="display:flex; gap:.75rem; margin-top:1.5rem">
+          <button type="submit" class="btn btn-c" style="flex:1">💾 Salva Modifiche</button>
+          <button type="button" class="btn btn-ghost" onclick="closeEditMeasurementModal()">Annulla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>FITNESS MANAGER API &mdash; PT DASHBOARD &mdash; <span>Version 1.0.0</span></footer>
+
+  <script>
+
+    let catalog = [];
+    let dayCount = 0;
+
+    /* ─────────────────────── CONFIGURAZIONE SERVER ─────────────────────── */
+    function getServerUrl() {
+      let url = localStorage.getItem('API_BASE_URL');
+      // Migrazione automatica dal vecchio dominio se presente in localStorage
+      if (url && url.includes('fitness.ghome.it')) {
+        url = url.replace('fitness.ghome.it', 'fitconsole.ghome.it');
+        localStorage.setItem('API_BASE_URL', url);
+      }
+      return url ? url.replace(/\/+$/, '') : 'https://fitconsole.ghome.it';
+    }
+
+    function openServerSetupModal() {
+      document.getElementById('serverUrlInput').value = localStorage.getItem('API_BASE_URL') || 'https://fitconsole.ghome.it';
+      document.getElementById('serverSetupOverlay').classList.remove('hidden');
+    }
+
+    function saveServerUrl() {
+      const url = document.getElementById('serverUrlInput').value.trim();
+      if (!url) { showAlert('alertServerSetup', 'Inserisci un URL valido.', false); return; }
+      localStorage.setItem('API_BASE_URL', url);
+      document.getElementById('serverSetupOverlay').classList.add('hidden');
+      showAlert('alertLogin', '✅ URL Server salvato. Effettua il login.', true);
+      checkAuth();
+    }
+
+    /* ─────────────────────── AUTH / JWT ─────────────────────── */
+
+    /** Helper: restituisce gli header con Bearer token (+ Content-Type se json=true) */
+    function getHeaders(json = false) {
+      const h = {};
+      const token = localStorage.getItem('jwt_token');
+      if (token) h['Authorization'] = 'Bearer ' + token;
+      if (json) h['Content-Type'] = 'application/json';
+      return h;
+    }
+
+    /** Se il server risponde 401, forza il re-login */
+    function handleUnauthorized() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('jwt_email');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('userChip').style.display = 'none';
+    }
+
+    /** Controlla se esiste un token in localStorage, aggiorna UI e carica i dati */
+    async function checkAuth() {
+      if (!localStorage.getItem('API_BASE_URL')) {
+        openServerSetupModal();
+        return;
+      }
+
+      // Verifica se il sistema è configurato
+      try {
+        const rSetup = await fetch(getServerUrl() + '/api/auth/setup-status');
+        const setupData = await rSetup.json();
+        if (setupData && setupData.is_configured === false) {
+          document.getElementById('setupOverlay').classList.remove('hidden');
+          document.getElementById('loginOverlay').classList.add('hidden');
+          return;
+        } else {
+          document.getElementById('setupOverlay').classList.add('hidden');
+        }
+      } catch (e) {
+        console.error("Errore verifica setup:", e);
+      }
+
+      const token = localStorage.getItem('jwt_token');
+      const email = localStorage.getItem('jwt_email');
+      if (token && email) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('userChip').style.display = 'flex';
+        document.getElementById('loggedEmail').textContent = email;
+        loadUsers();
+        loadCatalog();
+      } else {
+        document.getElementById('loginOverlay').classList.remove('hidden');
+      }
+    }
+
+
+    async function doSetup(e) {
+      if (e) e.preventDefault();
+      const btn = document.getElementById('btnSetup');
+      const originalText = btn.innerHTML;
+      
+      const pt_name = document.getElementById('setupPTName').value.trim();
+      const username = document.getElementById('setupUsername').value.trim();
+      const password = document.getElementById('setupPassword').value;
+      const confirm_password = document.getElementById('setupConfirmPassword').value;
+
+      if (password !== confirm_password) {
+        showAlert('alertSetup', 'Le password non coincidono.', false);
+        return;
+      }
+
+      // Inibizione tasto e messaggio temporaneo
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Attendi...';
+
+      try {
+        const r = await fetch(getServerUrl() + '/api/auth/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pt_name, username, password, confirm_password })
+        });
+        const d = await r.json();
+        if (r.ok) {
+          showAlert('alertSetup', 'Registrazione effettuata con successo! Attendi...', true);
+          setTimeout(() => {
+            document.getElementById('setupOverlay').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('loginEmail').value = username;
+          }, 2000);
+        } else {
+          showAlert('alertSetup', 'Errore: ' + d.detail, false);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      } catch (err) {
+        showAlert('alertSetup', 'Errore rete: ' + err.message, false);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+
+    async function doLogin(e) {
+      if (e) e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showAlert('alertLogin', 'Inserisci email e password.', false);
+        return;
+      }
+
+      // Costruzione del body come application/x-www-form-urlencoded (standard OAuth2)
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
+      try {
+        const r = await fetch(getServerUrl() + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+
+        console.log("Login Status Code:", r.status);
+        const d = await r.json();
+
+        if (r.ok || r.status === 200) {
+          // Controllo Ruolo (RBAC) - Solo l'admin può accedere alla dashboard
+          if (d.role !== 'admin') {
+            console.warn("Accesso negato: l'utente non è un amministratore.");
+            showAlert('alertLogin', 'Accesso negato: area riservata agli amministratori.', false);
+            return;
+          }
+
+          // Salvataggio Token (gestisce sia access_token che token)
+          const token = d.access_token || d.token;
+          localStorage.setItem('jwt_token', token);
+          localStorage.setItem('jwt_email', email);
+
+          // Transizione UI
+          document.getElementById('loginOverlay').classList.add('hidden');
+          document.getElementById('userChip').style.display = 'flex';
+          document.getElementById('loggedEmail').textContent = email;
+          document.getElementById('alertLogin').className = 'alert';
+
+          // Caricamento dati iniziali
+          loadUsers();
+          loadCatalog();
+
+          console.log("Login effettuato con successo.");
+        } else {
+          console.error("Login Error Details:", d);
+          let msg = 'Credenziali non valide.';
+          if (d.detail) {
+            msg = typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail);
+          }
+          showAlert('alertLogin', msg, false);
+        }
+      } catch (e) {
+        console.error("Login Fetch Exception:", e);
+        showAlert('alertLogin', 'Errore rete: ' + e.message, false);
+      }
+    }
+
+
+    function logout() {
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('jwt_email');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('userChip').style.display = 'none';
+    }
+
+    // Clock
+    setInterval(() => {
+      const n = new Date();
+      document.getElementById('clock').textContent =
+        n.toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' }) + ' ' +
+        n.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }, 1000);
+
+    function toggleMenu() {
+      const nav = document.getElementById('mainNav');
+      if (nav.classList.contains('open')) {
+        nav.classList.remove('open');
+      } else {
+        nav.classList.add('open');
+      }
+    }
+
+    function showSection(id, btn) {
+      // Chiudi il menu mobile se aperto
+      const nav = document.getElementById('mainNav');
+      if (nav && nav.classList.contains('open')) {
+        nav.classList.remove('open');
+      }
+
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('sec-' + id).classList.add('active');
+      btn.classList.add('active');
+      if (id === 'clienti') loadUsers();
+      if (id === 'catalogo') loadCatalog();
+      if (id === 'builder') {
+        loadCatalog();
+        loadUsersForBuilder();
+        // Reset canvas e select cliente ad ogni accesso al Builder
+        document.getElementById('daysContainer').innerHTML = '';
+        dayCount = 0;
+        document.getElementById('alertBuilder').className = 'alert';
+      }
+      if (id === 'settings') loadSettings();
+    }
+
+    async function loadSettings() {
+      try {
+        // Load AI Models
+        const rModels = await fetch(getServerUrl() + '/api/system/models', { headers: getHeaders() });
+        if (!rModels.ok) throw new Error("Errore nel recupero della lista modelli.");
+        const models = await rModels.json();
+        
+        const select = document.getElementById('aiModelSelect');
+        select.innerHTML = '<option value="">Seleziona un modello...</option>';
+        models.forEach(m => {
+          select.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+        });
+
+        // Load Settings
+        const rSet = await fetch(getServerUrl() + '/api/system/settings', { headers: getHeaders() });
+        if (!rSet.ok) {
+           console.warn("Nessuna impostazione trovata nel DB, uso i default di sistema.");
+           // Fallback UI
+           select.value = "gemini-2.5-flash";
+           return;
+        }
+        
+        const settings = await rSet.json();
+        if (settings.ai_model) select.value = settings.ai_model;
+        document.getElementById('aiKeyOverride').value = settings.ai_api_key_override || '';
+      } catch (e) {
+        console.error("Settings Load Error:", e);
+        // Non mostrare alert invasivi se è solo un problema di record mancante (primo avvio)
+        if (e.name === 'SyntaxError') {
+            console.error("Il server ha risposto con un errore non-JSON. Verifica il log del backend.");
+        }
+      }
+    }
+
+    async function saveSettings(e) {
+      e.preventDefault();
+      const payload = {
+        ai_model: document.getElementById('aiModelSelect').value,
+        ai_api_key_override: document.getElementById('aiKeyOverride').value.trim()
+      };
+
+      try {
+        const r = await fetch(getServerUrl() + '/api/system/settings', {
+          method: 'PUT',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) {
+          showAlert('alertSettings', 'Impostazioni di sistema aggiornate.', true);
+        } else {
+          const err = await r.json();
+          showAlert('alertSettings', 'Errore: ' + err.detail, false);
+        }
+      } catch (e) {
+        showAlert('alertSettings', 'Errore rete: ' + e.message, false);
+      }
+    }
+
+    async function downloadBackup() {
+      try {
+        const token = localStorage.getItem('jwt_token');
+        const r = await fetch(getServerUrl() + '/api/system/backup', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!r.ok) throw new Error('Errore download database');
+
+        const blob = await r.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'fitness.db';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        alert("Errore scaricamento backup: " + e.message);
+      }
+    }
+
+    async function doRestore(input) {
+      if (!input.files || !input.files[0]) return;
+      if (!confirm("Sei sicuro di voler ripristinare il database? Tutti i dati attuali verranno persi definitivamente.")) {
+        input.value = '';
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('file', input.files[0]);
+      input.value = '';
+
+      try {
+        const r = await fetch(getServerUrl() + '/api/system/restore', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: fd
+        });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) {
+          showAlert('alertRestore', '✅ Ripristino completato con successo!', true);
+          setTimeout(() => location.reload(), 2000);
+        }
+        else showAlert('alertRestore', 'Errore ripristino: ' + d.detail, false);
+      } catch (e) { showAlert('alertRestore', 'Errore rete: ' + e.message, false); }
+    }
+
+
+    function showAlert(id, msg, ok) {
+      const el = document.getElementById(id);
+      el.className = 'alert show ' + (ok ? 'alert-ok' : 'alert-err');
+      el.innerHTML = (ok ? '✅ ' : '❌ ') + msg;
+      setTimeout(() => { el.className = 'alert'; }, 5000);
+    }
+
+    /* ─── CLIENTI ─── */
+    async function loadUsers() {
+      try {
+        const r = await fetch(getServerUrl() + '/api/users', { headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const data = await r.json();
+        const tb = document.getElementById('usersTbody');
+        if (!data.length) { tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:2rem">Nessun utente registrato.</td></tr>'; return; }
+        tb.innerHTML = data.map(u => `
+      <tr>
+        <td style="padding: 1.2rem 1rem">
+          <div style="font-weight:700; color:var(--text); font-size:0.95rem">${u.first_name} ${u.last_name}</div>
+          <div style="font-size:0.75rem; color:var(--muted); margin-top:2px">ID: #${u.id}</div>
+        </td>
+        <td style="color:var(--cyan); font-weight:500">${u.email}</td>
+        <td style="font-size:0.82rem">
+          <div style="display:flex; gap:1rem; color:var(--muted)">
+            <span>Età: <b style="color:var(--text)">${u.age != null ? u.age : '—'}</b></span>
+            <span>Sesso: <b style="color:var(--text)">${u.gender || '—'}</b></span>
+            <span>Peso: <b style="color:var(--cyan)">${u.weight != null ? u.weight + 'kg' : '—'}</b></span>
+          </div>
+        </td>
+        <td style="padding-right:1.5rem">
+          <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end">
+            <button class="btn btn-edit btn-progress" style="padding: 8px 16px; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px" 
+                    onclick="showProgress(${u.id}, '${u.first_name} ${u.last_name}')">
+              <span>📈</span> Progressi
+            </button>
+            <button class="btn btn-danger" style="padding: 8px 12px; border-radius:8px" 
+                    onclick="deleteUser('${u.email}')">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`).join('');
+      } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
+    }
+
+    async function registerUser(e) {
+      e.preventDefault();
+      const pesoVal = document.getElementById('regPeso').value;
+      const altVal = document.getElementById('regAltezza').value;
+      const body = {
+        nome: document.getElementById('regNome').value.trim(),
+        cognome: document.getElementById('regCognome').value.trim(),
+        email: document.getElementById('regEmail').value.trim(),
+        eta: parseInt(document.getElementById('regEta').value),
+        sesso: document.getElementById('regSesso').value || null,
+        peso: pesoVal !== '' ? parseFloat(pesoVal) : null,
+        altezza: altVal !== '' ? parseFloat(altVal) : null,
+        fianchi: document.getElementById('regFianchi').value !== '' ? parseFloat(document.getElementById('regFianchi').value) : null,
+        bicipite: document.getElementById('regBicipite').value !== '' ? parseFloat(document.getElementById('regBicipite').value) : null,
+        petto: document.getElementById('regPetto').value !== '' ? parseFloat(document.getElementById('regPetto').value) : null,
+        vita: document.getElementById('regVita').value !== '' ? parseFloat(document.getElementById('regVita').value) : null,
+        coscia: document.getElementById('regCoscia').value !== '' ? parseFloat(document.getElementById('regCoscia').value) : null,
+        polpaccio: document.getElementById('regPolpaccio').value !== '' ? parseFloat(document.getElementById('regPolpaccio').value) : null,
+        collo: document.getElementById('regCollo').value !== '' ? parseFloat(document.getElementById('regCollo').value) : null,
+        polso: document.getElementById('regPolso').value !== '' ? parseFloat(document.getElementById('regPolso').value) : null,
+        password: document.getElementById('regPassword').value
+      };
+      try {
+        const r = await fetch(getServerUrl() + '/api/register', { method: 'POST', headers: getHeaders(true), body: JSON.stringify(body) });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) { showAlert('alertRegister', '✅ Cliente registrato: ' + d.first_name + ' ' + d.last_name, true); document.getElementById('formRegister').reset(); loadUsers(); }
+        else showAlert('alertRegister', 'Errore: ' + d.detail, false);
+      } catch (err) { showAlert('alertRegister', 'Errore rete: ' + err.message, false); }
+    }
+
+    async function deleteUser(email) {
+      if (!confirm(`Eliminare ${email} e la sua scheda?`)) return;
+      try {
+        const r = await fetch(getServerUrl() + '/api/users/' + encodeURIComponent(email), { method: 'DELETE', headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) { showAlert('alertClienti', d.message, true); loadUsers(); }
+        else showAlert('alertClienti', 'Errore: ' + d.detail, false);
+      } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
+    }
+
+    /* ─── CATALOGO ─── */
+    let catalogFilter = '';
+
+    function filterCatalog(gruppo, btn) {
+      catalogFilter = gruppo;
+      document.querySelectorAll('#catalogFilterBar .pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      renderCatalogTable();
+    }
+
+    function toggleCatalogRow(id, el) {
+      const detailsRow = document.getElementById('details-' + id);
+      const isVisible = detailsRow.classList.contains('active');
+      
+      // Chiudi gli altri? No, lasciamo libertà
+      detailsRow.classList.toggle('active');
+      el.classList.toggle('active');
+    }
+
+    function renderCatalogTable() {
+      const tb = document.getElementById('catalogTbody');
+      const items = catalogFilter ? catalog.filter(e => e.gruppo_muscolare === catalogFilter) : catalog;
+      if (!items.length) {
+        tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:2rem">Nessun esercizio trovato.</td></tr>';
+        return;
+      }
+      const groups = {};
+      items.forEach(e => { (groups[e.gruppo_muscolare] || (groups[e.gruppo_muscolare] = [])).push(e); });
+      const groupOrder = ['Petto', 'Schiena', 'Gambe', 'Glutei', 'Spalle', 'Braccia', 'Core', 'Altro'];
+      const orderedGroups = [...groupOrder.filter(g => groups[g]), ...Object.keys(groups).filter(g => !groupOrder.includes(g))];
+      const groupEmoji = { 'Petto': '💪', 'Schiena': '🔙', 'Gambe': '🦵', 'Glutei': '🍑', 'Spalle': '🏋️', 'Braccia': '💪', 'Core': '⚡', 'Altro': '➕' };
+      
+      let html = '';
+      orderedGroups.forEach(g => {
+        html += `<tr class="tr-group-hdr"><td colspan="3">${groupEmoji[g] || '▸'} ${g.toUpperCase()} — ${groups[g].length} esercizi</td></tr>`;
+        groups[g].forEach(e => {
+          const ytLink = e.video_url 
+            ? `<a href="${e.video_url}" target="_blank" class="btn-edit" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px">▶ Guarda Video</a>`
+            : '<span style="color:var(--muted)">Nessun video</span>';
+
+          html += `
+            <tr class="catalog-row-main" onclick="toggleCatalogRow(${e.id}, this)">
+              <td style="text-align:center; color:var(--muted); font-size:0.75rem">${e.id}</td>
+              <td style="font-weight:600; font-size:0.92rem; letter-spacing:0.02em">${e.nome}</td>
+              <td style="text-align:right; padding-right:2rem">
+                <i class="fas fa-chevron-right chevron-icon"></i>
+              </td>
+            </tr>
+            <tr class="catalog-row-details" id="details-${e.id}">
+              <td colspan="3">
+                <div class="details-container">
+                  <!-- Colonna 1: Parametri -->
+                  <div style="display:flex; flex-direction:column; gap:1.2rem">
+                    <div class="detail-item">
+                      <div class="detail-label">Serie & Ripetizioni</div>
+                      <div class="detail-value" style="font-size:1rem; font-weight:700">${e.default_serie || '—'} <span style="font-weight:400; font-size:0.8rem; color:var(--muted)">serie x</span> ${e.default_ripetizioni || '—'}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="detail-label">Recupero</div>
+                      <div class="detail-value" style="color:var(--cyan); font-weight:600">${e.default_recupero_secondi ? e.default_recupero_secondi + 's' : '—'}</div>
+                    </div>
+                  </div>
+
+                  <!-- Colonna 2: Note (Espandibile) -->
+                  <div class="detail-item">
+                    <div class="detail-label">Note Tecniche</div>
+                    <div class="detail-value" style="font-style:italic; line-height:1.5; color:rgba(255,255,255,0.8)">${e.default_note || 'Nessuna nota specifica.'}</div>
+                  </div>
+
+                  <!-- Colonna 3: Media & Azioni -->
+                  <div style="display:flex; flex-direction:column; gap:1.2rem; align-items:flex-end">
+                    <div class="detail-item" style="align-items:flex-end">
+                      <div class="detail-label">Media</div>
+                      <div class="detail-value">${ytLink}</div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:0.5rem">
+                      <button class="btn btn-edit" style="padding: 8px 18px; font-weight:600" onclick="event.stopPropagation(); openEditModal(${e.id})">✏️ Modifica</button>
+                      <button class="btn btn-danger" style="padding: 8px 12px" onclick="event.stopPropagation(); deleteExercise(${e.id},'${e.nome.replace(/'/g, "\\'")}')">🗑️</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>`;
+        });
+      });
+      tb.innerHTML = html;
+    }
+
+    async function loadCatalog() {
+      try {
+        const r = await fetch(getServerUrl() + '/api/catalog', { headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        catalog = await r.json();
+        renderCatalogTable();
+        updateBuilderSelects();
+      } catch (e) { showAlert('alertCatalog', 'Errore rete: ' + e.message, false); }
+    }
+
+    document.getElementById('formCatalog').addEventListener('submit', async e => {
+      e.preventDefault();
+      const serieVal = document.getElementById('exSerie').value;
+      const recVal = document.getElementById('exRecupero').value;
+      const videoVal = document.getElementById('exVideoUrl').value.trim();
+      const body = {
+        nome: document.getElementById('exNome').value.trim(),
+        gruppo_muscolare: document.getElementById('exGruppo').value,
+        default_serie: serieVal !== '' ? parseInt(serieVal) : null,
+        default_ripetizioni: document.getElementById('exRipetizioni').value.trim() || null,
+        default_recupero_secondi: recVal !== '' ? parseInt(recVal) : null,
+        default_note: document.getElementById('exNote').value.trim() || null,
+        video_url: videoVal || null
+      };
+      try {
+        const r = await fetch(getServerUrl() + '/api/catalog', { method: 'POST', headers: getHeaders(true), body: JSON.stringify(body) });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) { showAlert('alertCatalogForm', 'Esercizio aggiunto: ' + d.nome, true); e.target.reset(); loadCatalog(); }
+        else showAlert('alertCatalogForm', 'Errore: ' + d.detail, false);
+      } catch (err) { showAlert('alertCatalogForm', 'Errore rete: ' + err.message, false); }
+    });
+
+    /* ─── CSV EXPORT / IMPORT ─── */
+    async function exportCSV() {
+      try {
+        const r = await fetch(getServerUrl() + '/api/users/export', { headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        if (!r.ok) { showAlert('alertClienti', 'Errore export: ' + r.statusText, false); return; }
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'clienti.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
+    }
+
+    async function importCSV(input) {
+      if (!input.files || !input.files[0]) return;
+      const fd = new FormData();
+      fd.append('file', input.files[0]);
+      input.value = '';
+      try {
+        const r = await fetch(getServerUrl() + '/api/users/import', { method: 'POST', headers: getHeaders(), body: fd });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) { showAlert('alertClienti', d.message, true); loadUsers(); }
+        else showAlert('alertClienti', 'Errore import: ' + d.detail, false);
+      } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
+    }
+
+    async function deleteExercise(id, nome) {
+      if (!confirm(`Rimuovere "${nome}" dal catalogo?`)) return;
+      try {
+        const r = await fetch(getServerUrl() + '/api/catalog/' + id, { method: 'DELETE', headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) { showAlert('alertCatalog', d.message, true); loadCatalog(); }
+        else showAlert('alertCatalog', 'Errore: ' + d.detail, false);
+      } catch (e) { showAlert('alertCatalog', 'Errore rete: ' + e.message, false); }
+    }
+
+    /* ─── MODAL MODIFICA ESERCIZIO ─── */
+    function openEditModal(id) {
+      const ex = catalog.find(c => c.id === id);
+      if (!ex) return;
+      document.getElementById('editExId').value = ex.id;
+      document.getElementById('editNome').value = ex.nome || '';
+      document.getElementById('editGruppo').value = ex.gruppo_muscolare || 'Petto';
+      document.getElementById('editSerie').value = ex.default_serie ?? '';
+      document.getElementById('editRipetizioni').value = ex.default_ripetizioni || '';
+      document.getElementById('editRecupero').value = ex.default_recupero_secondi ?? '';
+      document.getElementById('editNote').value = ex.default_note || '';
+      document.getElementById('editVideoUrl').value = ex.video_url || '';
+      document.getElementById('alertEditModal').className = 'alert';
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('open');
+    }
+
+    function closeEditModalOnBackdrop(e) {
+      if (e.target === document.getElementById('editModal')) closeEditModal();
+    }
+
+    // Chiudi modal con ESC
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeEditModal(); closeSettingsModal(); }
+    });
+
+    /* ─── MODAL IMPOSTAZIONI ─── */
+    function openSettingsModal() {
+      document.getElementById('oldPwd').value = '';
+      document.getElementById('newPwd').value = '';
+      document.getElementById('confirmPwd').value = '';
+      document.getElementById('alertSettingsModal').className = 'alert';
+      document.getElementById('settingsModal').classList.add('open');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('open');
+    }
+    function closeSettingsModalOnBackdrop(e) {
+      if (e.target === document.getElementById('settingsModal')) closeSettingsModal();
+    }
+
+    async function changePassword() {
+      const vecchia = document.getElementById('oldPwd').value;
+      const nuova = document.getElementById('newPwd').value;
+      const conferma = document.getElementById('confirmPwd').value;
+      const alertEl = document.getElementById('alertSettingsModal');
+
+      if (!vecchia || !nuova || !conferma) { showAlert('alertSettingsModal', 'Compila tutti i campi.', false); return; }
+      if (nuova.length < 6) { showAlert('alertSettingsModal', 'La nuova password deve avere almeno 6 caratteri.', false); return; }
+      if (nuova !== conferma) { showAlert('alertSettingsModal', 'La conferma password non coincide.', false); return; }
+
+      try {
+        const r = await fetch(getServerUrl() + '/api/auth/change-password', {
+          method: 'PUT',
+          headers: getHeaders(true),
+          body: JSON.stringify({ vecchia_password: vecchia, nuova_password: nuova })
+        });
+        const d = await r.json();
+        if (r.ok) {
+          showAlert('alertSettingsModal', '✅ Password aggiornata!', true);
+          setTimeout(closeSettingsModal, 1500);
+        } else {
+          showAlert('alertSettingsModal', d.detail || 'Errore durante l\'aggiornamento.', false);
+        }
+      } catch (e) { showAlert('alertSettingsModal', 'Errore rete: ' + e.message, false); }
+    }
+
+    async function saveEditExercise() {
+      const id = parseInt(document.getElementById('editExId').value);
+      const serieVal = document.getElementById('editSerie').value;
+      const recVal = document.getElementById('editRecupero').value;
+      const videoVal = document.getElementById('editVideoUrl').value.trim();
+      const body = {
+        nome: document.getElementById('editNome').value.trim(),
+        gruppo_muscolare: document.getElementById('editGruppo').value,
+        default_serie: serieVal !== '' ? parseInt(serieVal) : null,
+        default_ripetizioni: document.getElementById('editRipetizioni').value.trim() || null,
+        default_recupero_secondi: recVal !== '' ? parseInt(recVal) : null,
+        default_note: document.getElementById('editNote').value.trim() || null,
+        video_url: videoVal || null
+      };
+      if (!body.nome) { showAlert('alertEditModal', 'Il nome è obbligatorio.', false); return; }
+      if (!body.gruppo_muscolare) { showAlert('alertEditModal', 'Seleziona un gruppo muscolare.', false); return; }
+      try {
+        const r = await fetch(getServerUrl() + '/api/catalog/' + id, { method: 'PUT', headers: getHeaders(true), body: JSON.stringify(body) });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) {
+          closeEditModal();
+          showAlert('alertCatalog', 'Esercizio aggiornato: ' + d.nome, true);
+          loadCatalog();
+        } else {
+          showAlert('alertEditModal', 'Errore: ' + d.detail, false);
+        }
+      } catch (err) {
+        showAlert('alertEditModal', 'Errore rete: ' + err.message, false);
+      }
+    }
+
+    /* ─── BUILDER ─── */
+    async function loadUsersForBuilder() {
+      try {
+        const r = await fetch(getServerUrl() + '/api/users', { headers: getHeaders() });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const data = await r.json();
+        const sel = document.getElementById('builderUserId');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— Seleziona cliente —</option>' +
+          data.map(u => `<option value="${u.id}">${u.first_name || ''} ${u.last_name || ''} (${u.email})</option>`).join('');
+        if (cur) sel.value = cur;
+      } catch (e) { }
+    }
+
+    // Cambio cliente: carica la scheda esistente nel canvas (se presente) o svuota
+    document.getElementById('builderUserId').addEventListener('change', async function () {
+      const alertEl = document.getElementById('alertBuilder');
+      alertEl.className = 'alert';
+
+      const userId = this.value;
+
+      // Se non c'è selezione, resettiamo l'interfaccia
+      if (!userId) {
+        document.getElementById('daysContainer').innerHTML = '';
+        dayCount = 0;
+        return;
+      }
+
+      try {
+        const r = await fetch(getServerUrl() + `/api/plans/${userId}`, { headers: getHeaders() });
+
+        if (r.status === 401) { handleUnauthorized(); return; }
+
+        // GESTIONE FOGLIO BIANCO: Il 404 indica che l'utente non ha una scheda attiva
+        if (r.status === 404) {
+          document.getElementById('daysContainer').innerHTML = ''; // Canvas pulito
+          dayCount = 0;
+
+          alertEl.className = 'alert show alert-ok';
+          alertEl.innerHTML = '📋 Nessuna scheda attiva trovata per questo cliente. Modalità "Nuova Scheda" pronta.';
+          setTimeout(() => { alertEl.className = 'alert'; }, 4000);
+          return;
+        }
+
+        if (r.ok) {
+          const d = await r.json();
+          loadPlanIntoBuilder(d.plan);
+
+          const nGiorni = d.plan?.giorni?.length || 0;
+          alertEl.className = 'alert show alert-ok';
+          alertEl.innerHTML = `✅ Scheda caricata con successo (<strong>${nGiorni} giorni</strong>).`;
+          setTimeout(() => { alertEl.className = 'alert'; }, 5000);
+        } else {
+          const err = await r.json();
+          throw new Error(err.detail || "Errore nel caricamento");
+        }
+      } catch (e) {
+        console.error("Errore fetch scheda:", e);
+        // In caso di errore critico, garantiamo comunque un builder pulito
+        document.getElementById('daysContainer').innerHTML = '';
+        dayCount = 0;
+        alertEl.className = 'alert show alert-err';
+        alertEl.innerHTML = '❌ Errore tecnico nel caricamento: ' + e.message;
+      }
+    });
+
+    /**
+     * Ricostruisce il canvas del Builder a partire dal JSON del piano.
+     * Ogni giorno viene ricreato con addDay(), ogni esercizio con addExerciseRow(),
+     * poi i campi vengono precompilati cercando l'esercizio nel catalogo per nome.
+     */
+    let activeDayId = null;
+
+    function switchTab(dayId) {
+      activeDayId = dayId;
+      const main = document.getElementById('activeDayContent');
+      const storage = document.getElementById('hiddenDaysStorage');
+
+      // 1. Trova il giorno attualmente visualizzato nel main
+      const currentDay = main.querySelector('.day-block');
+      if (currentDay) {
+        // Spostalo nello storage nascosto per preservarne lo stato (input, esercizi, ecc.)
+        storage.appendChild(currentDay);
+      }
+
+      // 2. Recupera il giorno selezionato dallo storage
+      const nextDay = document.getElementById(dayId);
+      if (nextDay) {
+        main.innerHTML = '';
+        main.appendChild(nextDay);
+      }
+
+      // 3. Aggiorna l'interfaccia delle tab
+      document.querySelectorAll('.tab-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.dayId === dayId);
+      });
+    }
+
+    function updateTabTitle(dayId) {
+      const val = document.getElementById(dayId + '_label').value;
+      const tabTitle = document.getElementById(dayId + '_tabtitle');
+      if (tabTitle) {
+        tabTitle.textContent = val || 'Giorno ' + dayId.replace('day', '');
+      }
+    }
+
+    function removeDay(dayId) {
+      if (!confirm('Sei sicuro di voler eliminare questo giorno di allenamento e tutti i suoi esercizi?')) return;
+
+      const tab = document.querySelector(`.tab-item[data-day-id="${dayId}"]`);
+      if (tab) tab.remove();
+
+      const dayEl = document.getElementById(dayId);
+      if (dayEl) dayEl.remove();
+
+      // Se abbiamo eliminato il giorno attivo, carichiamo il primo disponibile o svuotiamo
+      if (activeDayId === dayId) {
+        const firstTab = document.querySelector('.tab-item');
+        if (firstTab) {
+          switchTab(firstTab.dataset.dayId);
+        } else {
+          activeDayId = null;
+          document.getElementById('activeDayContent').innerHTML = `
+            <div style="color:var(--muted); text-align:center; padding:4rem; border:2px dashed rgba(255,255,255,0.05); border-radius:12px">
+              <div style="font-size:2.5rem; margin-bottom:1rem; opacity:0.3">🏗️</div>
+              Seleziona un giorno a sinistra o clicca "+ Giorno" per iniziare.
+            </div>`;
+        }
+      }
+    }
+
+    function loadPlanIntoBuilder(plan) {
+      // Reset completo del builder
+      document.getElementById('tabsContainer').innerHTML = '';
+      document.getElementById('hiddenDaysStorage').innerHTML = '';
+      document.getElementById('activeDayContent').innerHTML = `
+        <div style="color:var(--muted); text-align:center; padding:4rem; border:2px dashed rgba(255,255,255,0.05); border-radius:12px">
+          <div style="font-size:2.5rem; margin-bottom:1rem; opacity:0.3">🏗️</div>
+          Seleziona un giorno a sinistra o clicca "+ Giorno" per iniziare.
+        </div>`;
+      dayCount = 0;
+      activeDayId = null;
+
+      const giorni = plan?.giorni || [];
+      giorni.forEach(giorno => {
+        addDay(giorno.nome_giorno || ''); 
+        const dayId = 'day' + dayCount;
+
+        (giorno.esercizi || []).forEach(ex => {
+          addExerciseRow(dayId);
+          const container = document.getElementById(dayId + '_exs');
+          const blocks = container.querySelectorAll('.ex-block');
+          const block = blocks[blocks.length - 1];
+          if (!block) return;
+
+          const gruppoSel = block.querySelector('.ex-gruppo');
+          const exSel = block.querySelector('.ex-select');
+
+          let catalogEx = catalog.find(c => c.nome.toLowerCase() === (ex.nome || '').toLowerCase());
+          if (!catalogEx && ex.nome) {
+            catalogEx = catalog.find(c =>
+              c.nome.toLowerCase().includes(ex.nome.toLowerCase()) ||
+              ex.nome.toLowerCase().includes(c.nome.toLowerCase())
+            );
+          }
+
+          const gValue = catalogEx ? catalogEx.gruppo_muscolare : (ex.gruppo || ex.gruppo_muscolare);
+          if (gruppoSel && gValue) {
+            gruppoSel.value = gValue;
+            if (exSel) exSel.innerHTML = getExerciseOptions(gValue);
+          }
+
+          if (exSel) {
+            if (catalogEx) {
+              exSel.value = catalogEx.id;
+            } else {
+              const opt = document.createElement('option');
+              opt.value = ex.nome;
+              opt.textContent = "❓ " + (ex.nome || 'Sconosciuto');
+              opt.selected = true;
+              exSel.appendChild(opt);
+              block.style.borderLeft = "4px solid var(--pink)";
+              block.style.background = "rgba(255,0,180,0.05)";
+            }
+          }
+
+          // 4. Aggiornamento Header Accordion (Badge e Titolo)
+          const badge = block.querySelector('.ex-group-badge');
+          const titleText = block.querySelector('.ex-title-text');
+          if (badge && gValue) badge.textContent = gValue;
+          if (titleText && ex.nome) titleText.textContent = ex.nome;
+
+          // 5. Mappatura esatta delle chiavi AI -> UI Builder (.value)
+          const inputSerie = block.querySelector('.ex-serie');
+          if (inputSerie) inputSerie.value = ex.serie || '';
+
+          const inputReps = block.querySelector('.ex-rip');
+          if (inputReps) inputReps.value = ex.ripetizioni || '';
+
+          const inputRec = block.querySelector('.ex-rec');
+          if (inputRec) inputRec.value = ex.recupero || '';
+
+          const inputNote = block.querySelector('.ex-note');
+          if (inputNote) inputNote.value = ex.note || '';
+        });
+      });
+    }
+
+    /* ─── AI PARTICLE ENGINE ─── */
+    let particleAnimationId = null;
+    function initParticleEngine() {
+      const canvas = document.getElementById('aiParticleCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      const count = 65;
+      const maxDist = 60;
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 1.5;
+          this.vy = (Math.random() - 0.5) * 1.5;
+          this.radius = Math.random() * 1.5 + 1;
+          this.color = Math.random() > 0.4 ? '#00e5ff' : '#b400ff';
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = this.color;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < count; i++) particles.push(new Particle());
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particles.length; i++) {
+          const p1 = particles[i];
+          p1.update();
+          p1.draw();
+          for (let j = i + 1; j < particles.length; j++) {
+            const p2 = particles[j];
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < maxDist) {
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              const opacity = (1 - (dist / maxDist)) * 0.4;
+              ctx.strokeStyle = p1.color === p2.color ? p1.color : '#ffffff';
+              ctx.globalAlpha = opacity;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+          }
+        }
+        particleAnimationId = requestAnimationFrame(animate);
+      }
+      if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
+      animate();
+    }
+
+    function stopParticleEngine() {
+      if (particleAnimationId) {
+        cancelAnimationFrame(particleAnimationId);
+        particleAnimationId = null;
+      }
+    }
+
+    function toggleAiTools() {
+      const wrapper = document.getElementById('aiToolsWrapper');
+      wrapper.classList.toggle('open');
+    }
+
+    async function generateAIPlan() {
+      const sel = document.getElementById('builderUserId');
+      const userId = sel.value;
+      if (!userId) { alert("Seleziona prima un cliente!"); return; }
+
+      const btn = document.getElementById('btnAiGen');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = "🌀 GENERAZIONE...";
+      btn.disabled = true;
+
+      // Logica Modal AI
+      const modal = document.getElementById('aiLoadingModal');
+      const msgEl = document.getElementById('aiLoadingMsg');
+      const bar = document.getElementById('aiProgressBar');
+      const messages = [
+        "Analisi Body Fat %: ottimizzazione volume allenante per la ricomposizione...",
+        "Calcolo BMR e TDEE: bilanciamento intensità per il target calorico...",
+        "Sincronizzazione Catalogo: selezione varianti biomeccanicamente efficaci...",
+        "Valutazione BMI e stress articolare per la prevenzione infortuni...",
+        "Strutturazione progressione logica basata sui dati storici dell'atleta...",
+        "Gemini sta definendo i tempi di recupero ideali per la risposta metabolica...",
+        "Finalizzazione setup esercizi e istruzioni tecniche personalizzate..."
+      ];
+
+      modal.style.display = 'flex';
+      initParticleEngine();
+      bar.style.width = '0%';
+      let msgIdx = 0;
+      msgEl.innerText = messages[0];
+
+      const msgInterval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % messages.length;
+        msgEl.style.opacity = 0;
+        setTimeout(() => {
+          msgEl.innerText = messages[msgIdx];
+          msgEl.style.opacity = 1;
+        }, 500);
+      }, 3500);
+
+      // Progresso simulato fluido
+      let progress = 0;
+      const progInterval = setInterval(() => {
+        progress += (100 - progress) * 0.1;
+        bar.style.width = progress + '%';
+      }, 1000);
+
+      try {
+        const payload = {
+          user_id: parseInt(userId),
+          experience_level: document.getElementById('aiExperienceLevel').value,
+          pt_notes: document.getElementById('aiPtNotes').value || "",
+          training_days: parseInt(document.getElementById('aiTrainingDays').value) || 3,
+          training_time: parseInt(document.getElementById('aiTrainingTime').value) || 60
+        };
+
+        const r = await fetch(getServerUrl() + '/api/plans/generate-ai', {
+          method: 'POST',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload)
+        });
+
+        if (!r.ok) {
+          const errorData = await r.json();
+          throw new Error(errorData.detail || JSON.stringify(errorData));
+        }
+
+        const data = await r.json();
+        // Svuotiamo il builder prima di caricare la bozza AI
+        loadPlanIntoBuilder(data);
+        showAlert('alertBuilder', '✨ Bozza generata con successo! Revisiona e salva.', true);
+        
+        // Fai pulsare il tasto salva in ROSSO per attirare l'attenzione
+        document.getElementById('btnSaveWorkout').classList.add('btn-pulse-danger');
+
+      } catch (e) {
+        console.error("AI Error:", e);
+        showAlert('alertBuilder', 'Errore AI: ' + e.message, false);
+      } finally {
+        clearInterval(msgInterval);
+        clearInterval(progInterval);
+        bar.style.width = '100%';
+        setTimeout(() => {
+          modal.style.display = 'none';
+          stopParticleEngine();
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+          // Chiudi pannello strumenti IA post-generazione
+          document.getElementById('aiToolsWrapper').classList.remove('open');
+        }, 800);
+      }
+    }
+
+    function getGroupOptions() {
+      const groups = [...new Set(catalog.map(c => c.gruppo_muscolare))];
+      const order = ['Petto', 'Schiena', 'Gambe', 'Glutei', 'Spalle', 'Braccia', 'Core', 'Altro'];
+      const sorted = [...order.filter(g => groups.includes(g)), ...groups.filter(g => !order.includes(g))];
+      return '<option value="">— Gruppo —</option>' + sorted.map(g => `<option value="${g}">${g}</option>`).join('');
+    }
+
+    function getExerciseOptions(gruppo, selectedId) {
+      const items = gruppo ? catalog.filter(c => c.gruppo_muscolare === gruppo) : catalog;
+      return '<option value="">— Esercizio —</option>' + items.map(c => `<option value="${c.id}" ${c.id == selectedId ? 'selected' : ''}>${c.nome}</option>`).join('');
+    }
+
+    function updateBuilderSelects() {
+      // Aggiorna i select-gruppo già presenti (il select esercizio si rigenera on-change)
+      document.querySelectorAll('.ex-gruppo').forEach(sel => {
+        const cur = sel.value;
+        sel.innerHTML = getGroupOptions();
+        if (cur) sel.value = cur;
+        // rigenera anche il select esercizio corrispondente
+        const exSel = sel.closest('.ex-block').querySelector('.ex-select');
+        const curEx = exSel ? exSel.value : '';
+        if (exSel) { exSel.innerHTML = getExerciseOptions(cur, parseInt(curEx) || null); if (curEx) exSel.value = curEx; }
+      });
+    }
+
+    function addDay(label = '') {
+      dayCount++;
+      const id = 'day' + dayCount;
+      const div = document.createElement('div');
+      div.className = 'day-block';
+      div.id = id;
+      div.innerHTML = `
+        <div class="day-header" style="margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1rem">
+          <div class="day-title" style="font-size:1.1rem">◈ GIORNO ${dayCount}</div>
+          <input type="text" placeholder="Es. Lunedì – PUSH" style="flex:2; font-size:0.9rem; padding:0.5rem 1rem" id="${id}_label" oninput="updateTabTitle('${id}')" value="${label}"/>
+          <button class="btn btn-ghost btn-sm" onclick="addExerciseRow('${id}')">+ Esercizio</button>
+        </div>
+        <div id="${id}_exs"></div>`;
+
+      // Inseriamo il giorno nello storage nascosto inizialmente
+      document.getElementById('hiddenDaysStorage').appendChild(div);
+
+      // Creiamo l'elemento tab nella sidebar
+      const tab = document.createElement('div');
+      tab.className = 'tab-item';
+      tab.dataset.dayId = id;
+      tab.onclick = () => switchTab(id);
+      tab.innerHTML = `
+        <span class="tab-title" id="${id}_tabtitle">${label || 'Giorno ' + dayCount}</span>
+        <span class="tab-remove" onclick="removeDay('${id}'); event.stopPropagation();">✕</span>
+      `;
+      document.getElementById('tabsContainer').appendChild(tab);
+
+      // Attiviamo automaticamente il nuovo giorno
+      switchTab(id);
+    }
+
+    function addExerciseRow(dayId) {
+      const container = document.getElementById(dayId + '_exs');
+      const block = document.createElement('div');
+      block.className = 'ex-block'; // Inizialmente collassato
+      block.innerHTML = `
+        <div class="ex-header">
+          <span class="badge badge-v ex-group-badge" style="margin:0; min-width:70px; text-align:center">Gruppo</span>
+          <span class="ex-title-text">Seleziona esercizio...</span>
+          <div class="ex-chevron">▼</div>
+          <button class="btn btn-danger btn-sm" style="padding:0; width:28px; height:28px; flex-shrink:0; border-radius:50%" onclick="this.closest('.ex-block').remove(); event.stopPropagation();">✕</button>
+        </div>
+        <div class="ex-body">
+          <div class="ex-selects" style="grid-template-columns: 1fr 2fr; margin-bottom:1rem">
+            <div class="fg" style="margin:0">
+              <label>Gruppo Muscolare</label>
+              <select class="ex-gruppo">${getGroupOptions()}</select>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Esercizio</label>
+              <select class="ex-select">${getExerciseOptions('')}</select>
+            </div>
+          </div>
+          <div class="ex-params">
+            <div class="fg" style="margin:0">
+              <label>Serie</label>
+              <input type="number" class="ex-serie" value="4" min="1" max="20"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Ripetizioni</label>
+              <input type="text" class="ex-rip" placeholder="10" value="10"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Recupero (s)</label>
+              <input type="number" class="ex-rec" value="90" min="0"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Note</label>
+              <input type="text" class="ex-note" placeholder="Esecuzione…"/>
+            </div>
+          </div>
+        </div>`;
+
+      const header = block.querySelector('.ex-header');
+      const badge = block.querySelector('.ex-group-badge');
+      const title = block.querySelector('.ex-title-text');
+      const gruppoSel = block.querySelector('.ex-gruppo');
+      const exSel = block.querySelector('.ex-select');
+
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        block.classList.toggle('expanded');
+      });
+
+      gruppoSel.addEventListener('change', () => {
+        const val = gruppoSel.value;
+        badge.textContent = val || 'Gruppo';
+        exSel.innerHTML = getExerciseOptions(val);
+      });
+
+      exSel.addEventListener('change', () => {
+        const exId = parseInt(exSel.value);
+        if (!exId) {
+          title.textContent = 'Seleziona esercizio...';
+          return;
+        }
+        const ex = catalog.find(c => c.id === exId);
+        if (ex) {
+          title.textContent = ex.nome;
+          if (ex.default_serie != null) block.querySelector('.ex-serie').value = ex.default_serie;
+          if (ex.default_ripetizioni) block.querySelector('.ex-rip').value = ex.default_ripetizioni;
+          if (ex.default_recupero_secondi != null) block.querySelector('.ex-rec').value = ex.default_recupero_secondi;
+          if (ex.default_note) block.querySelector('.ex-note').value = ex.default_note;
+        }
+      });
+
+      container.appendChild(block);
+    }
+
+    async function saveScheda() {
+      // Ferma eventuale pulsazione di pericolo
+      document.getElementById('btnSaveWorkout').classList.remove('btn-pulse-danger');
+      const userId = document.getElementById('builderUserId').value;
+      if (!userId) { showAlert('alertBuilder', 'Seleziona un cliente.', false); return; }
+
+      // Recuperiamo TUTTI i blocchi giorno (sia quelli nel main che quelli nello storage nascosto)
+      const days = document.querySelectorAll('.day-block');
+      if (!days.length) { showAlert('alertBuilder', 'Aggiungi almeno un giorno.', false); return; }
+
+      const giorni = [];
+      for (const day of days) {
+        const label = day.querySelector('input[id$="_label"]').value.trim() || 'Giorno';
+        const exBlocks = day.querySelectorAll('.ex-block');
+        const esercizi = [];
+        for (const block of exBlocks) {
+          const selEl = block.querySelector('.ex-select');
+          const exId = parseInt(selEl.value);
+          if (!exId) continue;
+          const ex = catalog.find(c => c.id === exId);
+          if (!ex) continue;
+          esercizi.push({
+            nome: ex.nome,
+            gruppo_muscolare: ex.gruppo_muscolare,
+            serie: parseInt(block.querySelector('.ex-serie').value) || 4,
+            ripetizioni: block.querySelector('.ex-rip').value.trim() || '10',
+            recupero_secondi: parseInt(block.querySelector('.ex-rec').value) || 90,
+            note_esecuzione: block.querySelector('.ex-note').value.trim()
+          });
+        }
+        giorni.push({ nome_giorno: label, esercizi });
+      }
+      const payload = { plan: { giorni } };
+      try {
+        const r = await fetch(getServerUrl() + '/api/plans/' + userId, {
+          method: 'POST',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload)
+        });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        if (r.ok) showAlert('alertBuilder', '✅ Scheda salvata correttamente!', true);
+        else showAlert('alertBuilder', 'Errore: ' + d.detail, false);
+      } catch (e) { showAlert('alertBuilder', 'Errore rete: ' + e.message, false); }
+    }
+
+    /* ─── PROGRESSI CLIENTE ─── */
+    let chartInstance = null;
+    let currentProgressData = []; // Store measurements for dynamic chart updates
+
+    async function showProgress(userId, fullName) {
+      document.getElementById('progressTitle').textContent = `📈 Progressi: ${fullName}`;
+      document.getElementById('progressModal').classList.add('open');
+
+      // Reset selector to default
+      if (document.getElementById('chartMetricSelector')) {
+        document.getElementById('chartMetricSelector').value = 'weight';
+      }
+
+      try {
+        const r = await fetch(getServerUrl() + `/api/admin/clients/${userId}/progress`, { headers: getHeaders() });
+
+        if (r.status === 401) { handleUnauthorized(); return; }
+
+        if (!r.ok) {
+          const err = await r.json();
+          console.error("Dettaglio errore API:", err);
+          showToast(err.detail || "Errore nel caricamento dei progressi", "error");
+          return;
+        }
+
+        const data = await r.json();
+        console.log("Payload API Progressi:", data);
+
+        if (!data || !Array.isArray(data.measurements)) {
+          showToast("Dati progressi non validi o mancanti.", "error");
+          return;
+        }
+
+        currentProgressData = data.measurements;
+
+        // Salviamo i dati per i refresh
+        document.getElementById('progressModal').dataset.userId = userId;
+        document.getElementById('progressModal').dataset.fullName = fullName;
+
+        renderProgressChart(currentProgressData);
+        renderProgressTable(currentProgressData);
+        renderProgressSummary(data);
+      } catch (e) {
+        console.error("Errore caricamento progressi:", e);
+        showToast("Impossibile connettersi al server.", "error");
+      }
+    }
+
+    function updateChartMetric() {
+      if (currentProgressData && currentProgressData.length > 0) {
+        renderProgressChart(currentProgressData);
+      }
+    }
+
+    function renderProgressChart(measurements) {
+      const ctx = document.getElementById('progressChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const metricSelector = document.getElementById('chartMetricSelector');
+      const metric = metricSelector ? metricSelector.value : 'weight';
+      const labels = measurements.map(m => new Date(m.created_at).toLocaleDateString());
+
+      const config = {
+        weight: { label: 'Peso (kg)', color: '#00e5ff' },
+        chest: { label: 'Petto (cm)', color: '#fff01f' },
+        waist: { label: 'Vita (cm)', color: '#b400ff' },
+        hips: { label: 'Fianchi (cm)', color: '#39ff14' },
+        biceps: { label: 'Bicipite (cm)', color: '#ff5e00' },
+        thigh: { label: 'Coscia (cm)', color: '#ff0055' },
+        calf: { label: 'Polpaccio (cm)', color: '#ffaa00' },
+        neck: { label: 'Collo (cm)', color: '#00ffd4' },
+        wrist: { label: 'Polso (cm)', color: '#00ff88' }
+      };
+
+      const selected = config[metric] || config.weight;
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: selected.label,
+              data: measurements.map(m => m[metric]),
+              borderColor: selected.color,
+              backgroundColor: `${selected.color}22`,
+              tension: 0.3,
+              fill: true,
+              pointBackgroundColor: selected.color,
+              pointRadius: 4,
+              borderWidth: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#6a7090',
+                font: { size: 10 },
+                padding: 15
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(13,14,24,0.9)',
+              titleColor: '#00e5ff',
+              bodyColor: '#fff',
+              borderColor: '#222639',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6a7090' } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#6a7090' },
+              beginAtZero: false
+            }
+          }
+        }
+      });
+    }
+
+    function renderProgressTable(measurements) {
+      const tb = document.getElementById('progressTbody');
+      if (!measurements.length) {
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1rem; color:var(--muted)">Nessun dato storico.</td></tr>';
+        return;
+      }
+      tb.innerHTML = [...measurements].reverse().map(m => `
+    <tr>
+      <td>${new Date(m.created_at).toLocaleDateString()}</td>
+      <td style="color:var(--cyan)">${(m.weight !== null && m.weight !== undefined) ? m.weight : '—'}</td>
+      <td>${(m.chest !== null && m.chest !== undefined) ? m.chest : '—'}</td>
+      <td>${(m.waist !== null && m.waist !== undefined) ? m.waist : '—'}</td>
+      <td>${(m.hips !== null && m.hips !== undefined) ? m.hips : '—'}</td>
+      <td>${(m.biceps !== null && m.biceps !== undefined) ? m.biceps : '—'}</td>
+      <td>${(m.thigh !== null && m.thigh !== undefined) ? m.thigh : '—'}</td>
+      <td>${(m.calf !== null && m.calf !== undefined) ? m.calf : '—'}</td>
+      <td>${(m.neck !== null && m.neck !== undefined) ? m.neck : '—'}</td>
+      <td>${(m.wrist !== null && m.wrist !== undefined) ? m.wrist : '—'}</td>
+      <td>
+        <div style="display:flex; gap:0.4rem">
+          <button class="btn btn-edit btn-sm" onclick='editMeasurement(${JSON.stringify(m)})' title="Modifica">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMeasurement(${m.id})" title="Elimina">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    async function deleteMeasurement(id) {
+      if (!confirm("Vuoi davvero eliminare questa misurazione?")) return;
+      try {
+        const r = await fetch(getServerUrl() + `/api/measurements/${id}`, { method: 'DELETE', headers: getHeaders() });
+        if (r.ok) {
+          const userId = document.getElementById('progressModal').dataset.userId;
+          const fullName = document.getElementById('progressModal').dataset.fullName;
+          showProgress(userId, fullName);
+        }
+      } catch (e) { console.error("Errore eliminazione:", e); }
+    }
+
+    async function editMeasurement(m) {
+      document.getElementById('editMeasId').value = m.id;
+      document.getElementById('editWeight').value = m.weight || "";
+      document.getElementById('editWaist').value = m.waist || "";
+      document.getElementById('editFianchi').value = m.hips || "";
+      document.getElementById('editChest').value = m.chest || "";
+      document.getElementById('editBiceps').value = m.biceps || "";
+      document.getElementById('editThigh').value = m.thigh || "";
+      document.getElementById('editPolpaccio').value = m.calf || "";
+      document.getElementById('editCollo').value = m.neck || "";
+      document.getElementById('editPolso').value = m.wrist || "";
+
+      document.getElementById('editMeasurementModal').classList.add('open');
+    }
+
+    function closeEditMeasurementModal() {
+      document.getElementById('editMeasurementModal').classList.remove('open');
+    }
+
+    function closeEditMeasurementModalOnBackdrop(e) {
+      if (e.target.id === 'editMeasurementModal') closeEditMeasurementModal();
+    }
+
+    async function saveEditedMeasurement(e) {
+      e.preventDefault();
+      const id = document.getElementById('editMeasId').value;
+
+      const payload = {
+        weight: document.getElementById('editWeight').value !== "" ? parseFloat(document.getElementById('editWeight').value) : null,
+        waist: document.getElementById('editWaist').value !== "" ? parseFloat(document.getElementById('editWaist').value) : null,
+        hips: document.getElementById('editFianchi').value !== "" ? parseFloat(document.getElementById('editFianchi').value) : null,
+        chest: document.getElementById('editChest').value !== "" ? parseFloat(document.getElementById('editChest').value) : null,
+        biceps: document.getElementById('editBiceps').value !== "" ? parseFloat(document.getElementById('editBiceps').value) : null,
+        thigh: document.getElementById('editThigh').value !== "" ? parseFloat(document.getElementById('editThigh').value) : null,
+        calf: document.getElementById('editPolpaccio').value !== "" ? parseFloat(document.getElementById('editPolpaccio').value) : null,
+        neck: document.getElementById('editCollo').value !== "" ? parseFloat(document.getElementById('editCollo').value) : null,
+        wrist: document.getElementById('editPolso').value !== "" ? parseFloat(document.getElementById('editPolso').value) : null
+      };
+
+      try {
+        const r = await fetch(getServerUrl() + `/api/measurements/${id}`, {
+          method: 'PUT',
+          headers: getHeaders(true),
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) {
+          closeEditMeasurementModal();
+          const userId = document.getElementById('progressModal').dataset.userId;
+          const fullName = document.getElementById('progressModal').dataset.fullName;
+          showProgress(userId, fullName);
+        }
+      } catch (e) { console.error("Errore aggiornamento:", e); }
+    }
+
+    function renderProgressSummary(data) {
+      const statusEl = document.getElementById('progressStatus');
+      const planEl = document.getElementById('lastPlanSummary');
+
+      // Calcolo ultimo aggiornamento
+      if (data.measurements.length) {
+        const last = new Date(data.measurements[data.measurements.length - 1].created_at);
+        const diff = Math.floor((new Date() - last) / (1000 * 60 * 60 * 24));
+        statusEl.innerHTML = `
+      <div style="color:var(--cyan); font-weight:700">Ultima Misurazione</div>
+      <div style="font-size:1.1rem">${last.toLocaleDateString()}</div>
+      <div style="color:${diff > 14 ? 'var(--pink)' : 'var(--muted)'}; margin-top:0.3rem">
+        ${diff === 0 ? 'Oggi' : diff === 1 ? 'Ieri' : 'Aggiornato ' + diff + ' giorni fa'}
+      </div>
+    `;
+      } else {
+        statusEl.innerHTML = '<div style="color:var(--muted)">Nessun dato biometrico salvato.</div>';
+      }
+
+      // Riepilogo Scheda
+      if (data.last_plan && data.last_plan.giorni) {
+        const numGiorni = data.last_plan.giorni.length;
+        const numEx = data.last_plan.giorni.reduce((acc, g) => acc + (g.esercizi?.length || 0), 0);
+        planEl.innerHTML = `
+      <div style="color:var(--violet); font-weight:700; margin-bottom:0.2rem">PIANO ATTIVO</div>
+      <div>Giorni di allenamento: ${numGiorni}</div>
+      <div>Esercizi totali: ${numEx}</div>
+    `;
+      } else {
+        planEl.innerHTML = 'Nessuna scheda assegnata.';
+      }
+
+      const metricsEl = document.getElementById('derivedMetrics');
+      if (data.user) {
+        let mHtml = '';
+        if (data.user.bmi) mHtml += `<div><strong>BMI:</strong> ${data.user.bmi}</div>`;
+        if (data.user.body_fat_perc) mHtml += `<div><strong>Body Fat:</strong> ${data.user.body_fat_perc}%</div>`;
+        if (data.user.bmr) mHtml += `<div><strong>BMR:</strong> ${data.user.bmr} kcal</div>`;
+        if (data.user.acqua_litri) mHtml += `<div><strong>Acqua:</strong> ${data.user.acqua_litri} L/giorno</div>`;
+        if (data.user.proteine_min && data.user.proteine_max) mHtml += `<div><strong>Target Proteico:</strong> ${data.user.proteine_min} - ${data.user.proteine_max} g/giorno</div>`;
+        if (data.user.whr) mHtml += `<div><strong>WHR:</strong> ${data.user.whr}</div>`;
+
+        metricsEl.innerHTML = mHtml || '<div style="color:var(--muted)">Dati insufficienti per il calcolo.</div>';
+      } else {
+        metricsEl.innerHTML = '<div style="color:var(--muted)">Dati insufficienti per il calcolo.</div>';
+      }
+    }
+
+    function closeProgressModal() {
+      document.getElementById('progressModal').classList.remove('open');
+    }
+
+    function closeProgressModalOnBackdrop(e) {
+      if (e.target.id === 'progressModal') closeProgressModal();
+    }
+
+    // Init: controlla autenticazione al caricamento
+    checkAuth();
+  </script>
+</body>
+
+</html>

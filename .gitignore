@@ -1,53 +1,60 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# ── Build artifacts ──────────────────────────────────────────
+build/
+frontend/build/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
+# ── Flutter / Dart ───────────────────────────────────────────
 **/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+*.iml
+*.ipr
+*.iws
+.idea/
+.swiftpm/
+.history
+.svn/
 
-# Escludi la cartella build ma permetti il caricamento della versione web compilata
-/build/*
-!/build/web/
-#build/
-
-/coverage/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# ── Android ──────────────────────────────────────────────────
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/key.properties
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.jks
+*.keystore
 
-# API Keys e Secrets (Sbloccati per il corretto funzionamento del backend passthrough)
-# lib/core/api_config.dart
+# ── iOS ──────────────────────────────────────────────────────
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+
+# ── Backend ──────────────────────────────────────────────────
+backend/__pycache__/
+backend/**/__pycache__/
+**/__pycache__/
+*.pyc
+backend/.venv/
+backend/venv/
+backend/data/*.db
+backend/admin_config.json
+backend/.env
+
+# ── Docker ───────────────────────────────────────────────────
+.env
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.class
+*.log
+*.swp
