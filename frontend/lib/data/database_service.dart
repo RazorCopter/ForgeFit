@@ -86,6 +86,15 @@ class DatabaseService {
     return raw != null ? DateTime.tryParse(raw) : null;
   }
 
+  /// Elimina tutti i dati salvati sul dispositivo
+  static Future<void> clearAllData() async {
+    await _workoutBox.clear();
+    await _userProfileBox.clear();
+    await _biometricBox.clear();
+    await _settingsBox.clear();
+    await _planBox.clear();
+  }
+
   // --- EMAIL UTENTE ---
   // L'email è la chiave univoca usata per tutte le chiamate REST
   // (es. GET /api/plans/{email}). Viene salvata al completamento
@@ -299,6 +308,16 @@ class DatabaseService {
   // --- WORKOUTS ---
   static Future<void> saveWorkout(CompletedWorkout workout) async {
     await _workoutBox.add(workout);
+  }
+
+  static Future<void> deleteWorkout(CompletedWorkout workout) async {
+    final key = _workoutBox.keys.firstWhere(
+      (k) => _workoutBox.get(k)?.id == workout.id,
+      orElse: () => null,
+    );
+    if (key != null) {
+      await _workoutBox.delete(key);
+    }
   }
 
   static List<CompletedWorkout> getUnsyncedWorkouts() =>

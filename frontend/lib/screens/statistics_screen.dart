@@ -391,34 +391,101 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   style: TextStyle(color: AppTheme.textSecondary),
                 )
               else
-                ...muscleVolumes.entries.map((entry) {
-                  return AppTheme.glassContainer(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    borderColor: AppTheme.vividPurple.withOpacity(0.3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          entry.key,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                AppTheme.glassContainer(
+                  padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 24),
+                  child: SizedBox(
+                    height: 250,
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: muscleVolumes.values.fold(0.0, (m, v) => v > m ? v : m) * 1.2,
+                        barTouchData: BarTouchData(
+                          enabled: true,
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipColor: (_) => Colors.blueGrey.shade900,
+                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              return BarTooltipItem(
+                                '${muscleVolumes.keys.elementAt(group.x)}\n${rod.toY.toStringAsFixed(0)} kg',
+                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              );
+                            },
                           ),
                         ),
-                        Text(
-                          '${entry.value.toStringAsFixed(0)} kg',
-                          style: const TextStyle(
-                            color: AppTheme.cyan,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        titlesData: FlTitlesData(
+                          show: true,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 46,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                if (value < 0 || value >= muscleVolumes.keys.length) return const SizedBox.shrink();
+                                final text = muscleVolumes.keys.elementAt(value.toInt());
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 12.0),
+                                    child: Transform.rotate(
+                                      angle: -0.5,
+                                      child: Text(
+                                        text,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (value, meta) {
+                                if (value == 0) return const SizedBox.shrink();
+                                return Text(
+                                  '${value.toInt()}',
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10),
+                                );
+                              },
+                            ),
+                          ),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: AppTheme.textSecondary.withOpacity(0.1),
+                            strokeWidth: 1,
                           ),
                         ),
-                      ],
+                        borderData: FlBorderData(show: false),
+                        barGroups: muscleVolumes.entries.toList().asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final val = entry.value.value;
+                          return BarChartGroupData(
+                            x: idx,
+                            barRods: [
+                              BarChartRodData(
+                                toY: val,
+                                color: AppTheme.vividPurple,
+                                width: 16,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(4),
+                                  topRight: Radius.circular(4),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ).animate().slideX(begin: 0.1);
-                }).toList(),
+                  ),
+                ).animate().fade(delay: 600.ms).scale(),
 
               const SizedBox(height: 32),
               const Text(

@@ -186,7 +186,7 @@ class ApiService {
       } on _RetryWithNewToken catch (r) {
         headers = await AuthService.authHeaders();
         response = await doRequest(headers);
-        _checkUnauthorized(response);
+        await _checkUnauthorized(response);
       }
       return _handleResponse(response);
     } on ApiException catch (e) {
@@ -233,7 +233,7 @@ class ApiService {
         debugPrint('❌ [ApiService] Error Body: ${response.body}');
       }
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -265,7 +265,7 @@ class ApiService {
           )
           .timeout(_timeout);
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -290,7 +290,7 @@ class ApiService {
           )
           .timeout(_timeout);
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -311,7 +311,7 @@ class ApiService {
           .get(Uri.parse(ApiConfig.userMe), headers: headers)
           .timeout(_timeout);
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -342,7 +342,7 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -366,7 +366,7 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -392,7 +392,7 @@ class ApiService {
           )
           .timeout(_timeout);
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -412,7 +412,7 @@ class ApiService {
       final response = await http
           .get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: headers)
           .timeout(_timeout);
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -443,7 +443,7 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 45));
 
-      _checkUnauthorized(response);
+      await _checkUnauthorized(response);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
@@ -493,10 +493,10 @@ class ApiService {
     );
   }
 
-  /// Versione sincrona mantenuta per retrocompatibilità dove non serve retry.
-  static void _checkUnauthorized(http.Response response) {
+  /// Versione asincrona mantenuta per retrocompatibilità dove non serve retry.
+  static Future<void> _checkUnauthorized(http.Response response) async {
     if (response.statusCode == 401) {
-      AuthService.logout();
+      await AuthService.logout();
       onUnauthorized?.call();
       throw const ApiException(
         statusCode: 401,

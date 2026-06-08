@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import '../models/training_data.dart';
@@ -23,12 +23,25 @@ class DayDetailScreen extends StatefulWidget {
 class _DayDetailScreenState extends State<DayDetailScreen> {
   int? _expandedIndex;
   DateTime? _workoutStartTime;
+  Timer? _globalTimer;
+  int _elapsedSeconds = 0;
   final List<CompletedExercise> _completedExercises = [];
   final Set<int> _completedIndexes = {};
+
+  @override
+  void dispose() {
+    _globalTimer?.cancel();
+    super.dispose();
+  }
 
   void _startExercise(Exercise exercise, Color accentColor, int index) async {
     if (_workoutStartTime == null) {
       _workoutStartTime = DateTime.now();
+      _globalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      });
       setState(() {});
     }
 
@@ -71,7 +84,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       builder: (_) => const Center(child: CircularProgressIndicator(color: AppTheme.vividPurple)),
     );
 
-    final duration = DateTime.now().difference(_workoutStartTime ?? DateTime.now()).inSeconds;
+    _globalTimer?.cancel();
+    final duration = _elapsedSeconds;
     
     final completedWorkout = CompletedWorkout(
       id: const Uuid().v4(),
@@ -159,6 +173,23 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                       fontSize: 16,
                     ),
                   ),
+                  if (_workoutStartTime != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.timer, color: AppTheme.cyan, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${(_elapsedSeconds ~/ 60).toString().padLeft(2, '0')}:${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            color: AppTheme.cyan,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -208,6 +239,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 if (result != null) {
                   final exercises = result['completed'] as List<CompletedExercise>;
                   _completedExercises.addAll(exercises);
+                  _workoutStartTime ??= DateTime.now();
+                  _elapsedSeconds += (result['duration'] as int?) ?? 0;
                   await _finishWorkout();
                 }
               },
@@ -353,10 +386,10 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                             ),
                             const SizedBox(height: 16),
                             if (widget.exercise.videoUrl.isNotEmpty) ...[
-                              SizedBox(
-                                width: double.infinity,
-                                child: _YoutubeEmbedWidget(videoUrl: widget.exercise.videoUrl),
-                              ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: _YoutubeThumbnailWidget(videoUrl: widget.exercise.videoUrl),
+                                ),
                               const SizedBox(height: 16),
                             ],
                             SizedBox(
@@ -393,50 +426,35 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
   }
 }
 
-class _YoutubeEmbedWidget extends StatefulWidget {
+class _YoutubeThumbnailWidget extends StatelessWidget {
   final String videoUrl;
 
-  const _YoutubeEmbedWidget({Key? key, required this.videoUrl}) : super(key: key);
+  const _YoutubeThumbnailWidget({Key? key, required this.videoUrl}) : super(key: key);
 
-  @override
-  State<_YoutubeEmbedWidget> createState() => _YoutubeEmbedWidgetState();
-}
-
-class _YoutubeEmbedWidgetState extends State<_YoutubeEmbedWidget> {
-  late YoutubePlayerController _controller;
-  bool _isValidUrl = true;
-
-  @override
-  void initState() {
-    super.initState();
-    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
-    if (videoId == null) {
-      _isValidUrl = false;
-      return;
+  String? _getVideoId(String url) {
+    if (url.isEmpty) return null;
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
+    if (uri.host.contains('youtube.com')) {
+      return uri.queryParameters['v'];
+    } else if (uri.host.contains('youtu.be')) {
+      return uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
     }
-    _controller = YoutubePlayerController.fromVideoId(
-      videoId: videoId,
-      autoPlay: false,
-      params: const YoutubePlayerParams(
-        showControls: true,
-        mute: false,
-        showFullscreenButton: true,
-        loop: false,
-      ),
-    );
+    return null;
   }
 
-  @override
-  void dispose() {
-    if (_isValidUrl) {
-      _controller.close();
+  Future<void> _launchVideo() async {
+    final uri = Uri.parse(videoUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $videoUrl');
     }
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isValidUrl) {
+    final videoId = _getVideoId(videoUrl);
+
+    if (videoId == null) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -451,11 +469,43 @@ class _YoutubeEmbedWidgetState extends State<_YoutubeEmbedWidget> {
         ),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: YoutubePlayer(
-        controller: _controller,
-        aspectRatio: 16 / 9,
+
+    final thumbnailUrl = 'https://img.youtube.com/vi/$videoId/0.jpg';
+
+    return GestureDetector(
+      onTap: _launchVideo,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              thumbnailUrl,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  width: double.infinity,
+                  color: Colors.black26,
+                  child: const Center(
+                    child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            width: 60,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
+          ),
+        ],
       ),
     );
   }

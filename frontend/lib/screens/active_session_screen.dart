@@ -278,67 +278,77 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
 
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
+    bool isRemoved = false;
+
+    void removeEntry() {
+      if (!isRemoved) {
+        isRemoved = true;
+        entry.remove();
+      }
+    }
+
     entry = OverlayEntry(
       builder: (_) => Positioned(
         top: MediaQuery.of(context).size.height * 0.25,
         left: 32,
         right: 32,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.amber.withOpacity(0.9),
-                  Colors.orange.withOpacity(0.9),
+        child: GestureDetector(
+          onTap: removeEntry,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.withOpacity(0.9),
+                    Colors.orange.withOpacity(0.9),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amber.withOpacity(0.5),
+                    blurRadius: 30,
+                    spreadRadius: 5,
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.amber.withOpacity(0.5),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🏆', style: TextStyle(fontSize: 48)),
-                const SizedBox(height: 8),
-                const Text(
-                  'NUOVO RECORD!',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('🏆', style: TextStyle(fontSize: 48)),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'NUOVO RECORD!',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
                   ),
-                ),
-                Text(
-                  '${weight.toStringAsFixed(weight == weight.roundToDouble() ? 0 : 1)} kg',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
+                  Text(
+                    '${weight.toStringAsFixed(weight == weight.roundToDouble() ? 0 : 1)} kg',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ).animate()
-            .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.0, 1.0),
-                   duration: 400.ms, curve: Curves.elasticOut)
-            .fadeIn(duration: 200.ms),
+                ],
+              ),
+            ).animate()
+              .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.0, 1.0),
+                     duration: 400.ms, curve: Curves.elasticOut)
+              .fadeIn(duration: 200.ms),
+          ),
         ),
       ),
     );
 
     overlay.insert(entry);
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      entry.remove();
-    });
+    Future.delayed(const Duration(milliseconds: 2500), removeEntry);
   }
 
   Future<bool> _onWillPop() async {

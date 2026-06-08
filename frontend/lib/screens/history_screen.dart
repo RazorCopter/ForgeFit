@@ -23,6 +23,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _selectedDay = _focusedDay;
   }
 
+  Color _getColorForWorkout(CompletedWorkout w) {
+    final title = w.title.toLowerCase();
+    if (title.contains('push')) return AppTheme.pushAccent;
+    if (title.contains('pull')) return AppTheme.pullAccent;
+    if (title.contains('legs') || title.contains('gambe')) return AppTheme.legsAccent;
+    return AppTheme.cyan;
+  }
+
   Map<DateTime, List<CompletedWorkout>> _getWorkoutsByDay(List<CompletedWorkout> allWorkouts) {
     Map<DateTime, List<CompletedWorkout>> map = {};
     for (var w in allWorkouts) {
@@ -38,6 +46,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<CompletedWorkout> _getWorkoutsForDay(DateTime date, Map<DateTime, List<CompletedWorkout>> workoutsByDay) {
     final normalizedDate = DateTime(date.year, date.month, date.day);
     return workoutsByDay[normalizedDate] ?? [];
+  }
+
+  Future<void> _deleteWorkout(CompletedWorkout workout) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text('Eliminare allenamento?', style: TextStyle(color: Colors.white)),
+        content: const Text('Questa azione è irreversibile e rimuoverà la sessione dallo storico.', style: TextStyle(color: AppTheme.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annulla', style: TextStyle(color: AppTheme.cyan))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Elimina', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await DatabaseService.deleteWorkout(workout);
+    }
   }
 
   @override
@@ -85,10 +111,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppTheme.pushAccent, width: 2),
                 ),
-                markerDecoration: const BoxDecoration(
-                  color: AppTheme.pullAccent,
-                  shape: BoxShape.circle,
-                ),
+              ),
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isEmpty) return const SizedBox();
+                  return Positioned(
+                    bottom: 4,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: events.cast<CompletedWorkout>().map((w) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _getColorForWorkout(w),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -156,41 +200,53 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: Colors.black12,
-                                  borderRadius: const BorderRadius.only(
+                                  borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(16),
                                     bottomRight: Radius.circular(16),
                                   ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: w.exercises.map((ex) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 12.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(ex.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                          const SizedBox(height: 8),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: ex.sets.map((s) {
-                                              return Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.pullAccent.withOpacity(0.2),
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text('${s.weight}kg x ${s.reps}', style: const TextStyle(color: AppTheme.pullAccent, fontSize: 12)),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ],
+                                  children: [
+                                    ...w.exercises.map((ex) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 12.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(ex.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                            const SizedBox(height: 8),
+                                            Wrap(
+                                              spacing: 8,
+                                              runSpacing: 8,
+                                              children: ex.sets.map((s) {
+                                                return Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: AppTheme.pullAccent.withOpacity(0.2),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Text('${s.weight}kg x ${s.reps}', style: const TextStyle(color: AppTheme.pullAccent, fontSize: 12)),
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                    const SizedBox(height: 12),
+                                    TextButton.icon(
+                                      onPressed: () => _deleteWorkout(w),
+                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                      label: const Text('Elimina Allenamento', style: TextStyle(color: Colors.redAccent)),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        backgroundColor: Colors.redAccent.withOpacity(0.1),
                                       ),
-                                    );
-                                  }).toList(),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

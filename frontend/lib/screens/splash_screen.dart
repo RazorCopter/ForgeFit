@@ -17,9 +17,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () async {
-      if (!mounted) return;
-      final loggedIn = await AuthService.isLoggedIn();
+    final minimumDelay = Future.delayed(const Duration(milliseconds: 1500));
+    final checkAuth = AuthService.isLoggedIn().then((loggedIn) async {
       if (loggedIn) {
         // Sincronizzazione di sicurezza: se AuthService ha l'email ma DatabaseService no, la ripristiniamo.
         final email = await AuthService.getEmail();
@@ -27,7 +26,12 @@ class _SplashScreenState extends State<SplashScreen> {
           await DatabaseService.saveUserEmail(email);
         }
       }
+      return loggedIn;
+    });
+
+    Future.wait([minimumDelay, checkAuth]).then((results) {
       if (!mounted) return;
+      final loggedIn = results[1] as bool;
       final Widget next = loggedIn ? const MainScreen() : const AuthScreen();
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(

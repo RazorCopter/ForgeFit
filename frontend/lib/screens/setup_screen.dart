@@ -83,6 +83,42 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
+  Future<void> _resetApp() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text('Reset App e Dati?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '⚠️ TUTTI i dati salvati sul dispositivo verranno eliminati (storico, preferenze, cache). Verrai disconnesso. Questa operazione è irreversibile.',
+          style: TextStyle(color: Colors.redAccent),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('RESET', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await AuthService.logout();
+      await DatabaseService.clearAllData();
+      
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   void _showSnackBar(String msg, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -404,6 +440,16 @@ class _SetupScreenState extends State<SetupScreen> {
               color: Colors.redAccent,
               onTap: _logout,
             ).animate().fade(delay: 400.ms).slideX(),
+            
+            const SizedBox(height: 16),
+
+            _buildSetupCard(
+              title: 'Reset App e Dati',
+              subtitle: 'Elimina tutto e disconnetti',
+              icon: Icons.delete_forever,
+              color: Colors.red,
+              onTap: _resetApp,
+            ).animate().fade(delay: 450.ms).slideX(),
           ],
         ),
       ),

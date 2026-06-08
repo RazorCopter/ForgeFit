@@ -46,43 +46,47 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        backgroundColor: AppTheme.surface,
-        selectedItemColor: AppTheme.pushAccent,
-        unselectedItemColor: AppTheme.textSecondary,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Routines',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Storico',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Statistiche',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome),
-            label: 'AI Analysis',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Setup',
-          ),
-        ],
+    return AppTheme.buildBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedItemColor: AppTheme.pushAccent,
+          unselectedItemColor: AppTheme.textSecondary,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Routines',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month),
+              label: 'Storico',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart),
+              label: 'Statistiche',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.auto_awesome),
+              label: 'AI Analysis',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'Setup',
+            ),
+          ],
+        ),
       ),
     );
   }

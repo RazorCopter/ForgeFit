@@ -15,6 +15,7 @@ import '../core/api_service.dart';
 import '../data/database_service.dart';
 import '../services/plan_service.dart';
 import 'day_detail_screen.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -170,6 +171,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ----------------------------------------------------------------
+  // Formatting Last Sync
+  // ----------------------------------------------------------------
+  String _formatLastSync() {
+    final lastSync = DatabaseService.getLastSyncTimestamp();
+    if (lastSync == null) return 'Mai';
+    final now = DateTime.now();
+    final diff = now.difference(lastSync);
+    if (diff.inMinutes < 1) return 'Pochi istanti fa';
+    if (diff.inHours < 1) return '${diff.inMinutes} min fa';
+    if (diff.inDays < 1) return '${diff.inHours} ore fa';
+    return '${lastSync.day.toString().padLeft(2, '0')}/${lastSync.month.toString().padLeft(2, '0')} ${lastSync.hour.toString().padLeft(2, '0')}:${lastSync.minute.toString().padLeft(2, '0')}';
+  }
+
+  // ----------------------------------------------------------------
   // Build
   // ----------------------------------------------------------------
   @override
@@ -247,14 +262,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 32),
 
-              const Text(
-                'La tua Settimana',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                ),
-              ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text(
+                    'La tua Settimana',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
+                  Text(
+                    'Sinc: ${_formatLastSync()}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ).animate().fade(delay: 300.ms),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
@@ -306,14 +334,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // ── Lista giorni o placeholder ───────────────────────
               Expanded(
-                child: _days.isEmpty
-                    ? _buildEmptyState()   // Nessuna scheda caricata
-                    : _buildDaysList(),    // Lista giorni di allenamento
+                child: _isSyncing && _days.isEmpty
+                    ? _buildShimmerLoading()
+                    : _days.isEmpty
+                        ? _buildEmptyState()   // Nessuna scheda caricata
+                        : RefreshIndicator(
+                            onRefresh: () => _syncScheda(silent: true),
+                            color: AppTheme.cyan,
+                            backgroundColor: AppTheme.surface,
+                            child: _buildDaysList(),
+                          ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: 4,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: Shimmer.fromColors(
+            baseColor: AppTheme.surfaceVariant,
+            highlightColor: AppTheme.surfaceVariant.withOpacity(0.5),
+            child: Container(
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1,17 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:confetti/confetti.dart';
 import '../core/theme.dart';
 import '../models/completed_workout.dart';
 
-class WorkoutSummaryScreen extends StatelessWidget {
+class WorkoutSummaryScreen extends StatefulWidget {
   final CompletedWorkout workout;
 
   const WorkoutSummaryScreen({super.key, required this.workout});
 
+  @override
+  State<WorkoutSummaryScreen> createState() => _WorkoutSummaryScreenState();
+}
+
+class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController.play();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
   double get _totalVolume {
     double v = 0;
-    for (final ex in workout.exercises) {
+    for (final ex in widget.workout.exercises) {
       for (final s in ex.sets) {
         v += s.weight * s.reps;
       }
@@ -24,7 +45,9 @@ class WorkoutSummaryScreen extends StatelessWidget {
     return AppTheme.buildBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(
+        body: Stack(
+          children: [
+            SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -48,7 +71,7 @@ class WorkoutSummaryScreen extends StatelessWidget {
 
                 Center(
                   child: Text(
-                    workout.title,
+                    widget.workout.title,
                     style: const TextStyle(
                       color: AppTheme.textSecondary,
                       fontSize: 16,
@@ -71,7 +94,7 @@ class WorkoutSummaryScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(child: _AnimatedKPICard(
                       label: 'Durata',
-                      value: workout.durationSeconds / 60,
+                      value: widget.workout.durationSeconds / 60,
                       unit: 'min',
                       color: AppTheme.cyan,
                       icon: Icons.timer_outlined,
@@ -80,7 +103,7 @@ class WorkoutSummaryScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(child: _AnimatedKPICard(
                       label: 'Esercizi',
-                      value: workout.exercises.length.toDouble(),
+                      value: widget.workout.exercises.length.toDouble(),
                       unit: '',
                       color: AppTheme.legsAccent,
                       icon: Icons.list_alt,
@@ -102,7 +125,7 @@ class WorkoutSummaryScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                ...workout.exercises.asMap().entries.map((entry) {
+                ...widget.workout.exercises.asMap().entries.map((entry) {
                   final i = entry.key;
                   final ex = entry.value;
                   return _ExerciseSummaryCard(exercise: ex)
@@ -135,9 +158,24 @@ class WorkoutSummaryScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [AppTheme.cyan, AppTheme.vividPurple, AppTheme.legsAccent, Colors.white],
+            emissionFrequency: 0.05,
+            numberOfParticles: 20,
+            maxBlastForce: 20,
+            minBlastForce: 10,
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+}
 }
 
 class _AnimatedKPICard extends StatelessWidget {
