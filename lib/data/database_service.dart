@@ -11,21 +11,44 @@ class DatabaseService {
   static const String _userProfileBoxName = 'user_profile';
   static const String _biometricBoxName = 'biometric_records';
   static const String _settingsBoxName = 'settings';
+  static const String _planBoxName = 'training_plan';
 
   static Future<void> openBox() async {
     await Hive.openBox<CompletedWorkout>(_workoutBoxName);
     await Hive.openBox<UserProfile>(_userProfileBoxName);
     await Hive.openBox<BiometricRecord>(_biometricBoxName);
     await Hive.openBox(_settingsBoxName);
+    await Hive.openBox(_planBoxName);
   }
 
   static Box<CompletedWorkout> get _workoutBox => Hive.box<CompletedWorkout>(_workoutBoxName);
   static Box<UserProfile> get _userProfileBox => Hive.box<UserProfile>(_userProfileBoxName);
   static Box<BiometricRecord> get _biometricBox => Hive.box<BiometricRecord>(_biometricBoxName);
   static Box get _settingsBox => Hive.box(_settingsBoxName);
+  static Box get _planBox => Hive.box(_planBoxName);
 
   static ValueListenable<Box<CompletedWorkout>> workoutBoxListenable() => _workoutBox.listenable();
   static ValueListenable<Box<BiometricRecord>> biometricBoxListenable() => _biometricBox.listenable();
+
+  // --- TRAINING PLAN CACHE ---
+
+  /// Salva il JSON grezzo della scheda ricevuta dal backend.
+  static Future<void> saveRawPlan(Map<String, dynamic> planJson) async {
+    await _planBox.put('current', jsonEncode(planJson));
+  }
+
+  /// Carica la scheda dalla cache locale e la parsa in [TrainingDay].
+  /// Restituisce null se non è mai stata sincronizzata.
+  static List<TrainingDay>? loadCachedPlan() {
+    final raw = _planBox.get('current') as String?;
+    if (raw == null) return null;
+    try {
+      final planMap = jsonDecode(raw) as Map<String, dynamic>;
+      return parseTrainingDaysFromJson(planMap);
+    } catch (_) {
+      return null;
+    }
+  }
 
   // --- SETTINGS ---
   static Future<void> saveAIActivationDate(DateTime date) async {
@@ -373,13 +396,4 @@ class DatabaseService {
     }
   }
 
-  static Future<void> _mergeWorkouts(List<CompletedWorkout> importedWorkouts) async {
-    final existingIds = _workoutBox.values.map((w) => w.id).toSet();
-    for (var w in importedWorkouts) {
-      if (!existingIds.contains(w.id)) {
-        await _workoutBox.add(w);
-        existingIds.add(w.id);
-      }
-    }
-  }
 }

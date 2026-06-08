@@ -56,6 +56,18 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
   @override
   final int typeId = 4;
 
+  // Usa -1.0 come sentinel per i campi nullable, coerente con UserProfileAdapter.
+  // Record scritti prima di questo fix hanno 0.0 per i campi non inseriti:
+  // verranno letti come 0.0 (non null) — comportamento documentato e accettabile.
+  double? _readNullable(BinaryReader reader) {
+    try {
+      final v = reader.readDouble();
+      return v == -1.0 ? null : v;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   BiometricRecord read(BinaryReader reader) {
     return BiometricRecord(
@@ -64,11 +76,11 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
       hips: reader.readDouble(),
       biceps: reader.readDouble(),
       chest: reader.readDouble(),
-      waist: reader.readDouble(),
-      thigh: reader.readDouble(),
-      calf: reader.readDouble(),
-      neck: reader.readDouble(),
-      wrist: reader.readDouble(),
+      waist: _readNullable(reader),
+      thigh: _readNullable(reader),
+      calf: _readNullable(reader),
+      neck: _readNullable(reader),
+      wrist: _readNullable(reader),
     );
   }
 
@@ -79,10 +91,10 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
     writer.writeDouble(obj.hips);
     writer.writeDouble(obj.biceps);
     writer.writeDouble(obj.chest);
-    writer.writeDouble(obj.waist ?? 0.0);
-    writer.writeDouble(obj.thigh ?? 0.0);
-    writer.writeDouble(obj.calf ?? 0.0);
-    writer.writeDouble(obj.neck ?? 0.0);
-    writer.writeDouble(obj.wrist ?? 0.0);
+    writer.writeDouble(obj.waist ?? -1.0);
+    writer.writeDouble(obj.thigh ?? -1.0);
+    writer.writeDouble(obj.calf ?? -1.0);
+    writer.writeDouble(obj.neck ?? -1.0);
+    writer.writeDouble(obj.wrist ?? -1.0);
   }
 }

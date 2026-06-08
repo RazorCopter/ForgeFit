@@ -97,14 +97,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
   }
 
-  int _getIsoWeekNumber(DateTime date) {
-    DateTime thursday = DateTime(date.year, date.month, date.day);
-    thursday = thursday.add(Duration(days: 4 - thursday.weekday));
-    DateTime startOfYear = DateTime(thursday.year, 1, 1);
-    int days = thursday.difference(startOfYear).inDays;
-    return 1 + (days ~/ 7);
-  }
-
   void _checkAILock() {
     final activationDate = DatabaseService.getAIActivationDate();
     if (activationDate != null) {
@@ -123,22 +115,45 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
   }
 
-  void _unlockAI() {
-    final now = DateTime.now();
-    final currentWeek = _getIsoWeekNumber(now);
-    final expectedPassword = 'forza$currentWeek';
+  Future<void> _unlockAI() async {
+    final code = _passwordController.text.trim();
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inserisci il codice di sblocco.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
 
-    if (_passwordController.text.trim() == expectedPassword) {
-      DatabaseService.saveAIActivationDate(now);
-      _checkAILock();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('AI Sbloccata con successo!'), backgroundColor: Colors.green),
-      );
-      _passwordController.clear();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password errata o scaduta.'), backgroundColor: Colors.redAccent),
-      );
+    try {
+      final result = await ApiService.unlockAI(code: code);
+      if (result['valid'] == true) {
+        await DatabaseService.saveAIActivationDate(DateTime.now());
+        _checkAILock();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('AI Sbloccata con successo!'), backgroundColor: Colors.green),
+          );
+          _passwordController.clear();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Codice non valido o scaduto.'), backgroundColor: Colors.redAccent),
+          );
+        }
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Server non raggiungibile.'), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
 

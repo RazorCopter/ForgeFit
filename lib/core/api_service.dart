@@ -372,6 +372,32 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // POST /api/auth/unlock-ai [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+
+  /// Verifica il codice di sblocco AI lato server.
+  /// Restituisce `{ "valid": true, "expires_at": "ISO8601" }` se corretto.
+  static Future<Map<String, dynamic>> unlockAI({required String code}) async {
+    try {
+      final headers = await AuthService.authHeaders();
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.unlockAI),
+            headers: headers,
+            body: jsonEncode({'code': code}),
+          )
+          .timeout(_timeout);
+
+      _checkUnauthorized(response);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Impossibile raggiungere il server: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // POST /api/ai/analyze [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
 

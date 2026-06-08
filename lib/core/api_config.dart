@@ -45,4 +45,7 @@ class ApiConfig {
 
   /// POST  /api/workouts/save → salvataggio allenamento completato
   static const String saveWorkout = '$baseUrl/api/workouts/save';
+
+  /// POST  /api/auth/unlock-ai → verifica codice sblocco AI (lato server)
+  static const String unlockAI = '$baseUrl/api/auth/unlock-ai';
 }

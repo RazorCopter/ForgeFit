@@ -17,7 +17,7 @@ git add -f build/web/
 echo.
 
 :: 3. Controllo stato dei file (Così vedi cosa sta per essere pushato)
-echo [3/4] Controllo stato dei file...
+echo [3/4] Controllo stato dei file....
 git status
 echo.
 

@@ -23,14 +23,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ----------------------------------------------------------------
-  // Stato della lista di giorni di allenamento
-  // Inizia VUOTA: l'utente deve sincronizzare dal server.
-  // ----------------------------------------------------------------
   List<TrainingDay> _days = [];
 
   /// true mentre è in corso la chiamata GET /api/plans/{user_id}
   bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Carica la scheda dalla cache locale (se disponibile) senza attendere la sync
+    final cached = DatabaseService.loadCachedPlan();
+    if (cached != null && cached.isNotEmpty) {
+      _days = cached;
+    }
+  }
 
   // ----------------------------------------------------------------
   // Icona contestuale al tipo di giorno
@@ -82,9 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // NOTA: la chiave è "plan", NON "plan_json".
       final rawPlanJson = response['plan'];
 
-      // ── DEBUG ─────────────────────────────────────────────────────────────
-      print('[HomeScreen] rawPlanJson runtimeType: ${rawPlanJson?.runtimeType}');
-      // ─────────────────────────────────────────────────────────────
+      debugPrint('[HomeScreen] rawPlanJson runtimeType: ${rawPlanJson?.runtimeType}');
 
       if (rawPlanJson == null) {
         // Il server ha risposto ma senza scheda: l'utente non ha ancora
@@ -101,30 +105,25 @@ class _HomeScreenState extends State<HomeScreen> {
         planMap = rawPlanJson;
       } else if (rawPlanJson is String) {
         // Double-decode: la stringa è essa stessa JSON da parsare
-        print('[HomeScreen] plan_json è una String → eseguo jsonDecode');
+        debugPrint('[HomeScreen] plan_json è una String → eseguo jsonDecode');
         planMap = jsonDecode(rawPlanJson) as Map<String, dynamic>;
       } else {
         // Tipo inatteso — stampa e mostra errore
-        print('[HomeScreen] plan_json tipo inatteso: ${rawPlanJson.runtimeType} — valore: $rawPlanJson');
+        debugPrint('[HomeScreen] plan_json tipo inatteso: ${rawPlanJson.runtimeType} — valore: $rawPlanJson');
         _showErrorSnackBar('Formato scheda non riconosciuto. Contatta il supporto.');
         return;
       }
       // ─────────────────────────────────────────────────────────────
+
+      // Persiste il piano grezzo su Hive per ricaricarlo al prossimo avvio
+      await DatabaseService.saveRawPlan(planMap);
 
       // Parsing del JSON in modelli Flutter.
       // parseTrainingDaysFromJson accetta la Map completa e ne estrae "giorni".
       final List<TrainingDay> parsedDays =
           DatabaseService.parseTrainingDaysFromJson(planMap);
 
-      // ── DEBUG ─────────────────────────────────────────────────────────────
-      print('[HomeScreen] Giorni parsati: ${parsedDays.length}');
-      for (final d in parsedDays) {
-        print('  └ Giorno: ${d.title} | Esercizi: ${d.exercises.length}');
-      }
-      // ─────────────────────────────────────────────────────────────
-
-      // Ordinamento dei giorni per nome (es. "Giorno 1", "Giorno 2", "Giorno 3")
-      parsedDays.sort((a, b) => a.title.compareTo(b.title));
+      debugPrint('[HomeScreen] Giorni parsati: ${parsedDays.length}');
 
       // Aggiornamento reattivo dell'UI
       setState(() => _days = parsedDays);

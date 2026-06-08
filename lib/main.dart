@@ -32,14 +32,17 @@ void main() async {
       MaterialPageRoute(builder: (_) => const AuthScreen()),
       (route) => false,
     );
-    // SnackBar globale
-    ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
-      const SnackBar(
-        content: Text('Sessione scaduta. Effettua nuovamente il login.'),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // SnackBar globale — guard contro context null o smontato
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text('Sessione scaduta. Effettua nuovamente il login.'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   };
 
   runApp(const MyTrainingLogApp());

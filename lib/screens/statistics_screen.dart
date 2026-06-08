@@ -73,15 +73,68 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return spots.isEmpty ? [const FlSpot(0, 0)] : spots;
   }
 
-  List<FlSpot> _get1RMSpotsMock() {
-    return [
-      const FlSpot(0, 80),
-      const FlSpot(1, 82.5),
-      const FlSpot(2, 85),
-      const FlSpot(3, 85),
-      const FlSpot(4, 87.5),
-      const FlSpot(5, 90),
-    ];
+  /// Calcola la stima dell'1RM con la formula di Epley: weight * (1 + reps/30).
+  /// Trova l'esercizio compound più frequente negli ultimi 60 giorni e ne
+  /// traccia il massimo 1RM stimato per sessione (ultimi 6 allenamenti).
+  List<FlSpot> _get1RMSpots(List<CompletedWorkout> workouts) {
+    if (workouts.isEmpty) return [];
+
+    // Conta le occorrenze di ogni esercizio per trovare il più frequente
+    final Map<String, int> frequency = {};
+    for (final w in workouts) {
+      for (final ex in w.exercises) {
+        frequency[ex.name] = (frequency[ex.name] ?? 0) + 1;
+      }
+    }
+    if (frequency.isEmpty) return [];
+
+    final topExercise = frequency.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
+
+    // Raggruppa il miglior 1RM stimato per sessione
+    final Map<DateTime, double> best1rmByDay = {};
+    for (final w in workouts) {
+      for (final ex in w.exercises) {
+        if (ex.name != topExercise) continue;
+        double sessionBest = 0;
+        for (final s in ex.sets) {
+          if (s.reps > 0 && s.weight > 0) {
+            final estimated = s.weight * (1 + s.reps / 30);
+            if (estimated > sessionBest) sessionBest = estimated;
+          }
+        }
+        if (sessionBest > 0) {
+          final day = DateTime(w.date.year, w.date.month, w.date.day);
+          if ((best1rmByDay[day] ?? 0) < sessionBest) {
+            best1rmByDay[day] = sessionBest;
+          }
+        }
+      }
+    }
+
+    if (best1rmByDay.isEmpty) return [];
+
+    final sorted = best1rmByDay.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final recent = sorted.length > 6 ? sorted.sublist(sorted.length - 6) : sorted;
+
+    return recent
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), double.parse(e.value.value.toStringAsFixed(1))))
+        .toList();
+  }
+
+  String _top1RMExerciseName(List<CompletedWorkout> workouts) {
+    final Map<String, int> frequency = {};
+    for (final w in workouts) {
+      for (final ex in w.exercises) {
+        frequency[ex.name] = (frequency[ex.name] ?? 0) + 1;
+      }
+    }
+    if (frequency.isEmpty) return 'Esercizio principale';
+    return frequency.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
   }
 
   Map<String, double> _getMuscleGroupVolumes(List<CompletedWorkout> workouts) {
@@ -204,47 +257,63 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ).animate().fade(delay: 300.ms).scale(),
 
               const SizedBox(height: 32),
-              const Text(
-                'Stima 1RM (Panca Piana) - Simulato',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-              ).animate().fade(delay: 400.ms),
-              const SizedBox(height: 16),
-
-              AppTheme.glassContainer(
-                padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 24),
-                child: SizedBox(
-                  height: 200,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: AppTheme.textSecondary.withOpacity(0.1),
-                          strokeWidth: 1,
-                        ),
+              Builder(builder: (_) {
+                final spots = _get1RMSpots(workouts);
+                final exerciseName = _top1RMExerciseName(workouts);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Stima 1RM — $exerciseName',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                    ).animate().fade(delay: 400.ms),
+                    const SizedBox(height: 16),
+                    AppTheme.glassContainer(
+                      padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 24),
+                      child: SizedBox(
+                        height: 200,
+                        child: spots.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'Completa almeno una sessione\nper vedere la progressione 1RM.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                                ),
+                              )
+                            : LineChart(
+                                LineChartData(
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawVerticalLine: false,
+                                    getDrawingHorizontalLine: (value) => FlLine(
+                                      color: AppTheme.textSecondary.withOpacity(0.1),
+                                      strokeWidth: 1,
+                                    ),
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (val, meta) => Text(val.toInt().toString(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10)))),
+                                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  ),
+                                  borderData: FlBorderData(show: false),
+                                  lineBarsData: [
+                                    LineChartBarData(
+                                      spots: spots,
+                                      isCurved: true,
+                                      color: AppTheme.cyan,
+                                      barWidth: 3,
+                                      isStrokeCapRound: true,
+                                      dotData: FlDotData(show: true),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       ),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (val, meta) => Text(val.toInt().toString(), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10)))),
-                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: _get1RMSpotsMock(),
-                          isCurved: true,
-                          color: AppTheme.cyan,
-                          barWidth: 3,
-                          isStrokeCapRound: true,
-                          dotData: FlDotData(show: true),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ).animate().fade(delay: 500.ms).scale(),
+                    ).animate().fade(delay: 500.ms).scale(),
+                  ],
+                );
+              }),
 
               const SizedBox(height: 32),
               const Text(

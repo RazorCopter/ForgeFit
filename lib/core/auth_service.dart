@@ -3,6 +3,7 @@
 /// Gestione persistenza token JWT e stato di autenticazione.
 /// Usa shared_preferences (compatibile web + mobile).
 /// ============================================================
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
@@ -47,10 +48,32 @@ class AuthService {
     return prefs.getInt(_keyUserId);
   }
 
+  // ── Controlla se il token JWT è scaduto (decodifica payload base64) ───────
+  static bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final data = jsonDecode(payload) as Map<String, dynamic>;
+      final exp = data['exp'] as int?;
+      if (exp == null) return false;
+      return DateTime.now().millisecondsSinceEpoch ~/ 1000 >= exp;
+    } catch (_) {
+      return false; // token non parsabile → non bloccare l'utente
+    }
+  }
+
   // ── Controlla se l'utente è autenticato ───────────────────────────────────
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null && token.isNotEmpty;
+    if (token == null || token.isEmpty) return false;
+    if (_isTokenExpired(token)) {
+      await logout(); // pulizia automatica token scaduto
+      return false;
+    }
+    return true;
   }
 
   // ── Logout: cancella token e email ────────────────────────────────────────

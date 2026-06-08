@@ -1,5 +1,5 @@
-name: my_training_log
-description: "A comprehensive training log app with daily routines and rest timers."
+name: forgefit
+description: "Your AI-powered personal trainer."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -20,7 +20,6 @@ dependencies:
   uuid: ^4.3.3
   google_fonts: ^6.1.0
   url_launcher: ^6.2.6
-  youtube_player_iframe: ^5.1.2
   file_picker: ^8.0.0
   file_saver: ^0.3.1
   http: ^1.2.1
