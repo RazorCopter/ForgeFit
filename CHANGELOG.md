@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.1.8] — 2026-06-08
+
+### Fixed
+- **Installazione App (PWA) / CORS**: Risolto il blocco di Cloudflare Access sul file `manifest.json`. È stato aggiunto l'attributo `crossorigin="use-credentials"` al tag link HTML. Ora il browser invia i cookie di sessione di Cloudflare anche per il caricamento del manifest, permettendo al prompt PWA di apparire correttamente.
+
+---
+
 ## [1.1.7] — 2026-06-08
 
 ### Fixed
