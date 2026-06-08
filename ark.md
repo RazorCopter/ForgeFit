@@ -583,18 +583,20 @@ Variabili d'ambiente da configurare (passate da Portainer o `.env`):
 ```env
 JWT_SECRET_KEY=cambia_questa_chiave_in_produzione   # obbligatoria — fail-fast se assente
 GEMINI_API_KEY=la_tua_api_key_google
-ALLOWED_ORIGINS=https://fitconsole.ghome.it
+ALLOWED_ORIGINS=https://forgefit.ghome.it,http://10.0.0.105:8083   # fallback, non più necessario con proxy
 ```
 
 ### Porte produzione
 
 | Servizio | Porta host | Porta container | Note |
 |---|---|---|---|
-| Backend FastAPI | **8100** | 8000 | reverse proxy su fitconsole.ghome.it |
-| Frontend Nginx | **8083** | 80 | reverse proxy su fitconsole.ghome.it |
+| Backend FastAPI | **8100** | 8000 | accesso diretto solo da rete interna Docker |
+| Frontend Nginx | **8083** | 80 | reverse proxy su `forgefit.ghome.it`, include proxy `/api/` → backend |
 
-> Se il reverse proxy (Nginx/Cloudflare) su `fitconsole.ghome.it` era configurato
-> per puntare a `:8000`, va aggiornato a `:8100`.
+> **Architettura Same-Origin (v1.1.4+):** Il frontend Nginx fa da reverse-proxy
+> per tutte le chiamate `/api/` verso il container backend sulla rete Docker interna.
+> Il browser vede una sola origin (`forgefit.ghome.it`), eliminando i problemi CORS.
+> Il build web Flutter usa `API_BASE_URL=` (vuoto) → URL relative (`/api/...`).
 
 ### Deploy su Portainer (produzione)
 

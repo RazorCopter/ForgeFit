@@ -13,7 +13,8 @@ COPY . .
 # Compiliamo l'app in versione release
 RUN flutter clean
 RUN flutter pub get
-RUN flutter build web --release
+# API_BASE_URL vuoto → URL relative (/api/...) servite dal proxy Nginx locale
+RUN flutter build web --release --dart-define=API_BASE_URL=
 
 # ==========================================
 # STAGE 2: La Vetrina (Produzione)
