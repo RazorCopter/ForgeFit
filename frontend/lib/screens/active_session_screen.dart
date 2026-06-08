@@ -282,6 +282,17 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isResting) {
+      final nextIdx = _activeSetIndex + 1;
+      NextSetInfo? nextSetInfo;
+      if (nextIdx < _liveSets.length) {
+        final nextLive = _liveSets[nextIdx];
+        nextSetInfo = NextSetInfo(
+          setNumber: nextIdx + 1,
+          totalSets: widget.exercise.sets.length,
+          kg: nextLive.kg,
+          reps: nextLive.reps,
+        );
+      }
       return AppTheme.buildBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -290,6 +301,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
               durationSeconds: _restSeconds,
               accentColor: widget.accentColor,
               onFinish: _endRest,
+              nextSet: nextSetInfo,
             ),
           ),
         ),

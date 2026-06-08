@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-08. Riferimento: branch `main`.
-> **v2 — Struttura Monorepo** (frontend/ + backend/).
-> I 13 bug critici identificati in v1 sono stati tutti risolti.
+> **v3 — Post fix & feature session**.
+> 13 bug risolti + 4 feature implementate. Deploy su Portainer via Git.
 
 ---
 
@@ -15,14 +15,15 @@
 - **Dashboard web** (HTML statico servita dal backend) — pannello di controllo per il Personal Trainer
 
 Il sistema permette di:
-- Autenticarsi con un account personale (JWT 7gg)
+- Autenticarsi con un account personale (JWT + refresh token)
 - Scaricare la scheda di allenamento personalizzata assegnata dal trainer
 - Eseguire sessioni con timer, tracciamento serie, peso e reps
 - Consultare lo storico su calendario
 - Visualizzare statistiche di volume e stime 1RM (formula Epley)
+- Ricevere suggerimenti di progressive overload automatici basati sullo storico
 - Inviare report all'AI (Gemini via backend) per feedback personalizzati
-- Tracciare le misurazioni biometriche nel tempo
-- Sbloccare le funzionalità AI tramite codice settimanale verificato server-side
+- Tracciare le misurazioni biometriche nel tempo con grafici di tendenza
+- Sbloccare le funzionalità AI tramite codice HMAC-SHA256 verificato server-side
 
 | Voce | Dettaglio |
 |---|---|
@@ -32,9 +33,9 @@ Il sistema permette di:
 | Framework backend | FastAPI 0.x / Python 3.11 |
 | DB backend | SQLite (via SQLAlchemy ORM) |
 | DB locale (app) | Hive (NoSQL binary, 5 box) |
-| Auth | JWT Bearer HS256, scadenza 7gg |
+| Auth | JWT Bearer HS256, access 7gg + refresh 30gg |
 | AI | Google Gemini (gemini-2.5-flash default) |
-| Deployment | Docker + docker-compose |
+| Deployment | Docker + docker-compose su Portainer |
 
 ---
 
@@ -42,7 +43,7 @@ Il sistema permette di:
 
 ```
 ForgeFit/                        ← radice del monorepo (git)
-├── docker-compose.yaml          ← orchestrazione frontend:8083 + backend:8000
+├── docker-compose.yml           ← orchestrazione frontend:8083 + backend:8100
 ├── .gitignore                   ← regole per Flutter, Python, Docker, OS
 ├── ark.md                       ← questo documento
 │
@@ -54,8 +55,8 @@ ForgeFit/                        ← radice del monorepo (git)
 │   │   ├── main.dart            # Entry point — init Hive, interceptor 401
 │   │   ├── core/
 │   │   │   ├── api_config.dart  # URL endpoint centralizzati
-│   │   │   ├── api_service.dart # Client HTTP REST (singleton statico)
-│   │   │   ├── auth_service.dart# Gestione JWT + decodifica exp
+│   │   │   ├── api_service.dart # Client HTTP REST (singleton statico + retry 401)
+│   │   │   ├── auth_service.dart# Gestione JWT/refresh + decodifica exp
 │   │   │   └── theme.dart       # Design system Cyber-Glassmorphism
 │   │   ├── data/
 │   │   │   └── database_service.dart  # CRUD Hive + parser JSON scheda
@@ -65,17 +66,17 @@ ForgeFit/                        ← radice del monorepo (git)
 │   │   │   ├── user_profile.dart      # Profilo utente + Hive adapter (typeId=3)
 │   │   │   └── biometric_record.dart  # Misurazioni + Hive adapter (typeId=4)
 │   │   ├── screens/
-│   │   │   ├── splash_screen.dart     # Splash + auto-login + check JWT exp
-│   │   │   ├── auth_screen.dart       # Login + Registrazione
-│   │   │   ├── main_screen.dart       # Shell BottomNavigationBar (5 tab)
-│   │   │   ├── home_screen.dart       # Dashboard — lista giorni scheda
-│   │   │   ├── day_detail_screen.dart # Dettaglio giorno — lista esercizi
-│   │   │   ├── active_session_screen.dart # Sessione attiva — timer + serie
-│   │   │   ├── history_screen.dart    # Calendario storico allenamenti
-│   │   │   ├── statistics_screen.dart # Grafici volume + 1RM Epley
-│   │   │   ├── analysis_screen.dart   # Misurazioni + sblocco AI + report
-│   │   │   ├── setup_screen.dart      # Sync + export/import backup + sicurezza
-│   │   │   └── onboarding_screen.dart # Onboarding primo accesso
+│   │   │   ├── splash_screen.dart          # Splash + auto-login + check JWT exp
+│   │   │   ├── auth_screen.dart            # Login + Registrazione
+│   │   │   ├── main_screen.dart            # Shell BottomNavigationBar (5 tab)
+│   │   │   ├── home_screen.dart            # Dashboard — lista giorni scheda
+│   │   │   ├── day_detail_screen.dart      # Dettaglio giorno — lista esercizi
+│   │   │   ├── active_session_screen.dart  # Sessione attiva — timer + serie + overload hint
+│   │   │   ├── history_screen.dart         # Calendario storico allenamenti
+│   │   │   ├── statistics_screen.dart      # Grafici volume + 1RM Epley
+│   │   │   ├── analysis_screen.dart        # Misurazioni + sblocco AI + report + trend button
+│   │   │   ├── biometric_trends_screen.dart# Grafici fl_chart per 9 misure corporee
+│   │   │   └── setup_screen.dart           # Sync + export/import backup + sicurezza
 │   │   └── widgets/
 │   │       └── rest_timer_widget.dart # Timer countdown recupero circolare
 │   ├── android/                 # Kotlin MainActivity (package: it.nexusitsolutions.forgefit)
@@ -94,9 +95,9 @@ ForgeFit/                        ← radice del monorepo (git)
     ├── database.py              # SQLite engine + session factory
     ├── ai_service.py            # Gemini API client + prompt builder
     ├── config_manager.py        # admin_config.json (credenziali PT)
-    ├── requirements.txt         # Python dependencies
+    ├── requirements.txt         # Python dependencies (versioni pinnate)
     ├── Dockerfile               # python:3.11-slim + uvicorn
-    ├── data/                    # fitness.db (SQLite, montato come volume)
+    ├── data/                    # fitness.db (SQLite, montato come volume Docker)
     └── static/                  # Dashboard HTML del Personal Trainer
         ├── index.html
         ├── policy.html
@@ -117,13 +118,15 @@ ForgeFit/                        ← radice del monorepo (git)
 │       │                           │                         │
 │  ┌────▼───────────────────────────▼─────┐                   │
 │  │          core/api_service.dart       │                   │
-│  │     (HTTP client + auth headers)     │                   │
+│  │  HTTP client + auth headers          │                   │
+│  │  retry trasparente su 401 via        │                   │
+│  │  refresh token (_RetryWithNewToken)  │                   │
 │  └─────────────────┬────────────────────┘                   │
 │                    │                                        │
 │  ┌─────────────────▼────────────────────┐                   │
 │  │        core/auth_service.dart        │                   │
-│  │  JWT token — SharedPreferences       │                   │
-│  │  + decodifica exp per auto-logout    │                   │
+│  │  access_token + refresh_token        │                   │
+│  │  SharedPreferences — decodifica exp  │                   │
 │  └──────────────────────────────────────┘                   │
 │                                                             │
 │  ┌───────────────────────────────────────┐                  │
@@ -138,17 +141,21 @@ ForgeFit/                        ← radice del monorepo (git)
 ┌─────────────────────────────────────┐
 │   Backend FastAPI (backend/)        │
 │   fitconsole.ghome.it               │
-│   (o localhost:8000 in locale)      │
+│   (o localhost:8100 in locale)      │
 │                                     │
 │  POST /api/auth/login               │
 │  POST /api/auth/register            │
+│  POST /api/auth/refresh             │
 │  POST /api/auth/setup               │
 │  GET  /api/auth/me                  │
 │  PUT  /api/auth/change-password     │
-│  POST /api/auth/unlock-ai   ← NEW   │
+│  POST /api/auth/unlock-ai           │
+│  GET  /api/auth/ai-unlock-code      │
 │  GET  /api/plans/{user_id}          │
 │  POST /api/plans/{user_id}          │
+│  GET  /api/plans/{user_id}/history  │
 │  POST /api/plans/generate-ai        │
+│  GET  /api/workouts/suggestions/… │
 │  POST /api/workouts/save            │
 │  POST /api/measurements             │
 │  POST /api/analysis/generate        │
@@ -168,12 +175,13 @@ ForgeFit/                        ← radice del monorepo (git)
 ### 3.1 Docker Compose
 
 ```yaml
-# docker-compose.yaml (root)
+# docker-compose.yml (root)
 frontend:8083  ← Flutter web build servita da Nginx
-backend:8000   ← FastAPI + SQLite (volume backend_data)
+backend:8100   ← FastAPI + SQLite (volume backend_data)
+               (interno container: 8000 → host: 8100)
 ```
 
-Avvio: `docker-compose up -d`
+Avvio locale: `docker-compose up -d --build`
 Stop: `docker-compose down`
 
 ---
@@ -185,9 +193,9 @@ Stop: `docker-compose down`
 | File | Responsabilità |
 |---|---|
 | `main.py` | FastAPI app, tutti gli endpoint REST, seeding catalogo esercizi |
-| `auth.py` | `hash_password`, `verify_password`, `create_access_token`, `decode_token`, `get_current_user` |
-| `models.py` | SQLAlchemy ORM: `User`, `WorkoutPlan`, `WorkoutLog`, `Measurement`, `ExerciseCatalog`, `SystemSettings` |
-| `schemas.py` | Pydantic request/response: `UserCreate`, `TokenResponse`, `WorkoutPlanCreate`, `AIGenerateRequest`, `UnlockAIRequest`, `UnlockAIResponse`, … |
+| `auth.py` | `hash_password`, `verify_password`, `create_access_token`, `create_refresh_token`, `decode_token`, `decode_refresh_token`, `get_current_user` |
+| `models.py` | SQLAlchemy ORM: `User`, `WorkoutPlan` (con versioning), `WorkoutLog`, `Measurement`, `ExerciseCatalog`, `SystemSettings` |
+| `schemas.py` | Pydantic request/response: `UserCreate`, `TokenResponse`, `RefreshTokenRequest`, `WorkoutPlanCreate`, `WorkoutPlanHistoryItem`, `AIGenerateRequest`, … |
 | `database.py` | `engine` SQLite + `SessionLocal` + `get_db` dependency |
 | `ai_service.py` | `get_model(db)` — carica chiave Gemini e modello configurato; `generate_athlete_analysis_prompt()` |
 | `config_manager.py` | Lettura/scrittura `admin_config.json` (credenziali Personal Trainer) |
@@ -203,15 +211,16 @@ La dipendenza `get_current_user` gestisce entrambi: controlla prima il file admi
 Il JWT ha:
 - Algoritmo: HS256
 - `sub`: email dell'utente
-- `exp`: ora + 7 giorni
-- Chiave: `JWT_SECRET_KEY` da `.env` (default `super_secret_cyberpunk_key` — **da cambiare in produzione**)
+- `type`: `"access"` o `"refresh"`
+- `exp`: access = +7 giorni, refresh = +30 giorni
+- Chiave: `JWT_SECRET_KEY` da env var — **fail-fast all'avvio se non impostata**
 
 ### 4.3 Database SQLite (ORM)
 
 | Tabella | Campi principali |
 |---|---|
 | `users` | id, email, first_name, last_name, age, weight, height, biceps, chest, hips, waist, thigh, calf, neck, wrist, gender, hashed_password, role |
-| `workout_plans` | id, user_id (FK), plan_json (TEXT JSON) |
+| `workout_plans` | id, user_id (FK), plan_json, **version** (int), **label** (str, nullable), **created_at** |
 | `workout_logs` | id, user_id (FK), date, duration_seconds, exercises_json |
 | `measurements` | id, user_id (FK), created_at, weight, chest, waist, hips, biceps, thigh, calf, neck, wrist, goal |
 | `exercise_catalog` | id, nome, gruppo_muscolare, default_serie, default_ripetizioni, default_recupero_secondi, default_note, video_url |
@@ -228,14 +237,14 @@ Il JWT ha:
 | — | `CompletedSetAdapter` | 2 | Serie per esercizio |
 | `user_profile` | `UserProfileAdapter` | 3 | Profilo utente |
 | `biometric_records` | `BiometricRecordAdapter` | 4 | Misurazioni fisiche (key = data ISO) |
-| `settings` | — | — | `user_email`, `user_id`, `ai_activation_date` |
+| `settings` | — | — | `user_email`, `user_id`, `ai_activation_date`, `jwt_refresh_token` |
 | `training_plan` | — | — | `current` → JSON raw della scheda (persistenza offline) |
 
 ---
 
 ## 6. Flussi Funzionali
 
-### 6.1 Flusso di Autenticazione
+### 6.1 Flusso di Autenticazione (con Refresh Token)
 
 ```
 App Start
@@ -250,11 +259,17 @@ SplashScreen
     │           exp >= now → TRUE
     │
     ├─── NO ──► AuthScreen (Login / Register)
-    │             POST /api/auth/login  → JWT, userId, role
-    │             POST /api/auth/register → JWT, userId
-    │             → saveToken(), saveUserId(), saveEmail()
+    │             POST /api/auth/login
+    │               → access_token (7gg) + refresh_token (30gg)
+    │               → saveToken(), saveRefreshToken(), saveUserId(), saveEmail()
     │
     └── YES ──► MainScreen (BottomNavBar 5 tab)
+
+Su 401 in qualsiasi richiesta protetta:
+    ApiService._checkUnauthorizedAsync()
+    ├─ ha refresh_token? → POST /api/auth/refresh → nuovo access_token
+    │    └─ ok → salva e riprova la richiesta originale (_RetryWithNewToken)
+    └─ no / refresh scaduto → logout forzato → AuthScreen
 ```
 
 ### 6.2 Flusso Sincronizzazione Scheda
@@ -267,18 +282,13 @@ HomeScreen (o SetupScreen) → initState
     │
     ▼ [Pulsante cloud_sync]
     │
-DatabaseService.getUserId()
-    │
 ApiService.getPlans(userId)  ← GET /api/plans/{user_id}
-    │
-    ├─ risposta { "plan": { "giorni": [...] } }
-    │
+    │                           (ritorna versione più recente)
     ├─ DatabaseService.saveRawPlan(planMap)   ← persiste su Hive
-    │
     └─ parseTrainingDaysFromJson(planMap) → setState(_days)
 ```
 
-### 6.3 Flusso Sessione di Allenamento
+### 6.3 Flusso Sessione di Allenamento (con Progressive Overload)
 
 ```
 DayDetailScreen → [INIZIA ESERCIZIO]
@@ -287,21 +297,27 @@ DayDetailScreen → [INIZIA ESERCIZIO]
 ActiveSessionScreen(exercise)
     │
     ├─ Carica storico da Hive (pre-popola kg/reps)
-    ├─ Stopwatch 1s
+    ├─ ApiService.getOverloadSuggestions(userId)
+    │    └─ GET /api/workouts/suggestions/{user_id}
+    │         analizza ultime 3 sessioni per esercizio
+    │         → suggestedWeight (+2.5kg se 2+ sessioni on-target)
+    │         → mostrato sotto "Record precedente" in card
+    ├─ Stopwatch 1s (Time Under Tension)
     │
     ▼ LOOP SERIE:
-    │  _completeActiveSet() → RestTimerWidget (countdown)
+    │  _completeActiveSet() → RestTimerWidget (countdown recupero_secondi)
     │  Ultima serie → _showNerdStats()
+    │    kcal = MET(5.0) × peso_kg × durata_ore  (ACSM)
     │
     ▼ [TERMINA SESSIONE]
     │
 DayDetailScreen._finishWorkout()
     ├─ DatabaseService.saveWorkout()        ← Hive (offline)
-    └─ ApiService.saveWorkout()             ← backend (POST /api/workouts/save)
+    └─ ApiService.saveWorkout()             ← backend POST /api/workouts/save
          └─ errore? → solo offline + warning snackbar
 ```
 
-### 6.4 Flusso Sblocco AI (sicuro — server-side)
+### 6.4 Flusso Sblocco AI (HMAC-SHA256 — server-side)
 
 ```
 AnalysisScreen → [AI bloccata]
@@ -310,19 +326,43 @@ AnalysisScreen → [AI bloccata]
     │
     ApiService.unlockAI(code: input_utente)
     │  POST /api/auth/unlock-ai
-    │  Header: Authorization: Bearer {JWT}
-    │  Body: { "code": "forza42" }
     │
     ▼ Backend verifica:
-    │  expected = f"forza{iso_week_corrente}"  ← algoritmo non esposto al client
-    │  code != expected → { "valid": false }
-    │  code == expected → { "valid": true, "expires_at": "domenica 23:59:59 UTC" }
+    │  expected = HMAC-SHA256(JWT_SECRET_KEY, "{year}-W{week}")[:8]
+    │  compare_digest(code, expected)  ← timing-safe
+    │  code errato → { "valid": false }
+    │  code ok     → { "valid": true, "expires_at": "domenica 23:59:59 UTC" }
     │
     ├─ valid=false → SnackBar errore
     └─ valid=true  → DatabaseService.saveAIActivationDate(now) → sblocco UI
+
+Admin può ottenere il codice corrente:
+    GET /api/auth/ai-unlock-code  (solo ruolo admin)
 ```
 
-### 6.5 Flusso Statistiche
+### 6.5 Flusso Grafici Trend Misure Corporee
+
+```
+AnalysisScreen → [Vedi Trend Misure Corporee]
+    │
+    ▼
+BiometricTrendsScreen
+    │
+    DatabaseService.getAllBiometricRecords()  ← Hive biometric_records box
+    │
+    ├─ Ordina per data crescente
+    ├─ Per ciascuna delle 9 misure (peso, fianchi, petto, bicipite,
+    │   vita, coscia, polpaccio, collo, polso):
+    │     → FlSpot list (indice → valore)
+    │     → se < 2 punti: card saltata
+    │     → LineChart fl_chart con:
+    │          curva smussata, gradiente sotto, dot sui punti
+    │          tooltip interattivo (valore + data)
+    │          delta prima↔ultima misurazione (verde/rosso)
+    └─ Animazione in cascata (flutter_animate)
+```
+
+### 6.6 Flusso Statistiche
 
 ```
 StatisticsScreen
@@ -335,8 +375,6 @@ StatisticsScreen
     ├─ LineChart "Tonnellaggio Totale" (ultimi 7 allenamenti)
     ├─ LineChart "Stima 1RM — {esercizio più frequente}"
     │    formula Epley: weight * (1 + reps/30)
-    │    ultimi 6 allenamenti, max per sessione
-    │    empty state se nessun dato
     └─ Volume per Distretto Muscolare (gruppoMuscolare)
 ```
 
@@ -366,7 +404,7 @@ ExerciseSet
 ├── targetReps: int       (primo numero da ripetizioni)
 ├── actualReps: int       (compilato durante la sessione)
 ├── weight: double
-├── targetRestSeconds: int
+├── targetRestSeconds: int  (chiave JSON: recupero_secondi, fallback: recupero)
 ├── isCompleted: bool
 └── timeUnderTension: int (secondi da stopwatch)
 
@@ -386,25 +424,34 @@ BiometricRecord                     ← sentinel -1.0 per nullable
 
 ---
 
-## 8. Fix Applicati (rispetto a v1)
+## 8. Fix e Feature Applicati (v3)
 
-Tutti i 13 bug identificati nell'analisi precedente sono stati risolti.
+### Bug fix (13 totali)
 
 | # | Tipo | Fix |
 |---|---|---|
-| 1 | 🔴 Critico | `main.dart`: null-guard su `navigatorKey.currentContext` prima di `showSnackBar` |
-| 2 | 🔴 Critico | Eliminato `android/.../nfcsniper/MainActivity.kt` (package residuo) |
-| 3 | 🔴 Critico | Sblocco AI spostato su backend (`POST /api/auth/unlock-ai`) — algoritmo non esposto |
-| 4 | 🔴 Critico | `BiometricRecordAdapter`: sentinel `-1.0` per campi nullable (coerente con `UserProfileAdapter`) |
-| 5 | 🟠 Importante | Scheda persistita su Hive box `training_plan` — sopravvive ai riavvii |
-| 6 | 🟠 Importante | `SetupScreen._syncScheda()` ora chiama `saveRawPlan()` — HomeScreen si aggiorna |
-| 7 | 🟠 Importante | Grafico 1RM: dati mock rimossi, formula Epley su allenamenti reali |
-| 8 | 🟠 Importante | Export/Import backup esposti in `SetupScreen` (FileSaver + FilePicker) |
-| 9 | 🟡 Debito | `AuthService.isLoggedIn()` decodifica `exp` JWT — auto-logout se scaduto |
-| 10 | 🟡 Debito | Tutti i `print()` sostituiti con `debugPrint()` |
-| 11 | 🟡 Debito | `pubspec.yaml`: `name: my_training_log` → `name: forgefit` |
-| 12 | 🟡 Debito | Rimosso sort alfabetico giorni — preserva ordine del trainer |
-| 13 | 🟡 Debito | Eliminati `mock_data.dart`, `_mergeWorkouts()`, `youtube_player_iframe` |
+| 1 | 🔴 Critico | `ai_analyze_passthrough`: aggiunto `db: Session = Depends(get_db)` mancante |
+| 2 | 🔴 Critico | `docker-compose`: `GEMINI_API_KEY` (host) → `GOOGLE_API_KEY` (container) |
+| 3 | 🔴 Critico | Chiave `recupero_secondi` allineata tra prompt AI e parser Flutter (con fallback `recupero`) |
+| 4 | 🔴 Critico | `export_users_csv`: gate admin con 403 se ruolo ≠ admin |
+| 5 | 🟠 Sicurezza | `JWT_SECRET_KEY`: fail-fast all'avvio se env var non impostata |
+| 6 | 🟠 Sicurezza | CORS: rimosso wildcard `*`, configurabile via `ALLOWED_ORIGINS` env var |
+| 7 | 🟠 Sicurezza | AI unlock: sostituito `forza{week}` con HMAC-SHA256 (timing-safe) |
+| 8 | 🟡 UX | `dateOfBirth`: corretto da 1° gennaio a 1° luglio (errore medio da 6→3 mesi) |
+| 9 | 🟡 Data | `list_users`: evitata mutazione di oggetti ORM attivi (usa Pydantic `model_validate`) |
+| 10 | 🟡 UX | Stima kcal: formula MET × peso_kg × durata_ore (ACSM, MET=5.0) |
+| 11 | 🟡 API | `WorkoutLogResponse.exercises`: da stringa grezza JSON a campo `Any` deserializzato |
+| 12 | 🟡 Debito | Rimosso `onboarding_screen.dart` (codice morto con type error) |
+| 13 | 🟡 Debito | `requirements.txt`: tutte le versioni pinnate |
+
+### Feature (4 totali)
+
+| # | Feature | Descrizione |
+|---|---|---|
+| F1 | **Refresh Token** | `POST /api/auth/refresh`, retry 401 trasparente in Flutter, sessione valida 30gg |
+| F2 | **Versioning Piani** | Ogni assegnazione crea nuova riga con `version++`; storico via `GET /api/plans/{id}/history` |
+| F3 | **Progressive Overload** | `GET /api/workouts/suggestions/{user_id}`: +2.5kg se 2+ sessioni on-target; hint in sessione attiva |
+| F5 | **Trend Misure** | `BiometricTrendsScreen`: grafici `fl_chart` per 9 misure, delta primo↔ultimo, tooltip interattivo |
 
 ---
 
@@ -412,16 +459,20 @@ Tutti i 13 bug identificati nell'analisi precedente sono stati risolti.
 
 | Metodo | Endpoint | Auth | Tag | Descrizione |
 |---|---|---|---|---|
-| `POST` | `/api/auth/login` | NO | Auth | Login → JWT + userId + role |
+| `POST` | `/api/auth/login` | NO | Auth | Login → access_token + refresh_token + userId + role |
 | `POST` | `/api/auth/register` | JWT (admin) | Auth | Crea utente con password (PT) |
+| `POST` | `/api/auth/refresh` | NO | Auth | Rinnova access_token tramite refresh_token |
 | `POST` | `/api/auth/setup` | NO | Auth | Configura primo avvio PT |
 | `GET` | `/api/auth/setup-status` | NO | Auth | PT già configurato? |
 | `GET` | `/api/auth/me` | JWT | Auth | Profilo + metriche calcolate |
 | `PUT` | `/api/auth/change-password` | JWT | Auth | Cambio password |
-| `POST` | `/api/auth/unlock-ai` | JWT | Auth | **Verifica codice AI (server-side)** |
-| `GET` | `/api/plans/{user_id}` | JWT | Schede | Scarica scheda + arricchimento video |
-| `POST` | `/api/plans/{user_id}` | JWT (admin) | Schede | Salva/aggiorna scheda |
+| `POST` | `/api/auth/unlock-ai` | JWT | Auth | Verifica codice AI HMAC-SHA256 |
+| `GET` | `/api/auth/ai-unlock-code` | JWT (admin) | Auth | Restituisce codice corrente all'admin |
+| `GET` | `/api/plans/{user_id}` | JWT | Schede | Scarica versione più recente della scheda |
+| `POST` | `/api/plans/{user_id}` | JWT (admin) | Schede | Salva nuova versione scheda (version++) |
+| `GET` | `/api/plans/{user_id}/history` | JWT (admin) | Schede | Storico tutte le versioni assegnate |
 | `POST` | `/api/plans/generate-ai` | JWT | AI | Genera scheda con Gemini |
+| `GET` | `/api/workouts/suggestions/{user_id}` | JWT | Allenamento | Suggerimenti progressive overload |
 | `POST` | `/api/workouts/save` | JWT | Allenamento | Salva sessione completata |
 | `POST` | `/api/measurements` | JWT | Misure | Aggiunge misurazione biometrica |
 | `PUT` | `/api/measurements/{id}` | JWT | Misure | Aggiorna misurazione |
@@ -472,9 +523,9 @@ Glassmorphism: `BackdropFilter` + `ImageFilter.blur` + bordo semitrasparente con
 | Package | Versione | Uso |
 |---|---|---|
 | `hive` / `hive_flutter` | ^2.2.3 | DB locale (5 box) |
-| `shared_preferences` | ^2.2.3 | JWT token + email |
+| `shared_preferences` | ^2.2.3 | JWT token + email + refresh token |
 | `http` | ^1.2.1 | Chiamate REST |
-| `fl_chart` | ^0.68.0 | Grafici statistiche (1RM Epley, volume) |
+| `fl_chart` | ^0.68.0 | Grafici statistiche + trend misure corporee |
 | `table_calendar` | ^3.1.2 | Calendario storico |
 | `flutter_animate` | ^4.5.0 | Animazioni UI |
 | `google_fonts` | ^6.1.0 | Font Outfit + Orbitron |
@@ -483,19 +534,19 @@ Glassmorphism: `BackdropFilter` + `ImageFilter.blur` + bordo semitrasparente con
 | `file_picker` | ^8.0.0 | Import backup |
 | `file_saver` | ^0.3.1 | Export backup |
 
-### Backend (requirements.txt)
+### Backend (requirements.txt — versioni pinnate)
 
-| Package | Uso |
-|---|---|
-| `fastapi` | Framework HTTP |
-| `uvicorn[standard]` | ASGI server |
-| `sqlalchemy` | ORM SQLite |
-| `pydantic[email]` | Validazione dati |
-| `python-multipart` | Upload file |
-| `PyJWT>=2.0.0` | JWT encode/decode |
-| `passlib[bcrypt]` / `bcrypt==3.2.2` | Hashing password |
-| `google-generativeai>=0.5.2` | Gemini API |
-| `python-dotenv` | .env loading |
+| Package | Versione | Uso |
+|---|---|---|
+| `fastapi` | 0.115.5 | Framework HTTP |
+| `uvicorn[standard]` | 0.32.1 | ASGI server |
+| `sqlalchemy` | 2.0.36 | ORM SQLite |
+| `pydantic` | 2.10.3 | Validazione dati |
+| `PyJWT` | 2.10.1 | JWT encode/decode |
+| `passlib[bcrypt]` | 1.7.4 | Hashing password |
+| `bcrypt` | 3.2.2 | Backend bcrypt |
+| `google-generativeai` | 0.8.3 | Gemini API |
+| `python-dotenv` | 1.0.1 | .env loading |
 
 ---
 
@@ -504,10 +555,10 @@ Glassmorphism: `BackdropFilter` + `ImageFilter.blur` + bordo semitrasparente con
 ### Sviluppo locale
 
 ```bash
-# Backend
+# Backend (porta 8000 interna, mappata 8100 in produzione)
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+JWT_SECRET_KEY=dev_key uvicorn main:app --reload --port 8000
 
 # Frontend
 cd frontend
@@ -527,11 +578,140 @@ docker-compose logs -f backend
 docker-compose logs -f frontend
 ```
 
-Variabili d'ambiente da configurare in `.env`:
+Variabili d'ambiente da configurare (passate da Portainer o `.env`):
+
 ```env
-JWT_SECRET_KEY=cambia_questa_chiave_in_produzione
+JWT_SECRET_KEY=cambia_questa_chiave_in_produzione   # obbligatoria — fail-fast se assente
 GEMINI_API_KEY=la_tua_api_key_google
+ALLOWED_ORIGINS=https://fitconsole.ghome.it
 ```
+
+### Porte produzione
+
+| Servizio | Porta host | Porta container | Note |
+|---|---|---|---|
+| Backend FastAPI | **8100** | 8000 | reverse proxy su fitconsole.ghome.it |
+| Frontend Nginx | **8083** | 80 | reverse proxy su fitconsole.ghome.it |
+
+> Se il reverse proxy (Nginx/Cloudflare) su `fitconsole.ghome.it` era configurato
+> per puntare a `:8000`, va aggiornato a `:8100`.
+
+### Deploy su Portainer (produzione)
+
+Il deploy in produzione avviene tramite lo script PowerShell:
+
+```
+C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\deploy - forgefit.ps1
+```
+
+| Parametro | Valore |
+|---|---|
+| Portainer URL | `https://docker.ghome.it` |
+| Stack ID | `151` |
+| Endpoint ID | `2` |
+| Repository | `https://github.com/RazorCopter/ForgeFit.git` |
+| Branch | `main` |
+| Compose file | `docker-compose.yml` |
+
+Flusso dello script:
+1. Autentica su Portainer e ottiene un JWT
+2. Legge la configurazione dello stack — se Git è collegato:
+   - Ferma lo stack (libera le porte)
+   - Attende 5 secondi
+   - `PUT /api/stacks/151/git/redeploy` con `prune=true` e `pullImage=true`
+   - Portainer scarica l'ultimo commit da GitHub e ricostruisce le immagini
+3. Se Git non è collegato: stop → start (senza rebuild — solo riavvio)
+
+**Workflow di deploy standard:**
+```
+git push origin main
+# poi:
+powershell -ExecutionPolicy Bypass -File "deploy - forgefit.ps1"
+```
+
+> Le credenziali Portainer sono nel file `.ps1` locale — non versionare nel repo.
+
+---
+
+## 14. Release Workflow
+
+Al termine di ogni sviluppo seguire questi passi **nell'ordine indicato**:
+
+### Passo 1 — Aggiorna la versione in `pubspec.yaml`
+
+```
+version: MAJOR.MINOR.PATCH+BUILD
+```
+
+- **PATCH** (+0.0.1): bugfix, piccole correzioni UI
+- **MINOR** (+0.1.0): nuova funzionalità backward-compatible
+- **MAJOR** (+1.0.0): breaking change o rilascio significativo
+- **BUILD** (`+N`): incrementa sempre di 1 ad ogni rilascio
+
+Esempio: `1.0.0+1` → `1.1.0+2`
+
+### Passo 2 — Aggiorna `CHANGELOG.md`
+
+Aggiungi una nuova sezione in cima al file con il formato:
+
+```markdown
+## [X.Y.Z] — YYYY-MM-DD
+
+### Added
+- Descrizione delle nuove funzionalità.
+
+### Changed
+- Descrizione delle modifiche a funzionalità esistenti.
+
+### Fixed
+- Descrizione dei bug risolti.
+
+### Removed
+- Descrizione delle funzionalità rimosse.
+```
+
+Ometti le sezioni vuote.
+
+### Passo 3 — Commit e push
+
+```bash
+# Dalla radice del monorepo (ForgeFit/)
+git add -A
+git commit -m "chore: release vX.Y.Z
+
+- Riepilogo breve delle modifiche principali"
+git push origin main
+```
+
+### Passo 4 — Deploy locale (script)
+
+```bash
+# Dal root del monorepo
+docker-compose down
+docker-compose up -d --build
+```
+
+Verifica che entrambi i container siano `Up`:
+
+```bash
+docker-compose ps
+```
+
+Controlla i log in caso di errori:
+
+```bash
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+### Checklist rilascio
+
+- [ ] `pubspec.yaml` → versione aggiornata
+- [ ] `CHANGELOG.md` → sezione nuova in cima
+- [ ] `git commit` con messaggio `chore: release vX.Y.Z`
+- [ ] `git push origin main`
+- [ ] `docker-compose up -d --build` eseguito con successo
+- [ ] `docker-compose ps` → entrambi i container `Up`
 
 ---
 
@@ -539,10 +719,9 @@ GEMINI_API_KEY=la_tua_api_key_google
 
 | # | Feature | Nota |
 |---|---|---|
-| 4.1 | Refresh token JWT | Evitare logout forzato su token scaduto |
-| 4.2 | Notifiche push promemoria | Firebase Messaging |
-| 4.3 | Grafico progressi biometrici | Linea peso nel tempo (fl_chart) |
-| 4.4 | Onboarding interattivo | Completare `onboarding_screen.dart` |
-| 4.5 | Generazione scheda AI in-app | Integrare `generateAIPlan()` già presente in ApiService |
-| 4.6 | Dark/Light theme toggle | AppTheme è solo dark |
-| 4.7 | Backup automatico su backend | Attualmente solo export manuale locale |
+| F4 | Notifiche push promemoria | Firebase Cloud Messaging |
+| F6 | Esportazione PDF piano di allenamento | `pdf` package Flutter |
+| F7 | Migrazione SQLite → PostgreSQL | via `DATABASE_URL` env var |
+| F8 | Statistiche comparative multi-misura | sovrapponi misure sullo stesso grafico |
+| — | Dark/Light theme toggle | AppTheme è solo dark |
+| — | Backup automatico su backend | attualmente solo export manuale locale |
