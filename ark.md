@@ -190,15 +190,15 @@ Stop: `docker-compose down`
 
 ### 4.1 File principali
 
-| File | Responsabilità |
-|---|---|
-| `main.py` | FastAPI app, tutti gli endpoint REST, seeding catalogo esercizi |
-| `auth.py` | `hash_password`, `verify_password`, `create_access_token`, `create_refresh_token`, `decode_token`, `decode_refresh_token`, `get_current_user` |
-| `models.py` | SQLAlchemy ORM: `User`, `WorkoutPlan` (con versioning), `WorkoutLog`, `Measurement`, `ExerciseCatalog`, `SystemSettings` |
-| `schemas.py` | Pydantic request/response: `UserCreate`, `TokenResponse`, `RefreshTokenRequest`, `WorkoutPlanCreate`, `WorkoutPlanHistoryItem`, `AIGenerateRequest`, … |
-| `database.py` | `engine` SQLite + `SessionLocal` + `get_db` dependency |
-| `ai_service.py` | `get_model(db)` — carica chiave Gemini e modello configurato; `generate_athlete_analysis_prompt()` |
-| `config_manager.py` | Lettura/scrittura `admin_config.json` (credenziali Personal Trainer) |
+| File                | Responsabilità                                                                                                                                         |
+| ---------------------| --------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `main.py`           | FastAPI app, tutti gli endpoint REST, seeding catalogo esercizi                                                                                        |
+| `auth.py`           | `hash_password`, `verify_password`, `create_access_token`, `create_refresh_token`, `decode_token`, `decode_refresh_token`, `get_current_user`          |
+| `models.py`         | SQLAlchemy ORM: `User`, `WorkoutPlan` (con versioning), `WorkoutLog`, `Measurement`, `ExerciseCatalog`, `SystemSettings`                               |
+| `schemas.py`        | Pydantic request/response: `UserCreate`, `TokenResponse`, `RefreshTokenRequest`, `WorkoutPlanCreate`, `WorkoutPlanHistoryItem`, `AIGenerateRequest`, … |
+| `database.py`       | `engine` SQLite + `SessionLocal` + `get_db` dependency                                                                                                 |
+| `ai_service.py`     | `get_model(db)` — carica chiave Gemini e modello configurato; `generate_athlete_analysis_prompt()`                                                     |
+| `config_manager.py` | Lettura/scrittura `admin_config.json` (credenziali Personal Trainer)                                                                                   |
 
 ### 4.2 Autenticazione backend
 
@@ -602,6 +602,8 @@ Il deploy in produzione avviene tramite lo script PowerShell:
 
 ```
 C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\deploy - forgefit.ps1
+o
+C:\Users\gianv\Documents\Progetti\deploy - forgefit.ps1
 ```
 
 | Parametro | Valore |

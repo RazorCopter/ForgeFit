@@ -14,11 +14,45 @@ class DatabaseService {
   static const String _planBoxName = 'training_plan';
 
   static Future<void> openBox() async {
-    await Hive.openBox<CompletedWorkout>(_workoutBoxName);
-    await Hive.openBox<UserProfile>(_userProfileBoxName);
-    await Hive.openBox<BiometricRecord>(_biometricBoxName);
-    await Hive.openBox(_settingsBoxName);
-    await Hive.openBox(_planBoxName);
+    try {
+      await Hive.openBox<CompletedWorkout>(_workoutBoxName);
+    } catch (e) {
+      debugPrint('Error opening $_workoutBoxName: $e. Recreating...');
+      await Hive.deleteBoxFromDisk(_workoutBoxName);
+      await Hive.openBox<CompletedWorkout>(_workoutBoxName);
+    }
+
+    try {
+      await Hive.openBox<UserProfile>(_userProfileBoxName);
+    } catch (e) {
+      debugPrint('Error opening $_userProfileBoxName: $e. Recreating...');
+      await Hive.deleteBoxFromDisk(_userProfileBoxName);
+      await Hive.openBox<UserProfile>(_userProfileBoxName);
+    }
+
+    try {
+      await Hive.openBox<BiometricRecord>(_biometricBoxName);
+    } catch (e) {
+      debugPrint('Error opening $_biometricBoxName: $e. Recreating...');
+      await Hive.deleteBoxFromDisk(_biometricBoxName);
+      await Hive.openBox<BiometricRecord>(_biometricBoxName);
+    }
+
+    try {
+      await Hive.openBox(_settingsBoxName);
+    } catch (e) {
+      debugPrint('Error opening $_settingsBoxName: $e. Recreating...');
+      await Hive.deleteBoxFromDisk(_settingsBoxName);
+      await Hive.openBox(_settingsBoxName);
+    }
+
+    try {
+      await Hive.openBox(_planBoxName);
+    } catch (e) {
+      debugPrint('Error opening $_planBoxName: $e. Recreating...');
+      await Hive.deleteBoxFromDisk(_planBoxName);
+      await Hive.openBox(_planBoxName);
+    }
   }
 
   static Box<CompletedWorkout> get _workoutBox => Hive.box<CompletedWorkout>(_workoutBoxName);

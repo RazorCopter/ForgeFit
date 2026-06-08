@@ -41,14 +41,14 @@ class BiometricRecord {
   factory BiometricRecord.fromJson(Map<String, dynamic> json) => BiometricRecord(
     date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime.now(),
     weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
-    hips: (json['hips'] as num?)?.toDouble() ?? 0.0,
+    hips: (json['hips'] as num? ?? json['fianchi'] as num?)?.toDouble() ?? 0.0,
     biceps: (json['biceps'] as num?)?.toDouble() ?? 0.0,
     chest: (json['chest'] as num?)?.toDouble() ?? 0.0,
     waist: (json['waist'] as num?)?.toDouble(),
     thigh: (json['thigh'] as num?)?.toDouble(),
-    calf: (json['calf'] as num?)?.toDouble(),
-    neck: (json['neck'] as num?)?.toDouble(),
-    wrist: (json['wrist'] as num?)?.toDouble(),
+    calf: (json['calf'] as num? ?? json['polpaccio'] as num?)?.toDouble(),
+    neck: (json['neck'] as num? ?? json['collo'] as num?)?.toDouble(),
+    wrist: (json['wrist'] as num? ?? json['polso'] as num?)?.toDouble(),
   );
 }
 
