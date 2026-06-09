@@ -159,10 +159,10 @@ def ai_analyze_passthrough(
         prompt = f"""
         Sei un Personal Trainer d'élite.
         L'utente ti ha fornito questo contesto:
-        {data.context}
+        {data.context_data}
 
         Domanda o Richiesta:
-        {data.prompt}
+        {data.prompt_text}
 
         Rispondi in modo conciso e professionale.
         """

@@ -278,6 +278,10 @@ class AIAnalyzeRequest(BaseModel):
     class Config:
         populate_by_name = True
 
+class AIAnalyzeResponse(BaseModel):
+    """Schema di risposta per l'analisi AI generica."""
+    text: str
+
 class WorkoutLogCreate(BaseModel):
     """Schema per il salvataggio di un allenamento (POST /api/workouts/save)."""
     user_id: int
