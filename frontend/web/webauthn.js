@@ -53,7 +53,7 @@ window.forgeFitWebAuthn = {
     register: async function(optionsJsonStr) {
         try {
             const options = JSON.parse(optionsJsonStr);
-            const publicKeyCredentialCreationOptions = preformatMakeCredReq(options.publicKey);
+            const publicKeyCredentialCreationOptions = preformatMakeCredReq(options.publicKey || options);
             
             const credential = await navigator.credentials.create({
                 publicKey: publicKeyCredentialCreationOptions
@@ -78,7 +78,7 @@ window.forgeFitWebAuthn = {
     login: async function(optionsJsonStr) {
         try {
             const options = JSON.parse(optionsJsonStr);
-            const publicKeyCredentialRequestOptions = preformatGetAssertReq(options.publicKey);
+            const publicKeyCredentialRequestOptions = preformatGetAssertReq(options.publicKey || options);
 
             const credential = await navigator.credentials.get({
                 publicKey: publicKeyCredentialRequestOptions
