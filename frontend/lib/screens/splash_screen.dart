@@ -26,9 +26,12 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     _videoController = VideoPlayerController.asset('assets/videos/splash_video.mp4')
       ..initialize().then((_) {
-        setState(() {});
+        _videoController.setVolume(0.0); // Muto per aggirare il blocco autoplay dei browser
         _videoController.play();
         _videoController.setLooping(true);
+        if (mounted) setState(() {});
+      }).catchError((e) {
+        debugPrint("Errore inizializzazione video: $e");
       });
     _initApp();
   }
@@ -52,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // 2. Procedi con il controllo auth e il delay minimo
-    final minimumDelay = Future.delayed(const Duration(milliseconds: 1500));
+    final minimumDelay = Future.delayed(const Duration(milliseconds: 3000));
     final checkAuth = AuthService.isLoggedIn().then((loggedIn) async {
       if (loggedIn) {
         // Sincronizzazione di sicurezza: se AuthService ha l'email ma DatabaseService no, la ripristiniamo.
