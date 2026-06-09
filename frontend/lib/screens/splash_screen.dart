@@ -20,18 +20,25 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   late VideoPlayerController _videoController;
+  bool _videoFailed = false;
 
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.asset('assets/videos/splash_video.mp4')
-      ..initialize().then((_) {
+    _videoController = VideoPlayerController.asset(
+      'assets/videos/splash_video.mp4',
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    )..initialize().then((_) {
         _videoController.setVolume(0.0); // Muto per aggirare il blocco autoplay dei browser
-        _videoController.play();
+        _videoController.play().catchError((e) {
+          debugPrint("Errore play video: $e");
+          if (mounted) setState(() => _videoFailed = true);
+        });
         _videoController.setLooping(true);
         if (mounted) setState(() {});
       }).catchError((e) {
         debugPrint("Errore inizializzazione video: $e");
+        if (mounted) setState(() => _videoFailed = true);
       });
     _initApp();
   }
@@ -115,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SizedBox.expand(
-        child: _videoController.value.isInitialized
+        child: (_videoController.value.isInitialized && !_videoFailed)
             ? FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
@@ -124,7 +131,13 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: VideoPlayer(_videoController),
                 ),
               )
-            : const SizedBox(),
+            : Center(
+                child: Image.asset(
+                  'assets/images/splash.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                ),
+              ),
       ),
     );
   }
