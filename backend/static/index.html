@@ -3084,7 +3084,7 @@
           training_time: parseInt(document.getElementById('aiTrainingTime').value) || 60
         };
 
-        const r = await fetch(getServerUrl() + '/api/plans/generate-ai', {
+        const r = await fetch(getServerUrl() + '/api/ai/generate', {
           method: 'POST',
           headers: getHeaders(true),
           body: JSON.stringify(payload)
