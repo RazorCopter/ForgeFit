@@ -82,7 +82,8 @@ def verify_registration(
         raise HTTPException(status_code=400, detail="Challenge non trovato o scaduto.")
         
     try:
-        credential = RegistrationCredential.parse_raw(data)
+        from webauthn.helpers import parse_registration_credential_json
+        credential = parse_registration_credential_json(data)
         
         verification = verify_registration_response(
             credential=credential,
@@ -157,7 +158,8 @@ def verify_login(
         raise HTTPException(status_code=400, detail="Challenge non trovato o scaduto.")
         
     try:
-        credential = AuthenticationCredential.parse_raw(data)
+        from webauthn.helpers import parse_authentication_credential_json
+        credential = parse_authentication_credential_json(data)
         
         # Trova la chiave corrispondente
         passkey = next((pk for pk in user.passkeys if pk.credential_id == credential.id), None)
