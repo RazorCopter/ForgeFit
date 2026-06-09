@@ -1024,6 +1024,33 @@
       margin-left: 0.5rem;
     }
 
+    .tab-item .tab-controls {
+      display: flex;
+      flex-direction: column;
+      margin-right: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tab-item:hover .tab-controls {
+      opacity: 1;
+    }
+
+    .tab-item .tab-controls button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.6rem;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+
+    .tab-item .tab-controls button:hover {
+      color: var(--cyan);
+    }
+
+
     .tab-item:hover .tab-remove {
       opacity: 1;
     }
@@ -2855,6 +2882,20 @@
       }
     }
 
+    function moveDayUp(btn, id) {
+      const tab = btn.closest('.tab-item');
+      if (tab.previousElementSibling) {
+        tab.parentNode.insertBefore(tab, tab.previousElementSibling);
+      }
+    }
+
+    function moveDayDown(btn, id) {
+      const tab = btn.closest('.tab-item');
+      if (tab.nextElementSibling) {
+        tab.parentNode.insertBefore(tab.nextElementSibling, tab);
+      }
+    }
+
     function removeDay(dayId) {
       if (!confirm('Sei sicuro di voler eliminare questo giorno di allenamento e tutti i suoi esercizi?')) return;
 
@@ -3176,6 +3217,10 @@
       tab.dataset.dayId = id;
       tab.onclick = () => switchTab(id);
       tab.innerHTML = `
+        <div class="tab-controls">
+          <button type="button" onclick="moveDayUp(this, '${id}'); event.stopPropagation();">▲</button>
+          <button type="button" onclick="moveDayDown(this, '${id}'); event.stopPropagation();">▼</button>
+        </div>
         <span class="tab-title" id="${id}_tabtitle">${label || 'Giorno ' + dayCount}</span>
         <span class="tab-remove" onclick="removeDay('${id}'); event.stopPropagation();">✕</span>
       `;
@@ -3269,12 +3314,16 @@
       const userId = document.getElementById('builderUserId').value;
       if (!userId) { showAlert('alertBuilder', 'Seleziona un cliente.', false); return; }
 
-      // Recuperiamo TUTTI i blocchi giorno (sia quelli nel main che quelli nello storage nascosto)
-      const days = document.querySelectorAll('.day-block');
-      if (!days.length) { showAlert('alertBuilder', 'Aggiungi almeno un giorno.', false); return; }
+      // Recuperiamo i tab nell'ordine in cui sono visualizzati nella sidebar
+      const tabs = document.querySelectorAll('#tabsContainer .tab-item');
+      if (!tabs.length) { showAlert('alertBuilder', 'Aggiungi almeno un giorno.', false); return; }
 
       const giorni = [];
-      for (const day of days) {
+      for (const tab of tabs) {
+        const dayId = tab.dataset.dayId;
+        const day = document.getElementById(dayId);
+        if (!day) continue;
+
         const label = day.querySelector('input[id$="_label"]').value.trim() || 'Giorno';
         const exBlocks = day.querySelectorAll('.ex-block');
         const esercizi = [];
