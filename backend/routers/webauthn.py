@@ -66,7 +66,8 @@ def get_registration_options(current_user: models.User = Depends(get_current_use
     )
     
     registration_challenges[current_user.email] = options.challenge
-    return options_to_json(options)
+    import json
+    return json.loads(options_to_json(options))
 
 
 @router.post("/register/verify")
@@ -136,7 +137,8 @@ def get_login_options(email: str, db: Session = Depends(get_db)):
     )
     
     authentication_challenges[user.email] = options.challenge
-    return options_to_json(options)
+    import json
+    return json.loads(options_to_json(options))
 
 
 @router.post("/login/verify")
