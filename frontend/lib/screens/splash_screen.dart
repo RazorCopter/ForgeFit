@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+
 import '../core/theme.dart';
 import '../core/auth_service.dart';
 import 'main_screen.dart';
@@ -119,9 +119,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ? AspectRatio(
                 aspectRatio: _videoController.value.aspectRatio,
                 child: VideoPlayer(_videoController),
-              ).animate()
-                .fadeIn(duration: 800.ms)
-                .fadeOut(delay: 4500.ms, duration: 500.ms)
+              )
             : const SizedBox(),
       ),
     );
