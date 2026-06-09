@@ -2277,8 +2277,7 @@
         loadCatalog();
         loadUsersForBuilder();
         // Reset canvas e select cliente ad ogni accesso al Builder
-        document.getElementById('daysContainer').innerHTML = '';
-        dayCount = 0;
+        clearBuilderCanvas();
         document.getElementById('alertBuilder').className = 'alert';
       }
       if (id === 'settings') loadSettings();
@@ -2756,6 +2755,17 @@
       } catch (e) { }
     }
 
+    function clearBuilderCanvas() {
+      document.getElementById('tabsContainer').innerHTML = '';
+      document.getElementById('hiddenDaysStorage').innerHTML = '';
+      document.getElementById('activeDayContent').innerHTML = `<div style="color:var(--muted); text-align:center; padding:4rem; border:2px dashed rgba(255,255,255,0.05); border-radius:12px">
+        <div style="font-size:2.5rem; margin-bottom:1rem; opacity:0.3">🏗️</div>
+        Seleziona un giorno a sinistra o clicca "+ Giorno" per iniziare.
+      </div>`;
+      dayCount = 0;
+      activeDayId = null;
+    }
+
     // Cambio cliente: carica la scheda esistente nel canvas (se presente) o svuota
     document.getElementById('builderUserId').addEventListener('change', async function () {
       const alertEl = document.getElementById('alertBuilder');
@@ -2765,8 +2775,7 @@
 
       // Se non c'è selezione, resettiamo l'interfaccia
       if (!userId) {
-        document.getElementById('daysContainer').innerHTML = '';
-        dayCount = 0;
+        clearBuilderCanvas();
         return;
       }
 
@@ -2777,8 +2786,7 @@
 
         // GESTIONE FOGLIO BIANCO: Il 404 indica che l'utente non ha una scheda attiva
         if (r.status === 404) {
-          document.getElementById('daysContainer').innerHTML = ''; // Canvas pulito
-          dayCount = 0;
+          clearBuilderCanvas(); // Canvas pulito
 
           alertEl.className = 'alert show alert-ok';
           alertEl.innerHTML = '📋 Nessuna scheda attiva trovata per questo cliente. Modalità "Nuova Scheda" pronta.';
@@ -2801,8 +2809,7 @@
       } catch (e) {
         console.error("Errore fetch scheda:", e);
         // In caso di errore critico, garantiamo comunque un builder pulito
-        document.getElementById('daysContainer').innerHTML = '';
-        dayCount = 0;
+        clearBuilderCanvas();
         alertEl.className = 'alert show alert-err';
         alertEl.innerHTML = '❌ Errore tecnico nel caricamento: ' + e.message;
       }
