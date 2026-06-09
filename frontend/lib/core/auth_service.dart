@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../data/database_service.dart';
 
 class AuthService {
   AuthService._();
@@ -70,6 +71,9 @@ class AuthService {
     await _storage.delete(key: _keyRefreshToken);
     await _storage.delete(key: _keyEmail);
     await _storage.delete(key: _keyUserId);
+    
+    // Cancella anche tutti i dati applicativi su Hive
+    await DatabaseService.clearAllData();
   }
 
   static Future<Map<String, String>> authHeaders() async {
