@@ -13,6 +13,32 @@ router = APIRouter(
     tags=["Misure"]
 )
 
+@router.get(
+    "/history/{user_id}",
+    response_model=list[schemas.MeasurementResponse],
+    summary="Ottieni lo storico misurazioni di un utente",
+)
+def get_measurement_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Non hai i permessi per visualizzare le misurazioni di un altro utente."
+        )
+
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Utente non trovato.")
+
+    measurements = db.query(models.Measurement).filter(
+        models.Measurement.user_id == user_id
+    ).order_by(models.Measurement.created_at.asc()).all()
+
+    return measurements
+
 @router.delete(
     "/{measurement_id}",
     response_model=schemas.MessageResponse,

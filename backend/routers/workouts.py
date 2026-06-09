@@ -50,6 +50,32 @@ def save_workout(
     return schemas.WorkoutLogResponse.from_orm_log(new_log)
 
 @router.get(
+    "/history/{user_id}",
+    response_model=list[schemas.WorkoutLogResponse],
+    summary="Ottieni lo storico allenamenti di un utente",
+)
+def get_workout_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "admin" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Non hai i permessi per visualizzare l'allenamento di un altro utente."
+        )
+
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Utente non trovato.")
+
+    logs = db.query(models.WorkoutLog).filter(
+        models.WorkoutLog.user_id == user_id
+    ).order_by(models.WorkoutLog.date.asc()).all()
+
+    return [schemas.WorkoutLogResponse.from_orm_log(log) for log in logs]
+
+@router.get(
     "/suggestions/{user_id}",
     summary="Suggerimenti progressive overload per ogni esercizio",
 )

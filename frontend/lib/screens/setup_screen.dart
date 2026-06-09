@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../core/auth_service.dart';
 import '../data/database_service.dart';
+import '../core/sync_service.dart';
 import '../services/plan_service.dart';
 import 'auth_screen.dart';
 
@@ -33,8 +34,9 @@ class _SetupScreenState extends State<SetupScreen> {
     }
     setState(() => _isSyncing = true);
     try {
+      await SyncService.syncAllPendingData();
       final days = await PlanService.syncPlan(userId);
-      _showSnackBar('Scheda aggiornata! ${days.length} giorni caricati.', Colors.green.shade700);
+      _showSnackBar('Sincronizzazione completata con successo!', Colors.green.shade700);
     } on ApiException catch (e) {
       _showSnackBar('Errore dal server: ${e.message}', Colors.red.shade700);
     } catch (e) {

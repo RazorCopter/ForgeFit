@@ -244,6 +244,58 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // GET /api/workouts/history/{user_id} [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+  static Future<List<dynamic>> getWorkoutHistory(int userId) async {
+    final url = ApiConfig.workoutHistory(userId);
+    Future<http.Response> doRequest(Map<String, String> headers) =>
+        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
+
+    try {
+      var headers = await AuthService.authHeaders();
+      var response = await doRequest(headers);
+      try {
+        await _checkUnauthorizedAsync(response);
+      } on _RetryWithNewToken catch (_) {
+        headers = await AuthService.authHeaders();
+        response = await doRequest(headers);
+        await _checkUnauthorized(response);
+      }
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore di connessione: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // GET /api/measurements/history/{user_id} [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+  static Future<List<dynamic>> getBiometricHistory(int userId) async {
+    final url = ApiConfig.measurementHistory(userId);
+    Future<http.Response> doRequest(Map<String, String> headers) =>
+        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
+
+    try {
+      var headers = await AuthService.authHeaders();
+      var response = await doRequest(headers);
+      try {
+        await _checkUnauthorizedAsync(response);
+      } on _RetryWithNewToken catch (_) {
+        headers = await AuthService.authHeaders();
+        response = await doRequest(headers);
+        await _checkUnauthorized(response);
+      }
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore di connessione: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // PUT /api/auth/change-password [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
 

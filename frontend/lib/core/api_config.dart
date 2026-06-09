@@ -54,4 +54,10 @@ class ApiConfig {
 
   /// GET   /api/workouts/suggestions/{user_id} → suggerimenti progressive overload
   static String overloadSuggestions(int userId) => '$baseUrl/api/workouts/suggestions/$userId';
+
+  /// GET   /api/workouts/history/{user_id} → storico allenamenti
+  static String workoutHistory(int userId) => '$baseUrl/api/workouts/history/$userId';
+
+  /// GET   /api/measurements/history/{user_id} → storico misure biometriche
+  static String measurementHistory(int userId) => '$baseUrl/api/measurements/history/$userId';
 }

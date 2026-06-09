@@ -1,30 +1,40 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../data/database_service.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
+import '../models/completed_workout.dart';
+import '../models/biometric_record.dart';
 
 class SyncService {
   static bool _isSyncing = false;
 
-  /// Tenta la sincronizzazione di tutti i dati pendenti.
   static Future<void> syncAllPendingData() async {
     if (_isSyncing) return;
     
     _isSyncing = true;
     try {
-      // 1. Sincronizza Workouts
+      final userId = await AuthService.getUserId();
+      if (userId == null) return; // Non autenticato
+
+      // ==========================================
+      // FASE 1: PUSH (Upload dati locali pendenti)
+      // ==========================================
+
+      // 1A. Sincronizza Workouts
       final pendingWorkouts = DatabaseService.getUnsyncedWorkouts();
       for (final workout in pendingWorkouts) {
         try {
           await ApiService.saveWorkout(workout);
           await DatabaseService.markWorkoutSynced(workout.id);
-          if (kDebugMode) debugPrint('✅ Sync Workout ${workout.id} completato');
+          if (kDebugMode) debugPrint('✅ Push Workout ${workout.id} completato');
         } catch (e) {
-          debugPrint('❌ Sync fallito per Workout ${workout.id}: $e');
+          debugPrint('❌ Push fallito per Workout ${workout.id}: $e');
         }
       }
 
-      // 2. Sincronizza Biometric Records
+      // 1B. Sincronizza Biometric Records
       final pendingBiometrics = DatabaseService.getAllBiometricRecords().where((r) => !r.isSynced).toList();
       for (final record in pendingBiometrics) {
         try {
@@ -42,11 +52,62 @@ class SyncService {
           });
           record.isSynced = true;
           await DatabaseService.saveBiometricRecord(record);
-          if (kDebugMode) debugPrint('✅ Sync BiometricRecord completato per data ${record.date}');
+          if (kDebugMode) debugPrint('✅ Push BiometricRecord completato per data ${record.date}');
         } catch (e) {
-          debugPrint('❌ Sync fallito per BiometricRecord in data ${record.date}: $e');
+          debugPrint('❌ Push fallito per BiometricRecord in data ${record.date}: $e');
         }
       }
+
+      // ==========================================
+      // FASE 2: PULL (Download storico remoto)
+      // ==========================================
+
+      // 2A. Download Storico Workouts
+      try {
+        final remoteWorkouts = await ApiService.getWorkoutHistory(userId);
+        final localWorkouts = DatabaseService.getAllWorkouts();
+        final localIds = localWorkouts.map((w) => w.id).toSet();
+
+        for (final rw in remoteWorkouts) {
+          // parse exercises correctly
+          // WorkoutLogResponse JSON
+          final exercisesJson = rw['exercises_json'] as String? ?? '[]';
+          final exercisesList = jsonDecode(exercisesJson) as List<dynamic>;
+          rw['exercises'] = exercisesList;
+          
+          final cw = CompletedWorkout.fromJson(rw);
+          cw.isSynced = true; 
+          
+          if (!localIds.contains(cw.id)) {
+            await DatabaseService.saveWorkout(cw);
+            if (kDebugMode) debugPrint('✅ Pull nuovo Workout: ${cw.id}');
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Pull fallito per Storico Workouts: $e');
+      }
+
+      // 2B. Download Storico Biometrics
+      try {
+        final remoteBio = await ApiService.getBiometricHistory(userId);
+        final localBio = DatabaseService.getAllBiometricRecords();
+        // Le misure locali sono identificate dalla data
+        final localDates = localBio.map((b) => b.date.toIso8601String().substring(0, 10)).toSet();
+
+        for (final rb in remoteBio) {
+          final record = BiometricRecord.fromJson(rb);
+          record.isSynced = true;
+          
+          final dateStr = record.date.toIso8601String().substring(0, 10);
+          if (!localDates.contains(dateStr)) {
+            await DatabaseService.saveBiometricRecord(record);
+            if (kDebugMode) debugPrint('✅ Pull nuovo BiometricRecord: $dateStr');
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Pull fallito per Storico Biometrics: $e');
+      }
+
     } finally {
       _isSyncing = false;
     }
