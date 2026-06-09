@@ -8,6 +8,7 @@ import '../data/database_service.dart';
 
 import 'package:hive/hive.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
   final List<String> failedBoxes;
@@ -18,10 +19,24 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late VideoPlayerController _videoController;
+
   @override
   void initState() {
     super.initState();
+    _videoController = VideoPlayerController.asset('assets/videos/splash_video.mp4')
+      ..initialize().then((_) {
+        setState(() {});
+        _videoController.play();
+        _videoController.setLooping(true);
+      });
     _initApp();
+  }
+
+  @override
+  void dispose() {
+    _videoController.dispose();
+    super.dispose();
   }
 
   Future<void> _initApp() async {
@@ -97,23 +112,22 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
-        child: Image.asset(
-          'assets/images/splash.png',
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return const Text(
-              'FORGE FIT',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ).animate().fade(duration: 800.ms);
-          },
-        ).animate()
-            .fadeIn(duration: 800.ms)
-            .fadeOut(delay: 2.seconds, duration: 800.ms),
+        child: _videoController.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _videoController.value.aspectRatio,
+                child: VideoPlayer(_videoController),
+              ).animate()
+                .fadeIn(duration: 800.ms)
+                .fadeOut(delay: 2.seconds, duration: 800.ms)
+            : const Text(
+                'FORGE FIT',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ).animate().fade(duration: 800.ms),
       ),
     );
   }

@@ -5,6 +5,20 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.4.0] — 2026-06-09
+
+### Added
+- **Video Splash Screen**: Sostituita l'immagine statica di caricamento con un video animato in loop (`splash_video.mp4`), migliorando l'impatto visivo all'avvio.
+
+### Fixed
+- **Frontend Hive Fallback**: Aggiunto recovery automatico (`Hive.deleteBoxFromDisk`) in caso di corruzione dei dati locali (`RangeError`), per prevenire crash su web e app mobile.
+- **Frontend Logout Pulito**: Implementata la cancellazione globale e sicura dei dati in cache (`DatabaseService.clearAllData()`) ad ogni logout.
+- **Frontend Interceptor 401**: Intercettazione proattiva degli errori di token scaduto (HTTP 401) via `navigatorKey` per forzare il logout sicuro dell'utente in tempo reale.
+- **Backend Rate Limiter (`slowapi`)**: Corretta la firma del parametro `request` in `auth_login` per prevenire errori 500 Bad Gateway in fase di autenticazione.
+- **Backend AI Schemas**: Aggiunto lo schema `AIAnalyzeResponse` precedentemente omesso e corretto il mapping attributi (`context_data`, `prompt_text`) nel passthrough AI.
+
+---
+
 ## [1.3.0] — 2026-06-08
 
 ### Changed / Fixed
