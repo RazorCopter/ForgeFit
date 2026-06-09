@@ -426,7 +426,7 @@ BiometricRecord                     ← sentinel -1.0 per nullable
 
 ## 8. Fix e Feature Applicati (v3)
 
-### Bug fix (13 totali)
+### Bug fix (18 totali)
 
 | # | Tipo | Fix |
 |---|---|---|
@@ -443,6 +443,11 @@ BiometricRecord                     ← sentinel -1.0 per nullable
 | 11 | 🟡 API | `WorkoutLogResponse.exercises`: da stringa grezza JSON a campo `Any` deserializzato |
 | 12 | 🟡 Debito | Rimosso `onboarding_screen.dart` (codice morto con type error) |
 | 13 | 🟡 Debito | `requirements.txt`: tutte le versioni pinnate |
+| 14 | 🔴 Critico | **Frontend Hive Fallback**: Gestione e recovery automatico `RangeError` per box corrotti (`Hive.deleteBoxFromDisk`) |
+| 15 | 🟠 Importante | **Frontend Logout Clean**: Implementato `DatabaseService.clearAllData()` per svuotare interamente i box locali al logout |
+| 16 | 🟠 Importante | **Frontend Interceptor 401**: Intercettazione globale 401 via `navigatorKey` per forzare il logout sicuro |
+| 17 | 🔴 Critico | **Backend Rate Limiter**: Corretta firma parametro `request` in `auth_login` per prevenire crash `slowapi` in produzione |
+| 18 | 🔴 Critico | **Backend AI Schemas**: Aggiunto `AIAnalyzeResponse` mancante e corretto mapping Pydantic in `/api/ai/analyze-passthrough` |
 
 ### Feature (4 totali)
 
