@@ -5,6 +5,21 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.6.0] — 2026-06-10
+
+### Fixed & Changed
+- **Passkeys (WebAuthn)**: Spostata la registrazione della Passkey nella schermata "Setup & Sicurezza" ("Sicurezza account") rimuovendola dal menu Analisi IA.
+- **Passkeys (WebAuthn)**: Risolto errore server `400 Bad Request` in fase di registrazione/login. Aggiornata la libreria `python-webauthn` v2 per usare `parse_registration_credential_json` invece di `parse_raw`.
+
+---
+
+## [1.5.1] — 2026-06-09
+
+### Fixed
+- **Version Number**: Sincronizzata la versione dell'app a `1.5.1` globalmente (frontend e backend).
+
+---
+
 ## [1.5.0] — 2026-06-09
 
 ### Added

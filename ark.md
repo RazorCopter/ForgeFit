@@ -1,7 +1,7 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
-> Documento aggiornato il 2026-06-09. Riferimento: branch `main`.
-> **v5 — Passkeys & Background Sync**.
+> Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
+> **v1.6.0 — Passkeys & UI Refinements**.
 > Registrazione e Login senza password tramite WebAuthn (Passkeys). Sincronizzazione background offline-first robusta per Workouts e BiometricRecords.
 
 ---
