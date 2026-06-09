@@ -49,6 +49,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   
   bool _isResting = false;
   int _restSeconds = 0;
+  bool _soundEnabled = true;
   
   late final DateTime _startTime;
   CompletedExercise? _historyCache;
@@ -62,6 +63,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     super.initState();
     _startTime = DateTime.now();
     _activeSetIndex = widget.initialSetIndex;
+    _soundEnabled = DatabaseService.getSoundEnabled();
 
     _historyCache = DatabaseService.getLastExerciseHistory(widget.exercise.name);
     _currentPR = DatabaseService.getPersonalRecord(widget.exercise.name);
@@ -390,6 +392,11 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
               accentColor: widget.accentColor,
               onFinish: _endRest,
               nextSet: nextSetInfo,
+              soundEnabled: _soundEnabled,
+              onSoundToggle: (value) {
+                setState(() => _soundEnabled = value);
+                DatabaseService.setSoundEnabled(value);
+              },
             ),
           ),
         ),

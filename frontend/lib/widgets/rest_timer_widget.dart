@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
+import '../core/sound_service.dart';
 
 class NextSetInfo {
   final int setNumber;
@@ -23,12 +24,16 @@ class RestTimerWidget extends StatefulWidget {
   final Color accentColor;
   final VoidCallback onFinish;
   final NextSetInfo? nextSet;
+  final bool soundEnabled;
+  final ValueChanged<bool> onSoundToggle;
 
   const RestTimerWidget({
     super.key,
     required this.durationSeconds,
     required this.accentColor,
     required this.onFinish,
+    required this.soundEnabled,
+    required this.onSoundToggle,
     this.nextSet,
   });
 
@@ -40,11 +45,13 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
   late int _remainingSeconds;
   Timer? _timer;
   bool _countdownFinished = false;
+  late bool _soundEnabled;
 
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.durationSeconds;
+    _soundEnabled = widget.soundEnabled;
     _startTimer();
   }
 
@@ -57,6 +64,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
       } else {
         _timer?.cancel();
         HapticFeedback.heavyImpact();
+        if (_soundEnabled) SoundService.playBeep();
         setState(() {
           _countdownFinished = true;
         });
@@ -95,6 +103,26 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Campanella suono toggle
+            Align(
+              alignment: Alignment.centerRight,
+              child: Tooltip(
+                message: _soundEnabled ? 'Disattiva beep' : 'Attiva beep',
+                child: IconButton(
+                  onPressed: () {
+                    final next = !_soundEnabled;
+                    setState(() => _soundEnabled = next);
+                    widget.onSoundToggle(next);
+                  },
+                  icon: Icon(
+                    _soundEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
+                    color: _soundEnabled ? widget.accentColor : AppTheme.textSecondary,
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
+
             // Cerchio countdown
             Container(
               decoration: BoxDecoration(

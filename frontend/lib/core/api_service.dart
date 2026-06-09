@@ -217,8 +217,8 @@ class ApiService {
 
     final headers = await AuthService.authHeaders();
 
-    debugPrint('🚀 [ApiService] POST ${ApiConfig.saveWorkout}');
-    
+    if (kDebugMode) debugPrint('🚀 [ApiService] POST ${ApiConfig.saveWorkout}');
+
     try {
       final response = await http
           .post(
@@ -228,8 +228,8 @@ class ApiService {
           )
           .timeout(_timeout);
 
-      debugPrint('📥 [ApiService] saveWorkout Status: ${response.statusCode}');
-      if (response.statusCode >= 300) {
+      if (kDebugMode) debugPrint('📥 [ApiService] saveWorkout Status: ${response.statusCode}');
+      if (kDebugMode && response.statusCode >= 300) {
         debugPrint('❌ [ApiService] Error Body: ${response.body}');
       }
 
@@ -238,7 +238,7 @@ class ApiService {
     } on ApiException {
       rethrow;
     } catch (e) {
-      debugPrint('🚨 [ApiService] saveWorkout Error: $e');
+      if (kDebugMode) debugPrint('🚨 [ApiService] saveWorkout Error: $e');
       throw Exception('Errore di connessione: $e');
     }
   }

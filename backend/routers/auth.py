@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import models
@@ -6,6 +6,7 @@ import schemas
 import auth as auth_utils
 from auth import get_current_user
 from database import get_db
+from limiter import limiter
 import config_manager
 import logging
 
@@ -83,7 +84,8 @@ def auth_register(data: schemas.AuthRegisterRequest, db: Session = Depends(get_d
     response_model=schemas.TokenResponse,
     summary="Login e ottenimento JWT",
 )
-def auth_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def auth_login(_request: Request, data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Verifica email (username) e password, restituisce un JWT valido 7 giorni.
     """

@@ -86,6 +86,13 @@ class DatabaseService {
     return raw != null ? DateTime.tryParse(raw) : null;
   }
 
+  // --- SOUND SETTINGS ---
+  static bool getSoundEnabled() =>
+      _settingsBox.get('rest_sound_enabled', defaultValue: true) as bool;
+
+  static Future<void> setSoundEnabled(bool value) =>
+      _settingsBox.put('rest_sound_enabled', value);
+
   /// Elimina tutti i dati salvati sul dispositivo
   static Future<void> clearAllData() async {
     await _workoutBox.clear();

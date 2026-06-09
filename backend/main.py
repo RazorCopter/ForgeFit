@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import shutil
+from contextlib import asynccontextmanager
 import google.generativeai as genai
 from typing import Optional
 from dotenv import load_dotenv
@@ -22,9 +23,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from limiter import limiter
 
 # Import dei modelli per la registrazione dei metadati di SQLAlchemy
 import models
@@ -312,16 +313,32 @@ def seed_catalog() -> None:
 # Il seeding è stato spostato nell'evento 'startup' dell'app.
 
 # ---------------------------------------------------------------------------
+# Lifespan — startup/shutdown dell'applicazione
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    logger.info("Inizializzazione database in corso...")
+    models.Base.metadata.create_all(bind=engine)
+    seed_catalog()
+    if not config_manager.is_admin_configured():
+        logger.warning("ATTENZIONE: Personal Trainer non configurato. Effettuare il setup iniziale dalla dashboard.")
+    else:
+        logger.info("Personal Trainer configurato correttamente.")
+    logger.info("Inizializzazione completata con successo.")
+    yield
+
+
+# ---------------------------------------------------------------------------
 # Istanza FastAPI
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Forge Fit API",
     description="Backend per la gestione di utenti, schede di allenamento e catalogo esercizi.",
     version="1.1.8",
+    lifespan=lifespan,
 )
 
-# Inizializzazione Rate Limiter (SlowAPI)
-limiter = Limiter(key_func=get_remote_address)
+# Collega il limiter (istanza condivisa da limiter.py) all'app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -333,27 +350,6 @@ app.include_router(catalog.router)
 app.include_router(system.router)
 app.include_router(ai.router)
 app.include_router(measurements.router)
-
-
-@app.on_event("startup")
-def on_startup():
-    """
-    All'avvio dell'applicazione:
-    1. Crea le tabelle nel database se non esistono.
-    2. Esegue il seeding del catalogo esercizi.
-    3. Esegue il seeding dell'utente amministratore.
-    """
-    logger.info("Inizializzazione database in corso...")
-    # Crea tabelle
-    models.Base.metadata.create_all(bind=engine)
-    # Seeding
-    seed_catalog()
-    # seed_admin()  <-- Rimossa
-    if not config_manager.is_admin_configured():
-        logger.warning("ATTENZIONE: Personal Trainer non configurato. Effettuare il setup iniziale dalla dashboard.")
-    else:
-        logger.info("Personal Trainer configurato correttamente.")
-    logger.info("Inizializzazione completata con successo.")
 
 # ---------------------------------------------------------------------------
 # Middleware CORS - domini autorizzati via env var ALLOWED_ORIGINS
