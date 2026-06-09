@@ -85,7 +85,7 @@ def auth_register(data: schemas.AuthRegisterRequest, db: Session = Depends(get_d
     summary="Login e ottenimento JWT",
 )
 @limiter.limit("10/minute")
-def auth_login(_request: Request, data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Verifica email (username) e password, restituisce un JWT valido 7 giorni.
     """
