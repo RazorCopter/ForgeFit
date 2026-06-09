@@ -64,7 +64,7 @@ class UserResponse(BaseModel):
     proteine_min: Optional[int] = None
     proteine_max: Optional[int] = None
     body_fat_perc: Optional[float] = None
-    version: Optional[str] = "1.5.1"
+    version: Optional[str] = "1.6.0"
 
     class Config:
         from_attributes = True
@@ -200,7 +200,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     user_id: int
-    version: str = "1.5.1"
+    version: str = "1.6.0"
     user: UserResponse
 
 

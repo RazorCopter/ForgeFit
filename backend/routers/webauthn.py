@@ -195,7 +195,7 @@ def verify_login(
             refresh_token=refresh,
             role=user.role,
             user_id=user.id,
-            version="1.3.0",
+            version="1.6.0",
             user=schemas.UserResponse.model_validate(user)
         )
         
