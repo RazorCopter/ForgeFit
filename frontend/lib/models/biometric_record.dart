@@ -72,7 +72,7 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
 
   @override
   BiometricRecord read(BinaryReader reader) {
-    return BiometricRecord(
+    final record = BiometricRecord(
       date: DateTime.fromMillisecondsSinceEpoch(reader.readInt()),
       weight: reader.readDouble(),
       hips: reader.readDouble(),
