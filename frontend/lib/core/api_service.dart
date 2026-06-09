@@ -560,20 +560,22 @@ class ApiService {
   // ------------------------------------------------------------------
   // Helper privato: normalizza la risposta HTTP
   // ------------------------------------------------------------------
-  static Map<String, dynamic> _handleResponse(http.Response response) {
+  static dynamic _handleResponse(http.Response response) {
     final body = utf8.decode(response.bodyBytes);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       try {
-        return jsonDecode(body) as Map<String, dynamic>;
+        return jsonDecode(body);
       } catch (_) {
-        return {};
+        return body.isEmpty ? {} : body;
       }
     } else {
       String errorMessage = 'Errore del server (${response.statusCode})';
       try {
-        final errorBody = jsonDecode(body) as Map<String, dynamic>;
-        errorMessage = errorBody['detail']?.toString() ?? errorMessage;
+        final errorBody = jsonDecode(body);
+        if (errorBody is Map && errorBody.containsKey('detail')) {
+          errorMessage = errorBody['detail']?.toString() ?? errorMessage;
+        }
       } catch (_) {
         if (body.isNotEmpty) errorMessage = body;
       }
