@@ -3300,14 +3300,14 @@
       }
 
       try {
-        const r = await fetch(getServerUrl() + `/api/admin/clients/${userId}/progress`, { headers: getHeaders() });
+        const r = await fetch(getServerUrl() + `/api/users/${userId}/progress`, { headers: getHeaders() });
 
         if (r.status === 401) { handleUnauthorized(); return; }
 
         if (!r.ok) {
           const err = await r.json();
           console.error("Dettaglio errore API:", err);
-          showToast(err.detail || "Errore nel caricamento dei progressi", "error");
+          alert(err.detail || "Errore nel caricamento dei progressi");
           return;
         }
 
@@ -3315,7 +3315,7 @@
         console.log("Payload API Progressi:", data);
 
         if (!data || !Array.isArray(data.measurements)) {
-          showToast("Dati progressi non validi o mancanti.", "error");
+          alert("Dati progressi non validi o mancanti.");
           return;
         }
 
@@ -3330,7 +3330,7 @@
         renderProgressSummary(data);
       } catch (e) {
         console.error("Errore caricamento progressi:", e);
-        showToast("Impossibile connettersi al server.", "error");
+        alert("Impossibile connettersi al server.");
       }
     }
 
