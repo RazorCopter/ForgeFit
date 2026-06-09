@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // 2. Procedi con il controllo auth e il delay minimo
-    final minimumDelay = Future.delayed(const Duration(milliseconds: 3000));
+    final minimumDelay = Future.delayed(const Duration(milliseconds: 5000));
     final checkAuth = AuthService.isLoggedIn().then((loggedIn) async {
       if (loggedIn) {
         // Sincronizzazione di sicurezza: se AuthService ha l'email ma DatabaseService no, la ripristiniamo.
@@ -121,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: VideoPlayer(_videoController),
               ).animate()
                 .fadeIn(duration: 800.ms)
-                .fadeOut(delay: 2.seconds, duration: 800.ms)
+                .fadeOut(delay: 4500.ms, duration: 500.ms)
             : const Text(
                 'FORGE FIT',
                 style: TextStyle(
