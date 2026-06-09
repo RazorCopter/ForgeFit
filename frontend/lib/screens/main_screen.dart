@@ -5,8 +5,9 @@ import 'statistics_screen.dart';
 import 'analysis_screen.dart';
 import 'setup_screen.dart';
 import '../core/theme.dart';
-import '../core/api_service.dart';
 import '../data/database_service.dart';
+import '../core/sync_service.dart';
+import 'dart:async';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,22 +19,23 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  Timer? _syncTimer;
+
   @override
   void initState() {
     super.initState();
-    _retryUnsyncedWorkouts();
+    // Esegui la prima sync immediata
+    SyncService.syncAllPendingData();
+    // Imposta una sync periodica (es. ogni 5 minuti)
+    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      SyncService.syncAllPendingData();
+    });
   }
 
-  Future<void> _retryUnsyncedWorkouts() async {
-    final unsynced = DatabaseService.getUnsyncedWorkouts();
-    for (final workout in unsynced) {
-      try {
-        await ApiService.saveWorkout(workout);
-        await DatabaseService.markWorkoutSynced(workout.id);
-      } catch (_) {
-        // Riproverà al prossimo avvio
-      }
-    }
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    super.dispose();
   }
 
   final List<Widget> _screens = [

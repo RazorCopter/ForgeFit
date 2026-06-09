@@ -5,6 +5,7 @@ import '../core/api_service.dart';
 import '../data/database_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
+import '../core/passkeys_service.dart';
 import 'biometric_trends_screen.dart';
 
 class AnalysisScreen extends StatefulWidget {
@@ -216,6 +217,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         'goal': _goalController.text.trim(),
       });
       
+      record.isSynced = true;
+      await DatabaseService.saveBiometricRecord(record);
+      
       // Ricarica per ottenere le nuove metriche calcolate dal backend
       await _fetchUserProfile();
 
@@ -298,6 +302,26 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
     }
   }
 
+  Future<void> _registerPasskey() async {
+    setState(() => _isLoading = true);
+    try {
+      await PasskeysService.registerPasskey();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dispositivo registrato con successo!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore Passkey: ${e.toString()}'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final age = _profile != null ? DateTime.now().difference(_profile!.dateOfBirth).inDays ~/ 365 : 0;
@@ -346,6 +370,19 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                             _buildStaticInfo('Altezza', '${_profile?.height.toInt() ?? 0} cm'),
                           ],
                         ),
+                        if (PasskeysService.isSupported) ...[
+                          const SizedBox(height: 16),
+                          Center(
+                            child: OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _registerPasskey,
+                              icon: const Icon(Icons.fingerprint, color: AppTheme.cyan),
+                              label: const Text('Registra Passkey', style: TextStyle(color: AppTheme.cyan)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.cyan),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
               ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1),

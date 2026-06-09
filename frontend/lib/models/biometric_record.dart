@@ -11,6 +11,7 @@ class BiometricRecord {
   final double? calf;
   final double? neck;
   final double? wrist;
+  bool isSynced;
 
   BiometricRecord({
     required this.date,
@@ -23,6 +24,7 @@ class BiometricRecord {
     this.calf,
     this.neck,
     this.wrist,
+    this.isSynced = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -82,6 +84,10 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
       neck: _readNullable(reader),
       wrist: _readNullable(reader),
     );
+    try {
+      record.isSynced = reader.read() as bool? ?? false;
+    } catch (_) {}
+    return record;
   }
 
   @override
@@ -96,5 +102,6 @@ class BiometricRecordAdapter extends TypeAdapter<BiometricRecord> {
     writer.writeDouble(obj.calf ?? -1.0);
     writer.writeDouble(obj.neck ?? -1.0);
     writer.writeDouble(obj.wrist ?? -1.0);
+    writer.write(obj.isSynced);
   }
 }

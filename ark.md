@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
-> Documento aggiornato il 2026-06-08. Riferimento: branch `main`.
-> **v4 — Modularity & PWA session**.
-> Refactoring massivo FastAPI (8 routers), PWA offline service worker, rate limiting, UI feedback.
+> Documento aggiornato il 2026-06-09. Riferimento: branch `main`.
+> **v5 — Passkeys & Background Sync**.
+> Registrazione e Login senza password tramite WebAuthn (Passkeys). Sincronizzazione background offline-first robusta per Workouts e BiometricRecords.
 
 ---
 

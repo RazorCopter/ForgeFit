@@ -50,6 +50,7 @@ class User(Base):
     workout_plans = relationship("WorkoutPlan", back_populates="owner", cascade="all, delete-orphan")
     measurements = relationship("Measurement", back_populates="owner", cascade="all, delete-orphan")
     workout_logs = relationship("WorkoutLog", back_populates="owner", cascade="all, delete-orphan")
+    passkeys = relationship("PasskeyCredential", back_populates="owner", cascade="all, delete-orphan")
 
     @property
     def bmi(self):
@@ -210,3 +211,25 @@ class WorkoutLog(Base):
 
     owner = relationship("User", back_populates="workout_logs")
 
+
+class PasskeyCredential(Base):
+    """
+    Tabella 'passkey_credentials': memorizza le chiavi pubbliche WebAuthn registrate dagli utenti.
+    """
+    __tablename__ = "passkey_credentials"
+
+    credential_id = Column(String, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    # La chiave pubblica serializzata
+    public_key = Column(Text, nullable=False)
+    
+    # Contatore firme per rilevare cloni
+    sign_count = Column(Integer, default=0)
+    
+    # Nome assegnato al dispositivo (es. "iPhone Passkey")
+    name = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    owner = relationship("User", back_populates="passkeys")

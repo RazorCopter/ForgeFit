@@ -5,6 +5,14 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.5.0] — 2026-06-09
+
+### Added
+- **Passkeys (WebAuthn)**: Implementata l'autenticazione biometrica senza password tramite Passkeys. Gli utenti possono ora registrare il proprio dispositivo (FaceID/TouchID/Windows Hello) e accedere istantaneamente con l'impronta digitale o il volto, anche se l'app non è installata nativamente ma gira nel browser come PWA.
+- **SyncService Background Resiliente**: Implementata una coda asincrona offline/online robusta per `CompletedWorkout` e `BiometricRecord`. I dati pendenti che falliscono il caricamento a causa di problemi di rete vengono ora salvati con `isSynced: false` e spinti in background ogni 5 minuti e all'avvio dell'app.
+
+---
+
 ## [1.4.0] — 2026-06-09
 
 ### Added

@@ -28,6 +28,8 @@ dependencies:
   confetti: ^0.7.0
   audioplayers: ^6.0.0
   video_player: ^2.8.2
+  local_auth: ^3.0.1
+  passkeys: ^2.19.0
 
 dev_dependencies:
   flutter_test:

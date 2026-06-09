@@ -33,7 +33,7 @@ import schemas
 import auth
 from auth import get_current_user
 from database import engine, get_db
-from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai
+from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai, webauthn
 
 
 # ---------------------------------------------------------------------------
@@ -345,6 +345,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(auth_router.router)
 app.include_router(plans.router)
 app.include_router(workouts.router)
+app.include_router(webauthn.router)
 app.include_router(users.router)
 app.include_router(catalog.router)
 app.include_router(system.router)
