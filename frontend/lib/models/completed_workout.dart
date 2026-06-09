@@ -26,10 +26,10 @@ class CompletedWorkout {
   };
 
   factory CompletedWorkout.fromJson(Map<String, dynamic> json) => CompletedWorkout(
-    id: json['id'] as String? ?? '',
+    id: json['id']?.toString() ?? '',
     title: json['title'] as String? ?? '',
     date: DateTime.tryParse(json['date'] as String? ?? '') ?? DateTime.now(),
-    durationSeconds: json['durationSeconds'] as int? ?? 0,
+    durationSeconds: json['durationSeconds'] as int? ?? json['duration_seconds'] as int? ?? 0,
     exercises: (json['exercises'] as List<dynamic>?)
         ?.map((e) => CompletedExercise.fromJson(e as Map<String, dynamic>))
         .toList() ?? [],

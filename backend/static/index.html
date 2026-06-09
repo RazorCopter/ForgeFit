@@ -1964,6 +1964,22 @@
           </table>
         </div>
       </div>
+
+      <div style="margin-top: 1.5rem">
+        <div class="card-title">Storico Allenamenti Completati</div>
+        <div class="catalog-table-wrap" style="max-height: 250px">
+          <table id="workoutsTable">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Durata</th>
+                <th>Esercizi</th>
+              </tr>
+            </thead>
+            <tbody id="workoutsTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3328,6 +3344,20 @@
         renderProgressChart(currentProgressData);
         renderProgressTable(currentProgressData);
         renderProgressSummary(data);
+
+        // Fetch workout history
+        try {
+          const rw = await fetch(getServerUrl() + `/api/workouts/history/${userId}`, { headers: getHeaders() });
+          if (rw.ok) {
+            const wdata = await rw.json();
+            renderWorkoutsTable(wdata);
+          } else {
+            renderWorkoutsTable([]);
+          }
+        } catch (e) {
+          console.error("Errore fetch workouts:", e);
+          renderWorkoutsTable([]);
+        }
       } catch (e) {
         console.error("Errore caricamento progressi:", e);
         alert("Impossibile connettersi al server.");
@@ -3555,6 +3585,29 @@
       } else {
         metricsEl.innerHTML = '<div style="color:var(--muted)">Dati insufficienti per il calcolo.</div>';
       }
+    }
+
+    function renderWorkoutsTable(workouts) {
+      const tbody = document.getElementById('workoutsTbody');
+      tbody.innerHTML = '';
+      if (!workouts || workouts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--muted)">Nessun allenamento registrato.</td></tr>';
+        return;
+      }
+      workouts.forEach(w => {
+        const d = new Date(w.date);
+        const dataStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const durStr = Math.floor(w.duration_seconds / 60) + ' min ' + (w.duration_seconds % 60) + ' sec';
+        const exCount = Array.isArray(w.exercises) ? w.exercises.length : 0;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${dataStr}</td>
+          <td>${durStr}</td>
+          <td>${exCount} esercizi</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function closeProgressModal() {
