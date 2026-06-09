@@ -23,6 +23,31 @@ class SetupScreen extends StatefulWidget {
 
 class _SetupScreenState extends State<SetupScreen> {
   bool _isSyncing = false;
+  String _backendVersion = 'Caricamento...';
+  final String _frontendVersion = '1.5.1';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersions();
+  }
+
+  Future<void> _loadVersions() async {
+    try {
+      final me = await ApiService.getMe();
+      if (mounted) {
+        setState(() {
+          _backendVersion = me['version']?.toString() ?? 'Non disponibile (Pre-1.5.1)';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _backendVersion = 'Errore caricamento';
+        });
+      }
+    }
+  }
 
   /// Riscarica la scheda dal server e la salva in memoria.
   /// Utile quando il trainer aggiorna il piano dell'utente.
@@ -452,6 +477,23 @@ class _SetupScreenState extends State<SetupScreen> {
               color: Colors.red,
               onTap: _resetApp,
             ).animate().fade(delay: 450.ms).slideX(),
+
+            const SizedBox(height: 32),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'ForgeFit v$_frontendVersion (Frontend)',
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Backend API v$_backendVersion',
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
