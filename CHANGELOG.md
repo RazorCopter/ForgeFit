@@ -11,6 +11,9 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 - **Passkeys (WebAuthn)**: Implementata l'autenticazione biometrica senza password tramite Passkeys. Gli utenti possono ora registrare il proprio dispositivo (FaceID/TouchID/Windows Hello) e accedere istantaneamente con l'impronta digitale o il volto, anche se l'app non è installata nativamente ma gira nel browser come PWA.
 - **SyncService Resiliente (Two-Way Sync)**: Implementata una sincronizzazione a due vie (Push/Pull) per Workouts e Misure Biometriche. I dati creati offline vengono ritentati in background ogni 5 minuti. Inoltre, facendo login su un nuovo dispositivo o premendo "Sincronizza ora", l'app popola il database locale (Hive) scaricando interamente lo storico dal server (nuove API backend `/history/{user_id}`).
 
+### Fixed
+- **CORS Login Errore (Server non raggiungibile)**: Aggiunta la direttiva `allow_origin_regex=".*"` in `main.py` per garantire che il middleware CORS di FastAPI permetta le richieste da qualsiasi URL e porta, risolvendo il problema del "Server non raggiungibile" quando il client e il server sono su reti locali diverse ma non proxate o elencate tra le origin hardcoded.
+
 ---
 
 ## [1.4.0] — 2026-06-09
