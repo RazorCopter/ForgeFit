@@ -132,10 +132,15 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               )
             : Center(
-                child: Image.asset(
-                  'assets/images/splash.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                child: const Text(
+                  'FORGE FIT',
+                  style: TextStyle(
+                    fontFamily: 'Orbitron',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.cyanAccent,
+                    letterSpacing: 4,
+                  ),
                 ),
               ),
       ),
