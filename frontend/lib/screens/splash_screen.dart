@@ -122,15 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ).animate()
                 .fadeIn(duration: 800.ms)
                 .fadeOut(delay: 4500.ms, duration: 500.ms)
-            : const Text(
-                'FORGE FIT',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-              ).animate().fade(duration: 800.ms),
+            : const SizedBox(),
       ),
     );
   }
