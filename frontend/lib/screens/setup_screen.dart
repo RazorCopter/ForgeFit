@@ -25,7 +25,7 @@ class SetupScreen extends StatefulWidget {
 class _SetupScreenState extends State<SetupScreen> {
   bool _isSyncing = false;
   bool _isLoading = false;
-  String _backendVersion = 'Caricamento...';
+
   final String _frontendVersion = kAppVersion;
 
   @override
@@ -35,13 +35,7 @@ class _SetupScreenState extends State<SetupScreen> {
     // Usiamo il valore scaricato da SyncService.
   }
 
-  void _loadVersions() {
-    if (mounted) {
-      setState(() {
-        _backendVersion = SyncService.backendVersion ?? 'Disponibile dopo sync';
-      });
-    }
-  }
+
 
   /// Riscarica la scheda dal server e la salva in memoria.
   /// Utile quando il trainer aggiorna il piano dell'utente.
