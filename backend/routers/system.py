@@ -59,7 +59,8 @@ def get_supported_ai_models(current_user: models.User = Depends(get_current_user
         raise HTTPException(status_code=403, detail="Permesso negato.")
     
     whitelist = [
-        {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Bilanciato e Veloce - Default)"},
+        {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Affidabile ed Economico - Default)"},
+        {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Bilanciato e Veloce)"},
         {"id": "gemini-3.5-pro", "name": "Gemini 3.5 Pro (Ragionamento Complesso)"},
         {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Ultra Veloce)"},
     ]
