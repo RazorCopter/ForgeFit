@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
-> **v1.7.3 — Sync ID Bug Fix**.
-> Implementati i fix dell'audit di sicurezza e funzionale e risolto bug critico di duplicazione sync.
+> **v1.7.4 — Sync Call Optimizations**.
+> Risolti i bug di caricamento del profilo e ridotte drasticamente le chiamate API duplicate in fase di boot dell'app.
 
 ---
 

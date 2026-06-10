@@ -9,6 +9,7 @@ from database import get_db
 from limiter import limiter
 import config_manager
 import logging
+from version import APP_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db
             refresh_token=refresh,
             role="admin",
             user_id=real_user_id,
-            version="1.7.2",
+            version=APP_VERSION,
             user=user_response
         )
     else:
@@ -146,7 +147,7 @@ def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db
             refresh_token=refresh,
             role=user.role,
             user_id=user.id,
-            version="1.7.2",
+            version=APP_VERSION,
             user=schemas.UserResponse.model_validate(user)
         )
 

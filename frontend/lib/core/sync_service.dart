@@ -6,6 +6,7 @@ import 'api_service.dart';
 import 'auth_service.dart';
 import '../models/completed_workout.dart';
 import '../models/biometric_record.dart';
+import '../models/user_profile.dart';
 
 class SyncService {
   static bool _isSyncing = false;
@@ -109,6 +110,29 @@ class SyncService {
         debugPrint('❌ Pull fallito per Storico Biometrics: $e');
       }
 
+      // 2C. Download User Profile
+      try {
+        final userData = await ApiService.getMe();
+        final int eta = userData['age'] ?? 0;
+        final int birthYear = DateTime.now().year - eta;
+        final newProfile = UserProfile(
+          name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim(),
+          dateOfBirth: DateTime(birthYear > 1900 ? birthYear : 1990, 7, 1),
+          height: (userData['height'] as num?)?.toDouble() ?? 0.0,
+          sesso: userData['gender'] ?? '',
+          bmi: (userData['bmi'] as num?)?.toDouble(),
+          bmr: userData['bmr'] as int?,
+          whr: (userData['whr'] as num?)?.toDouble(),
+          acquaLitri: (userData['acqua_litri'] as num?)?.toDouble(),
+          proteineMin: userData['proteine_min'] as int?,
+          proteineMax: userData['proteine_max'] as int?,
+          bodyFatPerc: (userData['body_fat_perc'] as num?)?.toDouble(),
+        );
+        await DatabaseService.saveUserProfile(newProfile);
+        if (kDebugMode) debugPrint('✅ Pull UserProfile completato');
+      } catch (e) {
+        debugPrint('❌ Pull fallito per UserProfile: $e');
+      }
     } finally {
       _isSyncing = false;
     }

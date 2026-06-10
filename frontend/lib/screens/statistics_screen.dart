@@ -15,40 +15,11 @@ class StatisticsScreen extends StatefulWidget {
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
   String? _selectedExercise;
-  bool _isSyncing = false;
-
   @override
   void initState() {
     super.initState();
-    _syncFromBackend();
   }
 
-  Future<void> _syncFromBackend() async {
-    final userId = DatabaseService.getUserId();
-    if (userId == null) return;
-    if (mounted) setState(() => _isSyncing = true);
-    try {
-      final raw = await ApiService.getWorkoutHistory(userId);
-      final existingIds = DatabaseService.getAllWorkouts().map((w) => w.id).toSet();
-      for (final item in raw) {
-        final map = item as Map<String, dynamic>;
-        final remoteId = map['id']?.toString() ?? '';
-        if (remoteId.isEmpty || existingIds.contains(remoteId)) continue;
-        final workout = CompletedWorkout.fromJson({
-          'id': remoteId,
-          'title': 'Allenamento',
-          'date': map['date'] ?? DateTime.now().toIso8601String(),
-          'durationSeconds': map['duration_seconds'] ?? 0,
-          'exercises': map['exercises'] ?? [],
-        });
-        await DatabaseService.saveWorkout(workout);
-      }
-    } catch (_) {
-      // sync silente — non blocca la UI in caso di offline
-    } finally {
-      if (mounted) setState(() => _isSyncing = false);
-    }
-  }
   String _bestSet(List<CompletedWorkout> workouts) {
     if (workouts.isEmpty) return 'N/A';
     double maxLoad = 0;
@@ -259,13 +230,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           title: const Text('Nerd Analytics', style: TextStyle(color: AppTheme.textPrimary)),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          actions: [
-            if (_isSyncing)
-              const Padding(
-                padding: EdgeInsets.only(right: 16),
-                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.vividPurple)),
-              ),
-          ],
         ),
         body: ValueListenableBuilder(
           valueListenable: DatabaseService.workoutBoxListenable(),
@@ -277,29 +241,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (_isSyncing)
-                      const CircularProgressIndicator(color: AppTheme.vividPurple)
-                    else ...[
-                      const Icon(Icons.bar_chart_rounded, size: 72, color: AppTheme.textSecondary),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Nessun allenamento registrato',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Completa il tuo primo workout per\nvedere le statistiche qui.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton.icon(
-                        onPressed: _syncFromBackend,
-                        icon: const Icon(Icons.sync),
-                        label: const Text('Aggiorna da cloud'),
-                        style: FilledButton.styleFrom(backgroundColor: AppTheme.vividPurple),
-                      ),
-                    ],
+                    const Icon(Icons.bar_chart_rounded, size: 72, color: AppTheme.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Nessun allenamento registrato',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Completa il tuo primo workout per\nvedere le statistiche qui.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    ),
                   ],
                 ),
               );

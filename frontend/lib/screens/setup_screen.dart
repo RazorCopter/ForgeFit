@@ -31,7 +31,10 @@ class _SetupScreenState extends State<SetupScreen> {
   @override
   void initState() {
     super.initState();
-    _loadVersions();
+    // Fetch only when screen is displayed to avoid duplicate startup calls
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _loadVersions();
+    });
   }
 
   Future<void> _loadVersions() async {

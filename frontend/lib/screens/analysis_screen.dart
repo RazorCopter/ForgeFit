@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../data/database_service.dart';
+import '../core/sync_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
 import 'biometric_trends_screen.dart';
@@ -60,59 +61,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   Future<void> _initData() async {
     _loadLatestBiometrics();
     _checkAILock();
-    await _fetchUserProfile();
-  }
-
-  Future<void> _fetchUserProfile() async {
-    // 1. Prova da Hive
-    var localProfile = DatabaseService.getUserProfile();
-    
-    // Sempre tentiamo il fetch dal backend per avere le metriche derivate più aggiornate
-    try {
-      final userData = await ApiService.getMe();
-      final int eta = userData['age'] ?? 0;
-      // Usa il compleanno stimato al 1° luglio per ridurre l'errore medio a ~3 mesi
-      final int birthYear = DateTime.now().year - eta;
-      final newProfile = UserProfile(
-        name: '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'.trim(),
-        dateOfBirth: DateTime(birthYear, 7, 1),
-        height: (userData['height'] as num?)?.toDouble() ?? 0.0,
-        sesso: userData['gender'] ?? '',
-        bmi: (userData['bmi'] as num?)?.toDouble(),
-        bmr: userData['bmr'] as int?,
-        whr: (userData['whr'] as num?)?.toDouble(),
-        acquaLitri: (userData['acqua_litri'] as num?)?.toDouble(),
-        proteineMin: userData['proteine_min'] as int?,
-        proteineMax: userData['proteine_max'] as int?,
-        bodyFatPerc: (userData['body_fat_perc'] as num?)?.toDouble(),
-      );
-      localProfile = newProfile;
-      await DatabaseService.saveUserProfile(newProfile);
-
-      if (mounted) {
-        _weightController.text = (userData['weight'] ?? '').toString();
-        _chestController.text = (userData['chest'] ?? '').toString();
-        _fianchiController.text = (userData['hips'] ?? userData['fianchi'] ?? userData['abdomen'] ?? '').toString();
-        _polpaccioController.text = (userData['calf'] ?? userData['polpaccio'] ?? '').toString();
-        _colloController.text = (userData['neck'] ?? userData['collo'] ?? '').toString();
-        _polsoController.text = (userData['wrist'] ?? userData['polso'] ?? '').toString();
-        _bicepsController.text = (userData['biceps'] ?? '').toString();
-        _vitaController.text = (userData['waist'] ?? '').toString();
-        _cosciaController.text = (userData['thigh'] ?? '').toString();
-      }
-    } catch (e) {
-      debugPrint('Errore recupero profilo backend: $e');
-      if (localProfile == null || localProfile.height == 0) {
-        localProfile = UserProfile(
-          name: 'Atleta',
-          dateOfBirth: DateTime(1990),
-          height: 0,
-        );
-      }
-    }
-
     if (mounted) {
-      setState(() => _profile = localProfile);
+      setState(() {
+        _profile = DatabaseService.getUserProfile();
+      });
     }
   }
 
@@ -236,7 +188,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       await DatabaseService.saveBiometricRecord(record);
       
       // Ricarica per ottenere le nuove metriche calcolate dal backend
-      await _fetchUserProfile();
+      await SyncService.syncAllPendingData();
+      await _initData();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

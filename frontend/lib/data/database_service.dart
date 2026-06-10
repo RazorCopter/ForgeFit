@@ -318,7 +318,15 @@ class DatabaseService {
 
   // --- WORKOUTS ---
   static Future<void> saveWorkout(CompletedWorkout workout) async {
-    await _workoutBox.add(workout);
+    final key = _workoutBox.keys.firstWhere(
+      (k) => _workoutBox.get(k)?.id == workout.id,
+      orElse: () => null,
+    );
+    if (key != null) {
+      await _workoutBox.put(key, workout);
+    } else {
+      await _workoutBox.add(workout);
+    }
   }
 
   static Future<void> deleteWorkout(CompletedWorkout workout) async {

@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.7.4] — 2026-06-10
+### Fixed
+- Ottimizzazione chiamate API ridondanti all'avvio: il profilo utente è ora sincronizzato in maniera centralizzata per evitare età fallaci in `AnalysisScreen` e sono state eliminate chiamate duplicate a `workouts` e `auth/me` dalle singole schede per alleggerire il carico di avvio.
+- Fix in backend `auth.py`: utilizzo della variabile `APP_VERSION` dinamica al posto della stringa "1.7.2" hardcoded in `TokenResponse`.
+
 ## [1.7.3] — 2026-06-10
 ### Fixed
 - Risolto un bug critico di duplicazione degli allenamenti in storico. Il frontend ora aggiorna il proprio UUID locale con l'ID autoincrementale assegnato dal backend, prevenendo salvataggi multipli durante i successivi cicli di sincronizzazione offline.
