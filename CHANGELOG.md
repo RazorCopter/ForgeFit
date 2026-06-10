@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.8.3] — 2026-06-10
+### Changed
+- **AI Models:** Aggiunto `gemini-2.5-flash` alla whitelist dei modelli e impostato come default globale per evitare addebiti extra previsti dai futuri tier di Gemini 3.x.
+
 ## [1.8.2] — 2026-06-10
 ### Fixed
 - **AI timeout:** Risolto errore 524 Cloudflare durante la generazione di schede. Il backend ora sfrutta `StreamingResponse` per inviare i frammenti in tempo reale (keep-alive) bypassando il timeout di inattività dei load balancer.
