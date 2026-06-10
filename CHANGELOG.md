@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.8.2] — 2026-06-10
+### Fixed
+- **AI timeout:** Risolto errore 524 Cloudflare durante la generazione di schede. Il backend ora sfrutta `StreamingResponse` per inviare i frammenti in tempo reale (keep-alive) bypassando il timeout di inattività dei load balancer.
+- **Wakelock:** Implementato fallback globale nativo tramite JS nel web `index.html` per assicurare che il display non si spenga durante il workout su iOS e Android.
+
 ## [1.8.1] — 2026-06-10
 ### Fixed
 - **SyncService:** Risolto bug che azzerava gli esercizi scaricati dal server sovrascrivendo la cronologia locale con array vuoti.

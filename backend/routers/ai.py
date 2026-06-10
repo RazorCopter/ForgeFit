@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import json
 import models
@@ -120,15 +121,24 @@ def generate_ai_plan(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 response_mime_type="application/json",
-            )
+            ),
+            stream=True
         )
         
-        plan_json = json.loads(response.text)
-        logger.info(f"Scheda AI generata con successo per utente ID {user.id}")
-        return plan_json
+        def iter_response():
+            try:
+                for chunk in response:
+                    if chunk.text:
+                        yield chunk.text
+            except Exception as stream_e:
+                logger.error(f"Errore durante lo streaming AI: {stream_e}")
+                # Se fallisce a metà stream, la connessione si chiuderà in errore.
+                
+        logger.info(f"Avvio streaming scheda AI per utente ID {user.id}")
+        return StreamingResponse(iter_response(), media_type="application/json")
         
     except Exception as e:
-        logger.error(f"Errore generazione AI: {str(e)}")
+        logger.error(f"Errore inizializzazione AI: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Errore durante la generazione AI: {str(e)}")
 
 

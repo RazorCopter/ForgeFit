@@ -58,6 +58,36 @@
         });
       });
     }
+
+    // Wake Lock API globale per evitare che lo schermo si spenga su web/PWA
+    let wakeLock = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock rilasciato');
+          });
+          console.log('Wake Lock acquisito (schermo sempre acceso)');
+        }
+      } catch (err) {
+        console.error(`Errore WakeLock: ${err.name}, ${err.message}`);
+      }
+    };
+
+    // Richiedi il Wake Lock al primo tocco
+    document.addEventListener('pointerdown', async () => {
+      if (wakeLock === null) {
+        await requestWakeLock();
+      }
+    }, { once: true });
+
+    // Riapplica il Wake Lock quando l'app torna visibile (es. cambio tab)
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+      }
+    });
   </script>
 
 
