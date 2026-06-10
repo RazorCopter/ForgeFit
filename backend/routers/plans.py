@@ -26,7 +26,7 @@ def save_or_update_plan(
     current_user: models.User = Depends(get_current_user),
 ):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Permessi insufficienti: solo il Personal Trainer può salvare schede.")
+        raise HTTPException(status_code=403, detail="Permessi insufficienti: solo il Personal Trainer puÃ² salvare schede.")
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
@@ -129,7 +129,7 @@ def get_plan_history(
 @router.delete("/{user_id}/history/{plan_id}", summary="Elimina una scheda dallo storico")
 def delete_plan_from_history(user_id: int, plan_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Solo il Personal Trainer pu� eliminare schede.")
+        raise HTTPException(status_code=403, detail="Solo il Personal Trainer puo' eliminare schede.")
     plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id, models.WorkoutPlan.user_id == user_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Scheda non trovata.")
