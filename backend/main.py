@@ -345,6 +345,19 @@ def seed_catalog() -> None:
 async def lifespan(_app: FastAPI):
     logger.info("Inizializzazione database in corso...")
     models.Base.metadata.create_all(bind=engine)
+    
+    # Esegui migrazione manuale per aggiungere la colonna title se non esiste
+    try:
+        import sqlite3
+        conn = sqlite3.connect("./data/fitness.db")
+        conn.execute("ALTER TABLE workout_logs ADD COLUMN title VARCHAR")
+        conn.commit()
+        conn.close()
+        logger.info("Colonna 'title' aggiunta a workout_logs con successo (migrazione).")
+    except Exception as e:
+        # Se la colonna esiste già o c'è un altro errore, ignoriamo
+        pass
+
     seed_catalog()
     if not config_manager.is_admin_configured():
         logger.warning("ATTENZIONE: Personal Trainer non configurato. Effettuare il setup iniziale dalla dashboard.")

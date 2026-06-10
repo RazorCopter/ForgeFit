@@ -304,12 +304,14 @@ class AIAnalyzeResponse(BaseModel):
 class WorkoutLogCreate(BaseModel):
     """Schema per il salvataggio di un allenamento (POST /api/workouts/save)."""
     user_id: int
+    title: Optional[str] = ""
     duration_seconds: int
     exercises: list[dict] = Field(..., description="Lista di esercizi completati con serie, kg, e reps")
 
 class WorkoutLogResponse(BaseModel):
     id: int
     user_id: int
+    title: Optional[str] = ""
     date: datetime
     duration_seconds: Optional[int]
     exercises: Any = None
@@ -325,6 +327,7 @@ class WorkoutLogResponse(BaseModel):
         return cls(
             id=log.id,
             user_id=log.user_id,
+            title=log.title,
             date=log.date,
             duration_seconds=log.duration_seconds,
             exercises=exercises,

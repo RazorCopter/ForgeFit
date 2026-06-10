@@ -237,6 +237,7 @@ class ApiService {
     // Convert to the exact payload expected by backend.
     final payload = {
       'user_id': userId,
+      'title': workout.title,
       'duration_seconds': workout.durationSeconds,
       'exercises': workout.exercises.map((e) => e.toJson()).toList(),
     };

@@ -38,6 +38,7 @@ def save_workout(
 
     new_log = models.WorkoutLog(
         user_id=payload.user_id,
+        title=payload.title,
         duration_seconds=payload.duration_seconds,
         exercises_json=exercises_str
     )
