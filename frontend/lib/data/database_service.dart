@@ -502,60 +502,6 @@ class DatabaseService {
     return buffer.toString().trim();
   }
 
-  static String exportDatabaseJson() {
-    final workouts = getAllWorkouts().map((w) => w.toJson()).toList();
-    final profile = getUserProfile()?.toJson();
-    final biometrics = _biometricBox.values.map((b) => b.toJson()).toList();
 
-    final exportData = {
-      'workouts': workouts,
-      'profile': profile,
-      'biometrics': biometrics,
-    };
-
-    return jsonEncode(exportData);
-  }
-
-  static Future<void> importDatabaseJson(String jsonString) async {
-    try {
-      final decoded = jsonDecode(jsonString);
-
-      // Svuotiamo i vecchi dati prima di ripristinare il backup
-      await _workoutBox.clear();
-      await _biometricBox.clear();
-
-      if (decoded is List) {
-        final importedWorkouts = decoded.map((e) => CompletedWorkout.fromJson(e as Map<String, dynamic>)).toList();
-        for (var w in importedWorkouts) {
-          await _workoutBox.add(w);
-        }
-      } else if (decoded is Map<String, dynamic>) {
-        if (decoded.containsKey('workouts') && decoded['workouts'] != null) {
-          final importedWorkouts = (decoded['workouts'] as List)
-              .map((e) => CompletedWorkout.fromJson(e as Map<String, dynamic>))
-              .toList();
-          for (var w in importedWorkouts) {
-            await _workoutBox.add(w);
-          }
-        }
-
-        if (decoded.containsKey('profile') && decoded['profile'] != null) {
-          final p = UserProfile.fromJson(decoded['profile']);
-          await saveUserProfile(p);
-        }
-
-        if (decoded.containsKey('biometrics') && decoded['biometrics'] != null) {
-          final importedBiometrics = (decoded['biometrics'] as List)
-              .map((e) => BiometricRecord.fromJson(e as Map<String, dynamic>))
-              .toList();
-          for (var b in importedBiometrics) {
-            await saveBiometricRecord(b);
-          }
-        }
-      }
-    } catch (e) {
-      throw Exception('Formato JSON non valido o dati corrotti.');
-    }
-  }
 
 }

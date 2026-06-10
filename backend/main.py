@@ -34,7 +34,7 @@ import schemas
 import auth
 from auth import get_current_user
 from database import engine, get_db
-from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai
+from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai, admin
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +390,7 @@ app.include_router(catalog.router)
 app.include_router(system.router)
 app.include_router(ai.router)
 app.include_router(measurements.router)
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 # ---------------------------------------------------------------------------
 # Middleware CORS - domini autorizzati via env var ALLOWED_ORIGINS

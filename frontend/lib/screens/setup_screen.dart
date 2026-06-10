@@ -150,74 +150,6 @@ class _SetupScreenState extends State<SetupScreen> {
     ));
   }
 
-  Future<void> _exportBackup() async {
-    try {
-      final jsonString = DatabaseService.exportDatabaseJson();
-      final bytes = utf8.encode(jsonString);
-      final fileName = 'forgefit_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-      await FileSaver.instance.saveFile(
-        name: fileName,
-        bytes: bytes,
-        mimeType: MimeType.json,
-      );
-      _showSnackBar('Backup esportato con successo!', Colors.green.shade700);
-    } catch (e) {
-      _showSnackBar('Errore durante l\'export: $e', Colors.red.shade700);
-    }
-  }
-
-  Future<void> _importBackup() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.surfaceVariant,
-        title: const Text('Importa Backup', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '⚠️ I dati attuali (allenamenti e misurazioni) verranno sovrascritti con quelli del backup. Continuare?',
-          style: TextStyle(color: AppTheme.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla', style: TextStyle(color: AppTheme.cyan)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Importa', style: TextStyle(color: Colors.orangeAccent)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        withData: true,
-      );
-
-      if (result == null || result.files.isEmpty) return;
-
-      final fileBytes = result.files.first.bytes;
-      String content;
-      if (fileBytes != null) {
-        content = utf8.decode(fileBytes);
-      } else if (!kIsWeb && result.files.first.path != null) {
-        content = await File(result.files.first.path!).readAsString();
-      } else {
-        _showSnackBar('Impossibile leggere il file.', Colors.red.shade700);
-        return;
-      }
-
-      await DatabaseService.importDatabaseJson(content);
-      _showSnackBar('Backup importato con successo!', Colors.green.shade700);
-    } catch (e) {
-      _showSnackBar('Errore durante l\'import: $e', Colors.red.shade700);
-    }
-  }
-
   /// Apre un dialog per cambiare la password dell'account.
   Future<void> _showChangePasswordDialog() async {
     final oldCtrl = TextEditingController();
@@ -401,27 +333,7 @@ class _SetupScreenState extends State<SetupScreen> {
               ),
             ).animate().fade(delay: 150.ms).slideX(),
 
-            const SizedBox(height: 16),
 
-            _buildSetupCard(
-              title: 'Esporta Backup',
-              subtitle: 'Salva allenamenti e misurazioni in un file JSON',
-              icon: Icons.upload_file,
-              color: AppTheme.vividPurple,
-              onTap: _exportBackup,
-            ).animate().fade(delay: 200.ms).slideX(),
-
-            const SizedBox(height: 16),
-
-            _buildSetupCard(
-              title: 'Importa Backup',
-              subtitle: 'Ripristina dati da un file di backup',
-              icon: Icons.download_for_offline,
-              color: Colors.orangeAccent,
-              onTap: _importBackup,
-            ).animate().fade(delay: 250.ms).slideX(),
-
-            const SizedBox(height: 32),
 
             // ── Sezione Sicurezza ─────────────────────────────────────────
             const Text(

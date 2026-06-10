@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.7.9] — 2026-06-10
+### Changed
+- Rimossi i tasti obsoleti e fuorvianti di "Importa/Esporta Backup" locale dalla schermata `SetupScreen` per evitare conflitti con la sincronizzazione in tempo reale.
+- Spostata la logica di esportazione del database a livello server: creato nuovo endpoint `/api/admin/backup` per scaricare direttamente l'intero database di produzione SQLite.
+
 ## [1.7.8] — 2026-06-10
 ### Added
 - Integrazione del pacchetto `wakelock_plus` per mantenere lo schermo sempre acceso durante la sessione di allenamento (impedendo lo standby del dispositivo sia su Web PWA che su app mobile).
