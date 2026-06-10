@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/training_data.dart';
 import '../models/completed_workout.dart';
 import '../core/theme.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'active_session_screen.dart';
 
 class WorkoutSessionScreen extends StatefulWidget {
@@ -28,8 +29,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _startTime = DateTime.now();
     _startCurrentExercise();
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
   }
 
   void _startCurrentExercise() async {

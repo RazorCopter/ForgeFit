@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.7.8] — 2026-06-10
+### Added
+- Integrazione del pacchetto `wakelock_plus` per mantenere lo schermo sempre acceso durante la sessione di allenamento (impedendo lo standby del dispositivo sia su Web PWA che su app mobile).
+
 ## [1.7.7] — 2026-06-10
 ### Fixed
 - Corretto un artefatto visivo in `SetupScreen` per cui veniva renderizzata una versione del backend cablata fissa (1.7.4) nell'istante di caricamento prima che `SyncService` finisse. Ora usa un `ValueNotifier` per aggiornarsi reattivamente.
