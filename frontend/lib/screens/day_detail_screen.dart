@@ -10,6 +10,7 @@ import '../core/api_service.dart';
 import 'active_session_screen.dart';
 import 'workout_session_screen.dart';
 import 'workout_summary_screen.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class DayDetailScreen extends StatefulWidget {
   final TrainingDay day;
@@ -31,10 +32,14 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   @override
   void dispose() {
     _globalTimer?.cancel();
+    WakelockPlus.disable();
     super.dispose();
   }
 
   void _startExercise(Exercise exercise, Color accentColor, int index) async {
+    // Abilitiamo il wakelock al tap (serve per iOS Safari / Web)
+    WakelockPlus.enable();
+    
     if (_workoutStartTime == null) {
       _workoutStartTime = DateTime.now();
       _globalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -109,6 +114,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       }
 
       if (mounted) {
+        WakelockPlus.disable();
         Navigator.pop(context); // chiude lo spinner
         Navigator.pushReplacement(
           context,
@@ -119,6 +125,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        WakelockPlus.disable();
         Navigator.pop(context); // chiude lo spinner
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Errore salvataggio: $e'),
@@ -227,6 +234,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             FloatingActionButton.extended(
               heroTag: 'guided',
               onPressed: () async {
+                WakelockPlus.enable();
                 final result = await Navigator.push<Map<String, dynamic>>(
                   context,
                   MaterialPageRoute(
