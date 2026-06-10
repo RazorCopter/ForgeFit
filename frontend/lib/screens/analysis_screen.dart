@@ -5,7 +5,6 @@ import '../core/api_service.dart';
 import '../data/database_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
-import '../core/passkeys_service.dart';
 import 'biometric_trends_screen.dart';
 
 class AnalysisScreen extends StatefulWidget {
