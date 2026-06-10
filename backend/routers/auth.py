@@ -89,57 +89,66 @@ def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db
     """
     Verifica email (username) e password, restituisce un JWT valido 7 giorni.
     """
+    user = db.query(models.User).filter(models.User.email == data.username).first()
     admin_config = config_manager.get_admin_config()
+    
+    is_admin_login = False
+    
     if admin_config and admin_config.get("username") == data.username:
         if auth_utils.verify_password(data.password, admin_config["hashed_password"]):
-            token = auth_utils.create_access_token(subject=data.username)
-            refresh = auth_utils.create_refresh_token(subject=data.username)
-            logger.info(f"Login PT (File Config) riuscito: {data.username}")
-            return schemas.TokenResponse(
-                access_token=token,
-                refresh_token=refresh,
-                role="admin",
-                user_id=0,
-                version="1.6.1",
-                user=schemas.UserResponse(
-                    id=0,
-                    email=data.username,
-                    first_name=admin_config["pt_name"],
-                    last_name="PT",
-                    age=30
-                )
-            )
+            is_admin_login = True
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenziali Amministratore non valide.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+            
+    if not is_admin_login:
+        if not user or not user.hashed_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenziali non valide.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        if not auth_utils.verify_password(data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenziali non valide.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
-    user = db.query(models.User).filter(models.User.email == data.username).first()
-    if not user or not user.hashed_password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenziali non valide.",
-            headers={"WWW-Authenticate": "Bearer"},
+    token = auth_utils.create_access_token(subject=data.username)
+    refresh = auth_utils.create_refresh_token(subject=data.username)
+    
+    if is_admin_login:
+        logger.info(f"Login PT riuscito: {data.username}")
+        real_user_id = user.id if user else 0
+        user_response = schemas.UserResponse.model_validate(user) if user else schemas.UserResponse(
+            id=0,
+            email=data.username,
+            first_name=admin_config["pt_name"],
+            last_name="PT",
+            age=30
         )
-    if not auth_utils.verify_password(data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenziali non valide.",
-            headers={"WWW-Authenticate": "Bearer"},
+        return schemas.TokenResponse(
+            access_token=token,
+            refresh_token=refresh,
+            role="admin",
+            user_id=real_user_id,
+            version="1.6.3",
+            user=user_response
         )
-    token = auth_utils.create_access_token(subject=user.email)
-    refresh = auth_utils.create_refresh_token(subject=user.email)
-    logger.info(f"Login cliente riuscito: {user.email} (Ruolo: {user.role})")
-    return schemas.TokenResponse(
-        access_token=token,
-        refresh_token=refresh,
-        role=user.role,
-        user_id=user.id,
-        version="1.6.1",
-        user=schemas.UserResponse.model_validate(user)
-    )
+    else:
+        logger.info(f"Login cliente riuscito: {user.email} (Ruolo: {user.role})")
+        return schemas.TokenResponse(
+            access_token=token,
+            refresh_token=refresh,
+            role=user.role,
+            user_id=user.id,
+            version="1.6.3",
+            user=schemas.UserResponse.model_validate(user)
+        )
 
 
 @router.get(
