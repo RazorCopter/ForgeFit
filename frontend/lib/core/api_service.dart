@@ -623,16 +623,16 @@ class ApiService {
       var response = await doRequest(headers);
       try {
         await _checkUnauthorizedAsync(response);
-      } on UnauthorizedException {
+      } on _RetryWithNewToken catch (_) {
         headers = await AuthService.authHeaders();
         response = await doRequest(headers);
+        await _checkUnauthorized(response);
       }
-      if (response.statusCode != 200 && response.statusCode != 204) {
-        throw ApiException.fromJson(response.body, response.statusCode);
-      }
+      _handleResponse(response);
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(statusCode: 500, message: 'Errore di rete o server non raggiungibile.');
+      throw Exception('Errore di connessione: $e');
     }
   }
 }
