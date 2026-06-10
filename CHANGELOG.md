@@ -1,5 +1,12 @@
 # Changelog — ForgeFit
 
+## [1.8.1] — 2026-06-10
+### Fixed
+- **SyncService:** Risolto bug che azzerava gli esercizi scaricati dal server sovrascrivendo la cronologia locale con array vuoti.
+- **Wakelock (PWA):** Spostata l'abilitazione del blocco schermo direttamente negli handler dei bottoni (Avvia Tutto / Start) per bypassare i blocchi energetici di Safari iOS e Android Chrome, risolvendo il problema dello schermo che si spegneva durante il workout.
+- **Backend:** Fix import mancante (`models` invece di `UserProfile`) in `backend/routers/admin.py` che mandava in crash il backend.
+
+
 ## [1.8.0] — 2026-06-10
 ### Changed
 - Upgrade dell'intelligenza artificiale: i modelli selezionabili passano ufficialmente alla nuova famiglia Gemini 3.5 (Flash, Pro, e Flash-Lite), offrendo maggiore velocità e ragionamento.
