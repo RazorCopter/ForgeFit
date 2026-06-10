@@ -1911,6 +1911,40 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="modalEditUser" onclick="closeEditUserModalOnBackdrop(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Modifica Utente</div>
+        <button class="btn btn-ghost" onclick="closeEditUserModal()">✕</button>
+      </div>
+      <form id="formEditUser">
+        <input type="hidden" id="editUserId" />
+        <div class="fg">
+          <label>Email</label>
+          <input type="email" id="editUserEmail" required />
+        </div>
+        <div class="fg">
+          <label>Nome</label>
+          <input type="text" id="editUserFirstName" required />
+        </div>
+        <div class="fg">
+          <label>Cognome</label>
+          <input type="text" id="editUserLastName" required />
+        </div>
+        <div class="fg">
+          <label>Nuova Password</label>
+          <input type="text" id="editUserPassword" placeholder="Lascia vuoto per non cambiare" />
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+          <button type="submit" class="btn btn-c" style="flex:1">💾 Salva Modifiche</button>
+          <button type="button" class="btn btn-ghost" onclick="closeEditUserModal()">Annulla</button>
+        </div>
+      </form>
+      <div class="alert" id="alertEditUser" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+
+
   <div class="modal-backdrop" id="progressModal" onclick="closeProgressModalOnBackdrop(event)">
     <div class="modal modal-lg" style="max-height: 95vh; overflow-y: auto;">
       <div class="modal-header">
@@ -2450,6 +2484,10 @@
         </td>
         <td style="padding-right:1.5rem">
           <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end">
+            <button class="btn btn-edit" style="padding: 8px 12px; border-radius:8px" 
+                    onclick="openEditUserModal(${u.id}, \`${u.email}\`, \`${u.first_name.replace(/`/g, '')}\`, \`${u.last_name.replace(/`/g, '')}\`)" title="Modifica Dati">
+              <i class="fas fa-edit"></i>
+            </button>
             <button class="btn btn-edit btn-progress" style="padding: 8px 16px; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px" 
                     onclick="showProgress(${u.id}, '${u.first_name} ${u.last_name}')">
               <span>📈</span> Progressi
@@ -2505,6 +2543,55 @@
         else showAlert('alertClienti', 'Errore: ' + d.detail, false);
       } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
     }
+
+    function openEditUserModal(id, email, first, last) {
+      document.getElementById('editUserId').value = id;
+      document.getElementById('editUserEmail').value = email;
+      document.getElementById('editUserFirstName').value = first;
+      document.getElementById('editUserLastName').value = last;
+      document.getElementById('editUserPassword').value = '';
+      document.getElementById('alertEditUser').className = 'alert';
+      document.getElementById('modalEditUser').classList.add('open');
+    }
+    
+    function closeEditUserModal() {
+      document.getElementById('modalEditUser').classList.remove('open');
+    }
+    
+    function closeEditUserModalOnBackdrop(e) {
+      if (e.target === document.getElementById('modalEditUser')) closeEditUserModal();
+    }
+
+    document.getElementById('formEditUser').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('editUserId').value;
+      const body = {
+        email: document.getElementById('editUserEmail').value.trim() || null,
+        first_name: document.getElementById('editUserFirstName').value.trim() || null,
+        last_name: document.getElementById('editUserLastName').value.trim() || null,
+        password: document.getElementById('editUserPassword').value || null
+      };
+      
+      try {
+        const r = await fetch(getServerUrl() + '/api/users/' + id, {
+          method: 'PUT',
+          headers: getHeaders(true),
+          body: JSON.stringify(body)
+        });
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const d = await r.json();
+        
+        if (r.ok) {
+          closeEditUserModal();
+          showAlert('alertClienti', d.message, true);
+          loadUsers();
+        } else {
+          showAlert('alertEditUser', 'Errore: ' + d.detail, false);
+        }
+      } catch (err) {
+        showAlert('alertEditUser', 'Errore rete: ' + err.message, false);
+      }
+    });
 
     /* ─── CATALOGO ─── */
     let catalogFilter = '';

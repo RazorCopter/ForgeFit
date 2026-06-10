@@ -64,12 +64,20 @@ class UserResponse(BaseModel):
     proteine_min: Optional[int] = None
     proteine_max: Optional[int] = None
     body_fat_perc: Optional[float] = None
-    version: Optional[str] = "1.6.1"
+    version: Optional[str] = "1.6.2"
 
     class Config:
         from_attributes = True
         populate_by_name = True
 
+class UserUpdateAdmin(BaseModel):
+    """
+    Schema per l'aggiornamento dei dati anagrafici e password da parte dell'admin.
+    """
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    password: Optional[str] = None
 
 # ---------------------------------------------------------------------------
 # Schemi per la scheda di allenamento (WorkoutPlan)
@@ -200,7 +208,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     user_id: int
-    version: str = "1.6.1"
+    version: str = "1.6.2"
     user: UserResponse
 
 

@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.6.2] — 2026-06-10
+
+### Added
+- **Pannello Admin**: Aggiunta la possibilità di modificare i dati anagrafici (nome, cognome, email) e la password degli utenti direttamente dalla tabella "Clienti Registrati".
+
+---
+
 ## [1.6.1] — 2026-06-10
 
 ### Removed & Changed

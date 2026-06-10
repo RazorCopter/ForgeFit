@@ -47,6 +47,45 @@ def list_users(db: Session = Depends(get_db),
         result.append(response)
 
     return result
+@router.put(
+    "/{user_id}",
+    response_model=schemas.MessageResponse,
+    summary="Aggiorna i dati anagrafici e la password di un utente (solo admin)",
+)
+def update_user(
+    user_id: int, 
+    payload: schemas.UserUpdateAdmin, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Accesso negato: solo il Personal Trainer può modificare gli utenti.")
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Utente con ID {user_id} non trovato.")
+        
+    if payload.email:
+        # Check if email is already taken by someone else
+        existing = db.query(models.User).filter(models.User.email == payload.email).first()
+        if existing and existing.id != user_id:
+            raise HTTPException(status_code=400, detail="Questa email è già in uso da un altro utente.")
+        user.email = payload.email
+        
+    if payload.first_name:
+        user.first_name = payload.first_name
+        
+    if payload.last_name:
+        user.last_name = payload.last_name
+        
+    if payload.password and payload.password.strip():
+        from auth import get_password_hash
+        user.hashed_password = get_password_hash(payload.password)
+        
+    db.commit()
+    logger.info(f"Dati utente {user_id} aggiornati dall'admin")
+    return {"message": "Dati utente aggiornati con successo."}
+
 
 @router.delete(
     "/{email}",
