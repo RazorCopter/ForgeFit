@@ -1762,11 +1762,16 @@
               <option value="">— Seleziona cliente —</option>
             </select>
           </div>
-          <div class="fg" style="margin:0">
+          <div class="fg" style="margin:0; flex-grow: 1;">
             <label for="planHistorySelect">Storico Schede</label>
-            <select id="planHistorySelect" onchange="loadHistoricalPlan()">
-              <option value="">— Corrente / Nessuna —</option>
-            </select>
+            <div style="display:flex; gap:0.5rem">
+              <select id="planHistorySelect" onchange="loadHistoricalPlan()" style="flex-grow:1">
+                <option value="">� Corrente / Nessuna �</option>
+              </select>
+              <button class="btn btn-outline" style="padding:0 12px; border-color:var(--danger); color:var(--danger); height:44px;" onclick="deleteSelectedHistoricalPlan()" title="Elimina scheda selezionata">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
           <div style="display:flex;align-items:flex-end;gap:.5rem">
             <button class="btn-ai-toggle" onclick="toggleAiTools()">✨ Strumenti IA</button>
