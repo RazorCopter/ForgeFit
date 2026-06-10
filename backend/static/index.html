@@ -1765,16 +1765,16 @@
           <div class="fg" style="margin:0; flex-grow: 1;">
             <label for="planHistorySelect">Storico Schede</label>
             <div style="display:flex; gap:0.5rem">
-              <select id="planHistorySelect" onchange="loadHistoricalPlan()" style="flex-grow:1">
+              <select id="planHistorySelect" onchange="loadHistoricalPlan()" style="flex-grow:1; height:44px">
                 <option value="">— Corrente / Nessuna —</option>
               </select>
-              <button class="btn btn-outline" style="padding:0 12px; border-color:var(--danger); color:var(--danger); height:44px;" onclick="deleteSelectedHistoricalPlan()" title="Elimina scheda selezionata">
+              <button class="btn btn-danger" style="padding:0 12px; height:44px; display:flex; align-items:center; justify-content:center; background-color: var(--danger); border:none; color: white;" onclick="deleteSelectedHistoricalPlan()" title="Elimina scheda selezionata">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
           <div style="display:flex;align-items:flex-end;gap:.5rem">
-            <button class="btn-ai-toggle" onclick="toggleAiTools()">âœ¨ Strumenti IA</button>
+            <button class="btn-ai-toggle" onclick="toggleAiTools()" style="height:44px; display:flex; align-items:center; justify-content:center; padding: 0 16px;">âœ¨ Strumenti IA</button>
           </div>
           <div style="display:flex;align-items:flex-end;justify-content:flex-end">
             <button id="btnSaveWorkout" class="btn btn-primary-cta" onclick="saveScheda()" style="width:180px; height:44px">ðŸ’¾ Salva Scheda</button>
