@@ -61,7 +61,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       _completedIndexes.add(index);
       setState(() {});
 
-      if (result['action'] == 'finish') {
+      if (result['action'] == 'finish' || _completedIndexes.length == widget.day.exercises.length) {
         _finishWorkout();
       }
     }
