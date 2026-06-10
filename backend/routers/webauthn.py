@@ -87,7 +87,7 @@ def verify_registration(
         
         verification = verify_registration_response(
             credential=credential,
-            expected_challenge=base64url_to_bytes(expected_challenge),
+            expected_challenge=expected_challenge,
             expected_origin=ORIGIN,
             expected_rp_id=RP_ID,
             require_user_verification=False,
@@ -168,7 +168,7 @@ def verify_login(
 
         verification = verify_authentication_response(
             credential=credential,
-            expected_challenge=base64url_to_bytes(expected_challenge),
+            expected_challenge=expected_challenge,
             expected_origin=ORIGIN,
             expected_rp_id=RP_ID,
             credential_public_key=bytes.fromhex(passkey.public_key) if isinstance(passkey.public_key, str) else passkey.public_key,
