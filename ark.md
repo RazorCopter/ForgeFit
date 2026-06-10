@@ -1,7 +1,7 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
-> **v1.7.1 — Audit Fixes & Ottimizzazioni**.
+> **v1.7.2 — Audit Fixes & Ottimizzazioni**.
 > Implementati i fix dell'audit di sicurezza e funzionale (CORS, paginazione, ottimizzazione UX frontend).
 
 ---

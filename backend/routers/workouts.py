@@ -136,3 +136,27 @@ def get_overload_suggestions(
             suggestions[ex_name] = {"suggested_weight": last_weight, "reason": "maintain", "last_weight": last_weight}
 
     return {"suggestions": suggestions}
+
+@router.delete(
+    "/{log_id}",
+    summary="Elimina un allenamento",
+)
+def delete_workout(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    log = db.query(models.WorkoutLog).filter(models.WorkoutLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Allenamento non trovato.")
+    
+    if current_user.role != "admin" and current_user.id != log.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Non hai i permessi per eliminare questo allenamento."
+        )
+        
+    db.delete(log)
+    db.commit()
+    logger.info(f"Allenamento eliminato (Log ID: {log_id}) dall'utente {current_user.email}")
+    return {"message": "Allenamento eliminato con successo."}

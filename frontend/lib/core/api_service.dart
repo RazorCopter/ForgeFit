@@ -609,4 +609,30 @@ class ApiService {
       throw ApiException(statusCode: response.statusCode, message: errorMessage);
     }
   }
+
+  // ------------------------------------------------------------------
+  // DELETE /api/workouts/{log_id}
+  // ------------------------------------------------------------------
+  static Future<void> deleteWorkout(int logId) async {
+    final url = ApiConfig.deleteWorkout(logId);
+    Future<http.Response> doRequest(Map<String, String> headers) =>
+        http.delete(Uri.parse(url), headers: headers).timeout(_timeout);
+
+    try {
+      var headers = await AuthService.authHeaders();
+      var response = await doRequest(headers);
+      try {
+        await _checkUnauthorizedAsync(response);
+      } on UnauthorizedException {
+        headers = await AuthService.authHeaders();
+        response = await doRequest(headers);
+      }
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ApiException.fromJson(response.body, response.statusCode);
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(statusCode: 500, message: 'Errore di rete o server non raggiungibile.');
+    }
+  }
 }

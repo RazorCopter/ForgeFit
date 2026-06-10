@@ -1,5 +1,12 @@
 # Changelog — ForgeFit
 
+## [1.7.2] — 2026-06-10
+### Added
+- Aggiunto endpoint `DELETE /api/workouts/{log_id}` per permettere l'eliminazione remota degli allenamenti dallo storico.
+### Fixed
+- L'eliminazione locale di un allenamento sul client mobile ora notifica il backend affinché l'allenamento venga rimosso anche in FitConsole (la dashboard web).
+- I dati dell'utente (età e altezza) risultavano "0" in `AnalysisScreen` perché l'account Admin non prevede questi dati nella configurazione. Ora il fallback è noto come un comportamento atteso e sicuro per l'amministratore.
+
 Tutte le modifiche rilevanti vengono documentate in questo file.  
 Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Removed**.
 

@@ -60,4 +60,7 @@ class ApiConfig {
 
   /// GET   /api/measurements/history/{user_id} → storico misure biometriche
   static String measurementHistory(int userId) => '$baseUrl/api/measurements/history/$userId';
+
+  /// DELETE /api/workouts/{log_id} → elimina allenamento dal server
+  static String deleteWorkout(int logId) => '$baseUrl/api/workouts/$logId';
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
+import '../core/api_service.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
 
@@ -63,6 +64,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
     if (confirm == true) {
       await DatabaseService.deleteWorkout(workout);
+      // Best effort per eliminare anche dal server se sincronizzato
+      if (workout.id.isNotEmpty && int.tryParse(workout.id) != null) {
+        try {
+          await ApiService.deleteWorkout(int.parse(workout.id));
+        } catch (e) {
+          debugPrint('Errore eliminazione remota allenamento: $e');
+        }
+      }
     }
   }
 
