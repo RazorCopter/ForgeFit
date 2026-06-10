@@ -1478,6 +1478,10 @@
               <label for="aiKeyOverride">Override API Key Google (Opzionale)</label>
               <input type="password" id="aiKeyOverride" placeholder="Lascia vuoto per usare la chiave di sistema..." />
             </div>
+            <div class="fg">
+              <label for="deepseekKeyOverride">Override API Key DeepSeek (Opzionale)</label>
+              <input type="password" id="deepseekKeyOverride" placeholder="Lascia vuoto per usare la chiave di sistema..." />
+            </div>
             <button type="submit" class="btn btn-v w100">💾 Salva Impostazioni AI</button>
           </form>
           <div class="alert" id="alertSettings" style="margin-top:.75rem"></div>
@@ -2376,6 +2380,9 @@
         const settings = await rSet.json();
         if (settings.ai_model) select.value = settings.ai_model;
         document.getElementById('aiKeyOverride').value = settings.ai_api_key_override || '';
+        if (document.getElementById('deepseekKeyOverride')) {
+            document.getElementById('deepseekKeyOverride').value = settings.deepseek_api_key_override || '';
+        }
       } catch (e) {
         console.error("Settings Load Error:", e);
         // Non mostrare alert invasivi se è solo un problema di record mancante (primo avvio)
@@ -2389,7 +2396,8 @@
       e.preventDefault();
       const payload = {
         ai_model: document.getElementById('aiModelSelect').value,
-        ai_api_key_override: document.getElementById('aiKeyOverride').value.trim()
+        ai_api_key_override: document.getElementById('aiKeyOverride').value.trim(),
+        deepseek_api_key_override: document.getElementById('deepseekKeyOverride') ? document.getElementById('deepseekKeyOverride').value.trim() : ""
       };
 
       try {
