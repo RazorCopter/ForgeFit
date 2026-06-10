@@ -120,6 +120,7 @@ windows/
 scratch/
 mock/
 push.bat
+rebuild.ps1
 
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
