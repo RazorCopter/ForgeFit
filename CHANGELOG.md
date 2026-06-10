@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.7.1] — 2026-06-10
+
+### Fixed
+- **Sincronizzazione Storico Allenamenti**: Aggiunto il salvataggio e recupero del campo `title` nel backend per gli allenamenti completati. Questo risolve il bug per cui il badge mensile ("cerchietto") non si aggiornava sui dispositivi remoti a causa del titolo nullo.
+
+---
+
 ## [1.7.0] — 2026-06-10
 
 ### Fixed & Changed
