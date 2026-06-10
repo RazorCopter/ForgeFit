@@ -72,18 +72,19 @@ class SyncService {
         final localIds = localWorkouts.map((w) => w.id).toSet();
 
         for (final rw in remoteWorkouts) {
-          // parse exercises correctly
-          // WorkoutLogResponse JSON
-          final exercisesJson = rw['exercises_json'] as String? ?? '[]';
-          final exercisesList = jsonDecode(exercisesJson) as List<dynamic>;
-          rw['exercises'] = exercisesList;
-          
           final cw = CompletedWorkout.fromJson(rw);
           cw.isSynced = true; 
           
           if (!localIds.contains(cw.id)) {
             await DatabaseService.saveWorkout(cw);
             if (kDebugMode) debugPrint('✅ Pull nuovo Workout: ${cw.id}');
+          } else {
+            // Se esiste già, aggiorniamolo per assicurarci che i dati non siano corrotti
+            final existing = localWorkouts.firstWhere((w) => w.id == cw.id);
+            if (existing.exercises.isEmpty && cw.exercises.isNotEmpty) {
+              await DatabaseService.saveWorkout(cw);
+              if (kDebugMode) debugPrint('✅ Ripristinato Workout corrotto: ${cw.id}');
+            }
           }
         }
 
