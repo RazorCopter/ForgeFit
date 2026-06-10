@@ -63,8 +63,8 @@ def get_supported_ai_models(current_user: models.User = Depends(get_current_user
         {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Bilanciato e Veloce)"},
         {"id": "gemini-3.5-pro", "name": "Gemini 3.5 Pro (Ragionamento Complesso)"},
         {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Ultra Veloce)"},
-        {"id": "deepseek-chat", "name": "DeepSeek V3 (Chat)"},
-        {"id": "deepseek-reasoner", "name": "DeepSeek R1 (Reasoner)"},
+        {"id": "deepseek-chat", "name": "DeepSeek V3"},
+        {"id": "deepseek-reasoner", "name": "DeepSeek R1"},
     ]
     return whitelist
 
@@ -74,7 +74,7 @@ def get_system_settings(db: Session = Depends(get_db), current_user: models.User
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Permesso negato.")
     
-    _, ai_model = ai_service.get_ai_config(db)
+    api_key, ai_model, deepseek_key = ai_service.get_ai_config(db)
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
     deepseek_key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
     

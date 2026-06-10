@@ -122,21 +122,24 @@ def generate_ai_plan(
             generation_config=genai.types.GenerationConfig(
                 response_mime_type="application/json",
             ),
-            stream=True
+            stream=False
         )
         
-        def iter_response():
-            try:
-                for chunk in response:
-                    if chunk.text:
-                        yield chunk.text
-            except Exception as stream_e:
-                logger.error(f"Errore durante lo streaming AI: {stream_e}")
-                # Se fallisce a metà stream, la connessione si chiuderà in errore.
-                
-        logger.info(f"Avvio streaming scheda AI per utente ID {user.id}")
-        return StreamingResponse(iter_response(), media_type="application/json")
+        full_response = response.text if hasattr(response, 'text') else str(response)
         
+        if "{" in full_response and "}" in full_response:
+            start = full_response.find('{')
+            end = full_response.rfind('}') + 1
+            json_str = full_response[start:end]
+            try:
+                parsed_json = json.loads(json_str)
+                logger.info(f"Scheda AI generata con successo per utente ID {user.id}")
+                return parsed_json
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="L'AI ha restituito un JSON non valido.")
+        else:
+            raise HTTPException(status_code=500, detail="Impossibile estrarre la struttura JSON dalla risposta dell'AI.")
+            
     except Exception as e:
         logger.error(f"Errore inizializzazione AI: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Errore durante la generazione AI: {str(e)}")
