@@ -5,6 +5,14 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.6.1] — 2026-06-10
+
+### Removed & Changed
+- **Passkeys (WebAuthn)**: Rimozione totale di tutto il sistema Passkey dall'intero applicativo (Frontend e Backend).
+- **Sessione JWT**: Estesa la durata del token di sessione da 7 a 14 giorni.
+
+---
+
 ## [1.6.0] — 2026-06-10
 
 ### Fixed & Changed

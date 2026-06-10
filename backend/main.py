@@ -359,7 +359,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title="Forge Fit API",
     description="Backend per la gestione di utenti, schede di allenamento e catalogo esercizi.",
-    version="1.6.0",
+    version="1.6.1",
     lifespan=lifespan,
 )
 

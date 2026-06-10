@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
-> **v1.6.0 — Passkeys & UI Refinements**.
-> Registrazione e Login senza password tramite WebAuthn (Passkeys). Sincronizzazione background offline-first robusta per Workouts e BiometricRecords.
+> **v1.6.1 — Rimozione Passkey & Estensione Sessione**.
+> Rimozione completa del supporto WebAuthn e prolungamento validità token JWT a 14 giorni.
 
 ---
 
