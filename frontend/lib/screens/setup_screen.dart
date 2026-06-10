@@ -486,7 +486,11 @@ class _SetupScreenState extends State<SetupScreen> {
               child: Column(
                 children: [
                   Text(
-                    'ForgeFit v$_frontendVersion (Frontend)',
+                    'ForgeFit',
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  ),
+                  Text(
+                    'Frontend v$_frontendVersion',
                     style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 4),

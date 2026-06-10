@@ -171,6 +171,32 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // GET /api/plans/{user_id}/history  [PROTETTO — richiede JWT]
+  // ------------------------------------------------------------------
+  static Future<List<dynamic>> getPlanHistory(int userId) async {
+    final url = '${ApiConfig.plans(userId)}/history';
+    Future<http.Response> doRequest(Map<String, String> headers) =>
+        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
+
+    try {
+      var headers = await AuthService.authHeaders();
+      var response = await doRequest(headers);
+      try {
+        await _checkUnauthorizedAsync(response);
+      } on _RetryWithNewToken catch (_) {
+        headers = await AuthService.authHeaders();
+        response = await doRequest(headers);
+        await _checkUnauthorized(response);
+      }
+      return _handleResponse(response) as List<dynamic>;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Impossibile ottenere lo storico schede: $e');
+    }
+  }
+
+  // ------------------------------------------------------------------
   // GET /api/plans/{user_id}  [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
   static Future<Map<String, dynamic>> getPlans(int userId) async {

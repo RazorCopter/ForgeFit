@@ -26,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<TrainingDay> _days = [];
+  List<Map<String, dynamic>> _planHistory = [];
+  int? _selectedHistoryId;
 
   /// true mentre è in corso la chiamata GET /api/plans/{user_id}
   bool _isSyncing = false;
@@ -49,6 +51,12 @@ class _HomeScreenState extends State<HomeScreen> {
         DateTime.now().difference(lastSync).inHours >= 4;
     if (isStale) {
       await _syncScheda(silent: true);
+    } else {
+      // Se non fa _syncScheda, proviamo comunque a caricare la history silently
+      try {
+        final hist = await PlanService.fetchPlanHistory(userId);
+        if (mounted) setState(() => _planHistory = hist);
+      } catch (_) {}
     }
   }
 
@@ -62,6 +70,35 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'd3': return Icons.directions_run;    // Legs
       case 'd4': return Icons.home;              // Home
       default:   return Icons.sports_gymnastics;
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Selezione di una scheda storica
+  // ----------------------------------------------------------------
+  void _selectHistory(int? histId) {
+    if (histId == null) {
+      // Ritorna alla corrente dalla cache / sync
+      final cached = DatabaseService.loadCachedPlan();
+      setState(() {
+        _selectedHistoryId = null;
+        if (cached != null && cached.isNotEmpty) {
+          _days = cached;
+        }
+      });
+      return;
+    }
+
+    final histItem = _planHistory.firstWhere((e) => e['id'] == histId, orElse: () => {});
+    if (histItem.isNotEmpty) {
+      final planData = histItem['plan'] as Map<String, dynamic>?;
+      if (planData != null) {
+        final parsed = DatabaseService.parseTrainingDaysFromJson(planData);
+        setState(() {
+          _selectedHistoryId = histId;
+          _days = parsed;
+        });
+      }
     }
   }
 
@@ -94,7 +131,18 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final List<TrainingDay> parsedDays = await PlanService.syncPlan(userId);
       await DatabaseService.saveLastSyncTimestamp();
-      setState(() => _days = parsedDays);
+      
+      try {
+        final hist = await PlanService.fetchPlanHistory(userId);
+        if (mounted) setState(() => _planHistory = hist);
+      } catch (e) {
+        debugPrint('Errore fetch history: $e');
+      }
+
+      setState(() {
+         _days = parsedDays;
+         _selectedHistoryId = null;
+      });
       if (!silent) _showSuccessSnackBar('Scheda sincronizzata! ${parsedDays.length} giorni caricati.');
     } on ApiException catch (e) {
       if (!silent) _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
@@ -284,7 +332,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              
+              // Dropdown Storico Schede
+              if (_planHistory.isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.cyan.withOpacity(0.3)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int?>(
+                        value: _selectedHistoryId,
+                        icon: const Icon(Icons.history, color: AppTheme.cyan, size: 20),
+                        dropdownColor: AppTheme.surfaceVariant,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('Corrente / Attiva'),
+                          ),
+                          ..._planHistory.map((hist) {
+                            final ver = hist['version'];
+                            final rawDate = hist['created_at'];
+                            final label = hist['label'];
+                            String dateStr = '';
+                            if (rawDate != null) {
+                              try {
+                                final d = DateTime.parse(rawDate).toLocal();
+                                dateStr = '${d.day}/${d.month}/${d.year}';
+                              } catch (_) {}
+                            }
+                            final text = 'v$ver - $dateStr${label != null ? ' ($label)' : ''}';
+                            return DropdownMenuItem<int?>(
+                              value: hist['id'] as int,
+                              child: Text(text),
+                            );
+                          }),
+                        ],
+                        onChanged: _selectHistory,
+                      ),
+                    ),
+                  ).animate().fade(duration: 400.ms),
+                ),
+
+              const SizedBox(height: 16),
 
               // Banner streak (mostrato solo se streak >= 2)
               ValueListenableBuilder(

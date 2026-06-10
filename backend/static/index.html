@@ -1750,11 +1750,17 @@
         <div class="card-title">🏗️ Builder Scheda Allenamento</div>
         <p class="card-sub">Seleziona un cliente, crea i giorni e aggiungi esercizi dal catalogo.</p>
 
-        <div style="display:grid;grid-template-columns:1.5fr auto auto;gap:1rem;margin-bottom:1.25rem">
+        <div style="display:grid;grid-template-columns:1.5fr 1.5fr auto auto;gap:1rem;margin-bottom:1.25rem">
           <div class="fg" style="margin:0">
             <label for="builderUserId">Cliente</label>
             <select id="builderUserId">
               <option value="">— Seleziona cliente —</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label for="planHistorySelect">Storico Schede</label>
+            <select id="planHistorySelect" onchange="loadHistoricalPlan()">
+              <option value="">— Corrente / Nessuna —</option>
             </select>
           </div>
           <div style="display:flex;align-items:flex-end;gap:.5rem">
@@ -2881,20 +2887,39 @@
     }
 
     // Cambio cliente: carica la scheda esistente nel canvas (se presente) o svuota
+    window.currentPlanHistory = [];
+
     document.getElementById('builderUserId').addEventListener('change', async function () {
       const alertEl = document.getElementById('alertBuilder');
       alertEl.className = 'alert';
+      const historySelect = document.getElementById('planHistorySelect');
 
       const userId = this.value;
 
       // Se non c'è selezione, resettiamo l'interfaccia
       if (!userId) {
+        historySelect.innerHTML = '<option value="">— Corrente / Nessuna —</option>';
+        window.currentPlanHistory = [];
         clearBuilderCanvas();
         return;
       }
 
       try {
+        // Fetch della scheda attuale
         const r = await fetch(getServerUrl() + `/api/plans/${userId}`, { headers: getHeaders() });
+
+        // Fetch dello storico in parallelo
+        const rHist = await fetch(getServerUrl() + `/api/plans/${userId}/history`, { headers: getHeaders() });
+        if (rHist.ok) {
+          window.currentPlanHistory = await rHist.json();
+          let optionsHtml = '<option value="">— Corrente / Nessuna —</option>';
+          window.currentPlanHistory.forEach(hist => {
+            const dateStr = new Date(hist.created_at).toLocaleString('it-IT');
+            const lbl = hist.label ? ` - ${hist.label}` : '';
+            optionsHtml += `<option value="${hist.id}">v${hist.version} (${dateStr})${lbl}</option>`;
+          });
+          historySelect.innerHTML = optionsHtml;
+        }
 
         if (r.status === 401) { handleUnauthorized(); return; }
 
@@ -2928,6 +2953,30 @@
         alertEl.innerHTML = '❌ Errore tecnico nel caricamento: ' + e.message;
       }
     });
+
+    function loadHistoricalPlan() {
+      const historySelect = document.getElementById('planHistorySelect');
+      const histId = historySelect.value;
+      if (!histId) {
+        // Ricarica la scheda corrente
+        const userSelect = document.getElementById('builderUserId');
+        if(userSelect.value) {
+            userSelect.dispatchEvent(new Event('change'));
+        }
+        return;
+      }
+
+      const histItem = window.currentPlanHistory.find(h => h.id == histId);
+      if (histItem) {
+        clearBuilderCanvas();
+        loadPlanIntoBuilder(histItem.plan);
+        const alertEl = document.getElementById('alertBuilder');
+        alertEl.className = 'alert show alert-ok';
+        alertEl.innerHTML = `🕒 Visualizzando scheda <strong>v${histItem.version}</strong>. Se la salvi diventerà la nuova scheda attiva.`;
+        setTimeout(() => { alertEl.className = 'alert'; }, 6000);
+      }
+    }
+
 
     /**
      * Ricostruisce il canvas del Builder a partire dal JSON del piano.

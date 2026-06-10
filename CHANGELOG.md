@@ -5,6 +5,13 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.6.3] — 2026-06-10
+
+### Added
+- **Storico Schede**: Aggiunta la possibilità di navigare nello storico delle schede di allenamento sia dal Pannello Admin (nel Builder) sia dall'app per il Cliente (nella schermata principale).
+
+---
+
 ## [1.6.2] — 2026-06-10
 
 ### Added

@@ -27,4 +27,10 @@ class PlanService {
     await DatabaseService.saveRawPlan(planMap);
     return DatabaseService.parseTrainingDaysFromJson(planMap);
   }
+
+  /// Recupera lo storico delle schede dal backend.
+  static Future<List<Map<String, dynamic>>> fetchPlanHistory(int userId) async {
+    final responseList = await ApiService.getPlanHistory(userId);
+    return responseList.map((e) => e as Map<String, dynamic>).toList();
+  }
 }
