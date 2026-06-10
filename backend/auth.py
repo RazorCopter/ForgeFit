@@ -32,7 +32,7 @@ if not SECRET_KEY:
         "Aggiungila al file .env o alle variabili d'ambiente prima di avviare il server."
     )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_DAYS = 7
+ACCESS_TOKEN_EXPIRE_DAYS = 14
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Schema HTTP Bearer per l'estrazione del token dall'header Authorization

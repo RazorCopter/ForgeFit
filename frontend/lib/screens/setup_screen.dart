@@ -12,7 +12,6 @@ import '../core/auth_service.dart';
 import '../data/database_service.dart';
 import '../core/sync_service.dart';
 import '../services/plan_service.dart';
-import '../core/passkeys_service.dart';
 import 'auth_screen.dart';
 
 class SetupScreen extends StatefulWidget {
@@ -77,21 +76,6 @@ class _SetupScreenState extends State<SetupScreen> {
     }
   }
 
-  Future<void> _registerPasskey() async {
-    setState(() => _isLoading = true);
-    try {
-      await PasskeysService.registerPasskey();
-      if (mounted) {
-        _showSnackBar('Dispositivo registrato con successo!', Colors.green);
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar('Errore Passkey: ${e.toString()}', Colors.redAccent);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
@@ -478,17 +462,7 @@ class _SetupScreenState extends State<SetupScreen> {
             
             const SizedBox(height: 16),
             
-            if (PasskeysService.isSupported) ...[
-              _buildSetupCard(
-                title: 'Registra Passkey',
-                subtitle: 'Accedi con Impronta o Face ID',
-                icon: Icons.fingerprint,
-                color: AppTheme.cyan,
-                onTap: _isLoading ? () {} : _registerPasskey,
-              ).animate().fade(delay: 350.ms).slideX(),
-              const SizedBox(height: 16),
-            ],
-            
+
             _buildSetupCard(
               title: 'Esci dall\'Account',
               subtitle: 'Termina la sessione corrente',

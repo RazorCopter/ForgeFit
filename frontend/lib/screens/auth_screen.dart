@@ -14,7 +14,6 @@ import '../core/auth_service.dart';
 import '../data/database_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
-import '../core/passkeys_service.dart';
 import 'main_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -158,23 +157,6 @@ class _LoginFormState extends State<_LoginForm> {
     }
   }
 
-  Future<void> _loginWithPasskey() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
-      _showSnackBar('Inserisci una email valida per usare la Passkey.', Colors.orange);
-      return;
-    }
-    setState(() => _loading = true);
-    try {
-      await PasskeysService.loginWithPasskey(email);
-      if (mounted) widget.onSuccess();
-    } catch (e) {
-      _showSnackBar(e.toString(), Colors.red.shade700);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
   void _showSnackBar(String msg, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -243,25 +225,7 @@ class _LoginFormState extends State<_LoginForm> {
                                   fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
-                  if (PasskeysService.isSupported) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _loading ? null : _loginWithPasskey,
-                        icon: const Icon(Icons.fingerprint, color: AppTheme.cyan),
-                        label: const Text('ACCEDI CON IMPRONTA',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.cyan,
-                          side: const BorderSide(color: AppTheme.cyan),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                      ),
-                    ),
-                  ],
+
                 ],
               ),
             ),
