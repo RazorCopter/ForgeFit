@@ -408,103 +408,112 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 16),
 
-              // Banner streak (mostrato solo se streak >= 2)
-              ValueListenableBuilder(
-                valueListenable: DatabaseService.workoutBoxListenable(),
-                builder: (context, _, __) {
-                  final streak = DatabaseService.getCurrentStreak();
-                  if (streak < 2) return const SizedBox.shrink();
-
-                  // Colori e messaggio adattivi in base alla streak
-                  final Color streakColor;
-                  final List<Color> streakGradient;
-                  final String streakMsg;
-                  if (streak >= 14) {
-                    streakColor = AppTheme.vividPurple;
-                    streakGradient = [AppTheme.vividPurple, AppTheme.cyan];
-                    streakMsg = 'Due settimane filate. Leggendario!';
-                  } else if (streak >= 7) {
-                    streakColor = const Color(0xFFFFD700); // gold
-                    streakGradient = [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
-                    streakMsg = 'Una settimana intera. Sei inarrestabile!';
-                  } else {
-                    streakColor = Colors.orangeAccent;
-                    streakGradient = [Colors.orangeAccent, Colors.deepOrange];
-                    streakMsg = 'Continua così, stai andando alla grande!';
-                  }
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: LinearGradient(
-                          colors: streakGradient
-                              .map((c) => c.withOpacity(0.15))
-                              .toList(),
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        border: Border.all(
-                            color: streakColor.withOpacity(0.4), width: 1.5),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Text(
-                              streak >= 14 ? '⚡' : streak >= 7 ? '🏆' : '🔥',
-                              style: const TextStyle(fontSize: 28),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      colors: streakGradient,
-                                    ).createShader(bounds),
-                                    child: Text(
-                                      '$streak giorni di fila!',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    streakMsg,
-                                    style: const TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
-                  );
-                },
-              ),
-
-              // ── Lista giorni o placeholder ───────────────────────
+              // ValueListenableBuilder che reagisce agli aggiornamenti dei workout (es. fine sync in background)
               Expanded(
-                child: _isSyncing && _days.isEmpty
-                    ? _buildShimmerLoading()
-                    : _days.isEmpty
-                        ? _buildEmptyState()   // Nessuna scheda caricata
-                        : RefreshIndicator(
-                            onRefresh: () => _syncScheda(silent: true),
-                            color: AppTheme.cyan,
-                            backgroundColor: AppTheme.surface,
-                            child: _buildDaysList(),
+                child: ValueListenableBuilder(
+                  valueListenable: DatabaseService.workoutBoxListenable(),
+                  builder: (context, _, __) {
+                    final streak = DatabaseService.getCurrentStreak();
+                    Widget streakBanner = const SizedBox.shrink();
+                    
+                    if (streak >= 2) {
+                      // Colori e messaggio adattivi in base alla streak
+                      final Color streakColor;
+                      final List<Color> streakGradient;
+                      final String streakMsg;
+                      if (streak >= 14) {
+                        streakColor = AppTheme.vividPurple;
+                        streakGradient = [AppTheme.vividPurple, AppTheme.cyan];
+                        streakMsg = 'Due settimane filate. Leggendario!';
+                      } else if (streak >= 7) {
+                        streakColor = const Color(0xFFFFD700); // gold
+                        streakGradient = [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
+                        streakMsg = 'Una settimana intera. Sei inarrestabile!';
+                      } else {
+                        streakColor = Colors.orangeAccent;
+                        streakGradient = [Colors.orangeAccent, Colors.deepOrange];
+                        streakMsg = 'Continua così, stai andando alla grande!';
+                      }
+
+                      streakBanner = Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: LinearGradient(
+                              colors: streakGradient
+                                  .map((c) => c.withOpacity(0.15))
+                                  .toList(),
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            border: Border.all(
+                                color: streakColor.withOpacity(0.4), width: 1.5),
                           ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: Row(
+                              children: [
+                                Text(
+                                  streak >= 14 ? '⚡' : streak >= 7 ? '🏆' : '🔥',
+                                  style: const TextStyle(fontSize: 28),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ShaderMask(
+                                        shaderCallback: (bounds) => LinearGradient(
+                                          colors: streakGradient,
+                                        ).createShader(bounds),
+                                        child: Text(
+                                          '$streak giorni di fila!',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        streakMsg,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        streakBanner,
+                        Expanded(
+                          child: _isSyncing && _days.isEmpty
+                              ? _buildShimmerLoading()
+                              : _days.isEmpty
+                                  ? _buildEmptyState()   // Nessuna scheda caricata
+                                  : RefreshIndicator(
+                                      onRefresh: () => _syncScheda(silent: true),
+                                      color: AppTheme.cyan,
+                                      backgroundColor: AppTheme.surface,
+                                      child: _buildDaysList(),
+                                    ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
