@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
-> **v1.6.1 — Rimozione Passkey & Estensione Sessione**.
-> Rimozione completa del supporto WebAuthn e prolungamento validità token JWT a 14 giorni.
+> **v1.7.0 — Audit Fixes & Ottimizzazioni**.
+> Implementati i fix dell'audit di sicurezza e funzionale (CORS, paginazione, ottimizzazione UX frontend).
 
 ---
 

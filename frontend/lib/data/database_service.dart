@@ -67,6 +67,10 @@ class DatabaseService {
   }
 
   // --- SETTINGS ---
+  static bool isOnboardingDone() {
+    return _settingsBox.get('onboarding_done', defaultValue: false) as bool;
+  }
+
   static Future<void> saveAIActivationDate(DateTime date) async {
     await _settingsBox.put('ai_activation_date', date.toIso8601String());
   }
@@ -344,6 +348,14 @@ class DatabaseService {
 
   static List<CompletedWorkout> getAllWorkouts() {
     return _workoutBox.values.toList();
+  }
+
+  /// Conta quante volte un giorno specifico (per titolo) è stato completato nell'ultimo mese.
+  static int getMonthlyCompletionsForDay(String dayTitle) {
+    final cutoff = DateTime.now().subtract(const Duration(days: 30));
+    return _workoutBox.values
+        .where((w) => w.title == dayTitle && w.date.isAfter(cutoff))
+        .length;
   }
 
   /// Calcola il numero di giorni consecutivi con almeno un allenamento fino a oggi.

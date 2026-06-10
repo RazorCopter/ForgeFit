@@ -4,6 +4,7 @@ import '../core/theme.dart';
 import '../core/auth_service.dart';
 import 'main_screen.dart';
 import 'auth_screen.dart';
+import 'onboarding_screen.dart';
 import '../data/database_service.dart';
 
 import 'package:hive/hive.dart';
@@ -78,7 +79,12 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     
     final loggedIn = results[1] as bool;
-    final Widget next = loggedIn ? const MainScreen() : const AuthScreen();
+    final onboardingDone = DatabaseService.isOnboardingDone();
+    final Widget next = !onboardingDone
+        ? const OnboardingScreen()
+        : loggedIn
+            ? const MainScreen()
+            : const AuthScreen();
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 800),

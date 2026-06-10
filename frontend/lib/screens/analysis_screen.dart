@@ -36,6 +36,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   UserProfile? _profile;
 
   @override
+  void dispose() {
+    _goalController.dispose();
+    _weightController.dispose();
+    _fianchiController.dispose();
+    _polpaccioController.dispose();
+    _chestController.dispose();
+    _bicepsController.dispose();
+    _vitaController.dispose();
+    _cosciaController.dispose();
+    _colloController.dispose();
+    _polsoController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _initData();

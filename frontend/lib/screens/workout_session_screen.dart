@@ -84,20 +84,62 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Questa schermata è visibile solo brevemente tra un esercizio e l'altro,
+    // mentre Navigator.push è in attesa del risultato di ActiveSessionScreen.
+    // Mostriamo il riepilogo dell'esercizio corrente per dare contesto.
+    final exercise = _currentIndex < widget.exercises.length
+        ? widget.exercises[_currentIndex]
+        : null;
+
     return AppTheme.buildBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: widget.accentColor),
-              const SizedBox(height: 16),
-              Text(
-                'Esercizio ${_currentIndex + 1} / ${widget.exercises.length}',
-                style: const TextStyle(color: Colors.white70),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.fitness_center, size: 56, color: widget.accentColor),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Esercizio ${_currentIndex + 1} di ${widget.exercises.length}',
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  if (exercise != null) ...[
+                    Text(
+                      exercise.name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: widget.accentColor,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${exercise.sets.length} serie × ${exercise.sets.isNotEmpty ? exercise.sets.first.targetReps : 0} reps',
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+                    ),
+                    if (exercise.loadNote.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(exercise.loadNote, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    ],
+                  ],
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: widget.accentColor.withOpacity(0.5),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

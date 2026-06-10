@@ -56,6 +56,8 @@ def save_workout(
 )
 def get_workout_history(
     user_id: int,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -71,7 +73,7 @@ def get_workout_history(
 
     logs = db.query(models.WorkoutLog).filter(
         models.WorkoutLog.user_id == user_id
-    ).order_by(models.WorkoutLog.date.asc()).all()
+    ).order_by(models.WorkoutLog.date.asc()).offset(skip).limit(limit).all()
 
     return [schemas.WorkoutLogResponse.from_orm_log(log) for log in logs]
 

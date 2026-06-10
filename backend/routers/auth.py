@@ -201,6 +201,28 @@ def change_password(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    # Admin: le credenziali sono su file JSON, non nel DB
+    if current_user.id == 0:
+        admin_config = config_manager.get_admin_config()
+        if not admin_config:
+            raise HTTPException(status_code=500, detail="Configurazione admin non trovata.")
+        if not auth_utils.verify_password(data.vecchia_password, admin_config["hashed_password"]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La vecchia password non è corretta.",
+            )
+        new_hash = auth_utils.hash_password(data.nuova_password)
+        success = config_manager.save_admin_config(
+            pt_name=admin_config["pt_name"],
+            username=admin_config["username"],
+            hashed_password=new_hash,
+        )
+        if not success:
+            raise HTTPException(status_code=500, detail="Errore durante il salvataggio.")
+        logger.info(f"Password admin aggiornata per: {admin_config['username']}")
+        return {"message": "Password aggiornata con successo."}
+
+    # Clienti normali: password nel DB
     if not auth_utils.verify_password(data.vecchia_password, current_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

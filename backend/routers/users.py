@@ -21,11 +21,15 @@ router = APIRouter(
     response_model=list[schemas.UserResponse],
     summary="Lista tutti gli utenti registrati",
 )
-def list_users(db: Session = Depends(get_db),
-              current_user: models.User = Depends(get_current_user)):
+def list_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Accesso negato: solo il Personal Trainer può vedere la lista utenti.")
-    users = db.query(models.User).all()
+    users = db.query(models.User).offset(skip).limit(limit).all()
 
     result = []
     for user in users:
@@ -79,8 +83,8 @@ def update_user(
         user.last_name = payload.last_name
         
     if payload.password and payload.password.strip():
-        from auth import get_password_hash
-        user.hashed_password = get_password_hash(payload.password)
+        from auth import hash_password
+        user.hashed_password = hash_password(payload.password)
         
     db.commit()
     logger.info(f"Dati utente {user_id} aggiornati dall'admin")

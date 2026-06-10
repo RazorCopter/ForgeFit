@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
+import '../core/api_service.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -14,6 +15,40 @@ class StatisticsScreen extends StatefulWidget {
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
   String? _selectedExercise;
+  bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFromBackend();
+  }
+
+  Future<void> _syncFromBackend() async {
+    final userId = DatabaseService.getUserId();
+    if (userId == null) return;
+    if (mounted) setState(() => _isSyncing = true);
+    try {
+      final raw = await ApiService.getWorkoutHistory(userId);
+      final existingIds = DatabaseService.getAllWorkouts().map((w) => w.id).toSet();
+      for (final item in raw) {
+        final map = item as Map<String, dynamic>;
+        final remoteId = map['id']?.toString() ?? '';
+        if (remoteId.isEmpty || existingIds.contains(remoteId)) continue;
+        final workout = CompletedWorkout.fromJson({
+          'id': remoteId,
+          'title': 'Allenamento',
+          'date': map['date'] ?? DateTime.now().toIso8601String(),
+          'durationSeconds': map['duration_seconds'] ?? 0,
+          'exercises': map['exercises'] ?? [],
+        });
+        await DatabaseService.saveWorkout(workout);
+      }
+    } catch (_) {
+      // sync silente — non blocca la UI in caso di offline
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
+  }
   String _bestSet(List<CompletedWorkout> workouts) {
     if (workouts.isEmpty) return 'N/A';
     double maxLoad = 0;
@@ -224,14 +259,55 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           title: const Text('Nerd Analytics', style: TextStyle(color: AppTheme.textPrimary)),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            if (_isSyncing)
+              const Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.vividPurple)),
+              ),
+          ],
         ),
         body: ValueListenableBuilder(
           valueListenable: DatabaseService.workoutBoxListenable(),
           builder: (context, box, _) {
             final workouts = box.values.toList().cast<CompletedWorkout>();
+
+            if (workouts.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isSyncing)
+                      const CircularProgressIndicator(color: AppTheme.vividPurple)
+                    else ...[
+                      const Icon(Icons.bar_chart_rounded, size: 72, color: AppTheme.textSecondary),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Nessun allenamento registrato',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Completa il tuo primo workout per\nvedere le statistiche qui.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: _syncFromBackend,
+                        icon: const Icon(Icons.sync),
+                        label: const Text('Aggiorna da cloud'),
+                        style: FilledButton.styleFrom(backgroundColor: AppTheme.vividPurple),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }
+
             final muscleVolumes = _getMuscleGroupVolumes(workouts);
             final volumeLabels = _getVolumeLabels(workouts);
-            
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -391,101 +467,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   style: TextStyle(color: AppTheme.textSecondary),
                 )
               else
-                AppTheme.glassContainer(
-                  padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 24),
-                  child: SizedBox(
-                    height: 250,
-                    child: BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        maxY: muscleVolumes.values.fold(0.0, (m, v) => v > m ? v : m) * 1.2,
-                        barTouchData: BarTouchData(
-                          enabled: true,
-                          touchTooltipData: BarTouchTooltipData(
-                            getTooltipColor: (_) => Colors.blueGrey.shade900,
-                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              return BarTooltipItem(
-                                '${muscleVolumes.keys.elementAt(group.x)}\n${rod.toY.toStringAsFixed(0)} kg',
-                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                              );
-                            },
-                          ),
-                        ),
-                        titlesData: FlTitlesData(
-                          show: true,
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 46,
-                              getTitlesWidget: (double value, TitleMeta meta) {
-                                if (value < 0 || value >= muscleVolumes.keys.length) return const SizedBox.shrink();
-                                final text = muscleVolumes.keys.elementAt(value.toInt());
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 12.0),
-                                    child: Transform.rotate(
-                                      angle: -0.5,
-                                      child: Text(
-                                        text,
-                                        style: const TextStyle(
-                                          color: AppTheme.textSecondary,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 40,
-                              getTitlesWidget: (value, meta) {
-                                if (value == 0) return const SizedBox.shrink();
-                                return Text(
-                                  '${value.toInt()}',
-                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10),
-                                );
-                              },
-                            ),
-                          ),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        gridData: FlGridData(
-                          show: true,
-                          drawVerticalLine: false,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: AppTheme.textSecondary.withOpacity(0.1),
-                            strokeWidth: 1,
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        barGroups: muscleVolumes.entries.toList().asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final val = entry.value.value;
-                          return BarChartGroupData(
-                            x: idx,
-                            barRods: [
-                              BarChartRodData(
-                                toY: val,
-                                color: AppTheme.vividPurple,
-                                width: 16,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(4),
-                                  topRight: Radius.circular(4),
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ).animate().fade(delay: 600.ms).scale(),
+                _MuscleRadarChart(muscleVolumes: muscleVolumes)
+                    .animate()
+                    .fade(delay: 600.ms)
+                    .scale(),
 
               const SizedBox(height: 32),
               const Text(
@@ -598,6 +583,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildNerdStat(String title, String value, IconData icon, Color color) {
+    // Estrai il primo numero dalla stringa per animarlo (es. "3500 kg" → 3500.0)
+    final numMatch = RegExp(r'[\d]+(?:[.,]\d+)?').firstMatch(value);
+    final numericPart = numMatch != null ? double.tryParse(numMatch.group(0)!.replaceAll(',', '.')) : null;
+    final prefix = numMatch != null ? value.substring(0, numMatch.start) : '';
+    final suffix = numMatch != null ? value.substring(numMatch.end) : value;
+
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),
       borderColor: color.withOpacity(0.3),
@@ -606,9 +597,145 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         children: [
           Icon(icon, color: color, size: 28),
           const SizedBox(height: 12),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
+          numericPart != null
+              ? TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: numericPart),
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.easeOut,
+                  builder: (_, v, __) {
+                    final formatted = numericPart >= 100
+                        ? v.toInt().toString()
+                        : v.toStringAsFixed(1);
+                    return Text(
+                      '$prefix$formatted$suffix',
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: color),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                )
+              : Text(
+                  value,
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold, color: color),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
           const SizedBox(height: 4),
           Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MuscleRadarChart extends StatelessWidget {
+  final Map<String, double> muscleVolumes;
+
+  const _MuscleRadarChart({required this.muscleVolumes});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = muscleVolumes.entries
+        .where((e) => e.value > 0 || true) // mostra tutti i distretti
+        .toList();
+    final maxVal = muscleVolumes.values.fold(0.0, (m, v) => v > m ? v : m);
+    if (maxVal == 0) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            'Completa qualche allenamento\nper vedere il radar muscolare.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return AppTheme.glassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 260,
+            child: RadarChart(
+              RadarChartData(
+                dataSets: [
+                  RadarDataSet(
+                    dataEntries: entries
+                        .map((e) => RadarEntry(value: e.value))
+                        .toList(),
+                    fillColor: AppTheme.vividPurple.withOpacity(0.2),
+                    borderColor: AppTheme.vividPurple,
+                    borderWidth: 2,
+                    entryRadius: 4,
+                  ),
+                ],
+                radarBackgroundColor: Colors.transparent,
+                borderData: FlBorderData(show: false),
+                radarBorderData: const BorderSide(color: Colors.transparent),
+                tickBorderData: BorderSide(
+                    color: AppTheme.textSecondary.withOpacity(0.2), width: 1),
+                gridBorderData: BorderSide(
+                    color: AppTheme.textSecondary.withOpacity(0.15), width: 1),
+                tickCount: 4,
+                ticksTextStyle: const TextStyle(fontSize: 0, color: Colors.transparent),
+                getTitle: (index, angle) {
+                  if (index >= entries.length) return RadarChartTitle(text: '');
+                  final label = entries[index].key;
+                  final pct = maxVal > 0
+                      ? (entries[index].value / maxVal * 100).toStringAsFixed(0)
+                      : '0';
+                  return RadarChartTitle(
+                    text: '$label\n$pct%',
+                    angle: 0,
+                  );
+                },
+                titleTextStyle: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 10,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Legenda sintetica
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            alignment: WrapAlignment.center,
+            children: entries.map((e) {
+              final isEmpty = e.value == 0;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isEmpty
+                          ? AppTheme.textSecondary.withOpacity(0.3)
+                          : AppTheme.vividPurple,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    e.key,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isEmpty
+                          ? AppTheme.textSecondary.withOpacity(0.5)
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
         ],
       ),
     );

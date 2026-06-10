@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../core/theme.dart';
+import '../core/app_version.dart';
 import '../core/api_service.dart';
 import '../core/auth_service.dart';
 import '../data/database_service.dart';
@@ -25,7 +26,7 @@ class _SetupScreenState extends State<SetupScreen> {
   bool _isSyncing = false;
   bool _isLoading = false;
   String _backendVersion = 'Caricamento...';
-  final String _frontendVersion = '1.6.4';
+  final String _frontendVersion = kAppVersion;
 
   @override
   void initState() {

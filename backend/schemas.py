@@ -4,6 +4,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, AliasChoices
 from typing import Optional, Any
+from version import APP_VERSION
 
 
 # ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ class UserResponse(BaseModel):
     proteine_min: Optional[int] = None
     proteine_max: Optional[int] = None
     body_fat_perc: Optional[float] = None
-    version: Optional[str] = "1.6.3"
+    version: Optional[str] = APP_VERSION
 
     class Config:
         from_attributes = True
@@ -208,7 +209,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     user_id: int
-    version: str = "1.6.4"
+    version: str = APP_VERSION
     user: UserResponse
 
 
@@ -278,11 +279,20 @@ class AIGenerateRequest(BaseModel):
         populate_by_name = True
         from_attributes = True
 
+_ALLOWED_CONTEXT_KEYS = {"age", "height", "goal", "type", "weight", "gender"}
+
 class AIAnalyzeRequest(BaseModel):
     """Schema per la validazione della richiesta di analisi AI generica (Passthrough)."""
-    prompt_text: str = Field(..., description="Il testo del prompt da inviare all'AI")
+    prompt_text: str = Field(..., max_length=2000, description="Il testo del prompt da inviare all'AI (max 2000 caratteri)")
     context_data: dict = Field(default_factory=dict, description="Dati di contesto opzionali per l'analisi")
     model_name: Optional[str] = Field(default="gemini-2.5-flash", description="Il modello AI da utilizzare")
+
+    @classmethod
+    def model_validator_context(cls, values):
+        ctx = values.get("context_data", {})
+        filtered = {k: v for k, v in ctx.items() if k in _ALLOWED_CONTEXT_KEYS}
+        values["context_data"] = filtered
+        return values
 
     class Config:
         populate_by_name = True

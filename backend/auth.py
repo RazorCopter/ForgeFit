@@ -96,10 +96,17 @@ def decode_refresh_token(token: str) -> str:
 def decode_token(token: str) -> dict:
     """
     Decodifica e verifica il JWT.
-    Solleva HTTPException 401 se il token è scaduto o non valido.
+    Solleva HTTPException 401 se il token è scaduto, non valido,
+    o non è un access token (impedisce l'uso di refresh token come access).
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "access":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token non valido: tipo errato.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(

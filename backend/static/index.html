@@ -2475,11 +2475,25 @@
         const data = await r.json();
         const tb = document.getElementById('usersTbody');
         if (!data.length) { tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:2rem">Nessun utente registrato.</td></tr>'; return; }
+        const avatarColors = ['#BB86FC','#00E5FF','#00B8D4','#FFB74D','#F06292','#81C784','#64B5F6','#FF8A65'];
+        const avatarBg = (name) => avatarColors[(name.charCodeAt(0) || 0) % avatarColors.length];
+        const initials = (f, l) => ((f?.[0] || '') + (l?.[0] || '')).toUpperCase() || '?';
         tb.innerHTML = data.map(u => `
       <tr>
         <td style="padding: 1.2rem 1rem">
-          <div style="font-weight:700; color:var(--text); font-size:0.95rem">${u.first_name} ${u.last_name}</div>
-          <div style="font-size:0.75rem; color:var(--muted); margin-top:2px">ID: #${u.id}</div>
+          <div style="display:flex; align-items:center; gap:12px">
+            <div style="
+              width:40px; height:40px; border-radius:50%; flex-shrink:0;
+              background:${avatarBg(u.first_name || u.email)};
+              display:flex; align-items:center; justify-content:center;
+              font-weight:800; font-size:0.9rem; color:#0a0a0a;
+              box-shadow:0 0 10px ${avatarBg(u.first_name || u.email)}55;
+            ">${initials(u.first_name, u.last_name)}</div>
+            <div>
+              <div style="font-weight:700; color:var(--text); font-size:0.95rem">${u.first_name} ${u.last_name}</div>
+              <div style="font-size:0.75rem; color:var(--muted); margin-top:2px">ID: #${u.id}</div>
+            </div>
+          </div>
         </td>
         <td style="color:var(--cyan); font-weight:500">${u.email}</td>
         <td style="font-size:0.82rem">

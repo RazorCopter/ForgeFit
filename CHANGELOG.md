@@ -5,6 +5,20 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.7.0] — 2026-06-10
+
+### Fixed & Changed
+- **Audit Sicurezza & Fix**: Risolti i problemi evidenziati nel recente audit di sicurezza e funzionale:
+  - Rimosso `allow_origin_regex=".*"` dal middleware CORS in backend.
+  - Implementata paginazione (`skip`/`limit`) sugli endpoint `/api/users` e `/api/workouts/history`.
+  - Sistemato memory leak (`dispose()` dei TextEditingController) in `AnalysisScreen`.
+  - Le statistiche ora recuperano i dati mancanti dal server (`GET /api/workouts/history`) invece di usare solo la cache Hive.
+  - UI `WorkoutSessionScreen` migliorata con dettagli dell'esercizio corrente al posto di un semplice spinner.
+  - Mapping icone per giorno dinamico basato sul nome in `home_screen`.
+- **Dipendenze**: Aggiunto `connectivity_plus` e aggiornate dipendenze frontend.
+
+---
+
 ## [1.6.4] — 2026-06-10
 
 ### Fixed

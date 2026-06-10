@@ -64,11 +64,37 @@ class _HomeScreenState extends State<HomeScreen> {
   // Icona contestuale al tipo di giorno
   // ----------------------------------------------------------------
   IconData _getIconForDay(String dayId) {
+    final lower = dayId.toLowerCase();
+    if (lower.contains('petto') || lower.contains('chest') || lower.contains('push')) {
+      return Icons.fitness_center;
+    }
+    if (lower.contains('schiena') || lower.contains('back') || lower.contains('pull') || lower.contains('dorsali')) {
+      return Icons.accessibility_new;
+    }
+    if (lower.contains('gambe') || lower.contains('legs') || lower.contains('coscia') || lower.contains('quadricipiti')) {
+      return Icons.directions_run;
+    }
+    if (lower.contains('spalle') || lower.contains('shoulder')) {
+      return Icons.sports_handball;
+    }
+    if (lower.contains('braccia') || lower.contains('bicipiti') || lower.contains('tricipiti') || lower.contains('arms')) {
+      return Icons.sports_martial_arts;
+    }
+    if (lower.contains('full') || lower.contains('corpo') || lower.contains('total')) {
+      return Icons.self_improvement;
+    }
+    if (lower.contains('cardio') || lower.contains('hiit') || lower.contains('corsa')) {
+      return Icons.directions_run;
+    }
+    if (lower.contains('riposo') || lower.contains('rest') || lower.contains('recupero')) {
+      return Icons.hotel;
+    }
+    // fallback per ID legacy (d1..d4)
     switch (dayId) {
-      case 'd1': return Icons.fitness_center;    // Push
-      case 'd2': return Icons.accessibility_new; // Pull
-      case 'd3': return Icons.directions_run;    // Legs
-      case 'd4': return Icons.home;              // Home
+      case 'd1': return Icons.fitness_center;
+      case 'd2': return Icons.accessibility_new;
+      case 'd3': return Icons.directions_run;
+      case 'd4': return Icons.home;
       default:   return Icons.sports_gymnastics;
     }
   }
@@ -388,40 +414,79 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, _, __) {
                   final streak = DatabaseService.getCurrentStreak();
                   if (streak < 2) return const SizedBox.shrink();
+
+                  // Colori e messaggio adattivi in base alla streak
+                  final Color streakColor;
+                  final List<Color> streakGradient;
+                  final String streakMsg;
+                  if (streak >= 14) {
+                    streakColor = AppTheme.vividPurple;
+                    streakGradient = [AppTheme.vividPurple, AppTheme.cyan];
+                    streakMsg = 'Due settimane filate. Leggendario!';
+                  } else if (streak >= 7) {
+                    streakColor = const Color(0xFFFFD700); // gold
+                    streakGradient = [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
+                    streakMsg = 'Una settimana intera. Sei inarrestabile!';
+                  } else {
+                    streakColor = Colors.orangeAccent;
+                    streakGradient = [Colors.orangeAccent, Colors.deepOrange];
+                    streakMsg = 'Continua così, stai andando alla grande!';
+                  }
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: AppTheme.glassContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      borderColor: Colors.orangeAccent.withOpacity(0.5),
-                      child: Row(
-                        children: [
-                          const Text('🔥', style: TextStyle(fontSize: 28)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '$streak giorni di fila!',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  streak >= 7
-                                      ? 'Una settimana intera. Sei inarrestabile!'
-                                      : 'Continua così, stai andando alla grande!',
-                                  style: const TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        gradient: LinearGradient(
+                          colors: streakGradient
+                              .map((c) => c.withOpacity(0.15))
+                              .toList(),
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        border: Border.all(
+                            color: streakColor.withOpacity(0.4), width: 1.5),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Text(
+                              streak >= 14 ? '⚡' : streak >= 7 ? '🏆' : '🔥',
+                              style: const TextStyle(fontSize: 28),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ShaderMask(
+                                    shaderCallback: (bounds) => LinearGradient(
+                                      colors: streakGradient,
+                                    ).createShader(bounds),
+                                    child: Text(
+                                      '$streak giorni di fila!',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    streakMsg,
+                                    style: const TextStyle(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
                   );
@@ -561,6 +626,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------------------
   Widget _buildDayCard(TrainingDay day) {
     final accentColor = AppTheme.getAccentForDay(day.id);
+    final monthlyDone = DatabaseService.getMonthlyCompletionsForDay(day.title);
+    // Target di riferimento: 4 sessioni/mese (circa 1 a settimana)
+    const int monthlyTarget = 4;
+    final double ringProgress = (monthlyDone / monthlyTarget).clamp(0.0, 1.0);
 
     return InkWell(
       onTap: () {
@@ -615,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         softWrap: true,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 24, // Leggermente ridotto per gestire 2 righe
+                          fontSize: 24,
                           fontWeight: FontWeight.w900,
                           color: accentColor,
                           letterSpacing: 1.2,
@@ -639,10 +708,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: accentColor.withOpacity(0.7),
-                  size: 20,
+                // Progress ring mensile
+                SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: ringProgress),
+                        duration: const Duration(milliseconds: 900),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, value, __) => CircularProgressIndicator(
+                          value: value,
+                          strokeWidth: 3.5,
+                          backgroundColor: accentColor.withOpacity(0.15),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            ringProgress >= 1.0
+                                ? Colors.greenAccent
+                                : accentColor,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$monthlyDone',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: ringProgress >= 1.0
+                              ? Colors.greenAccent
+                              : accentColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

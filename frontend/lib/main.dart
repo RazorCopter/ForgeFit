@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme.dart';
 import 'core/api_service.dart';
 import 'core/auth_service.dart';
+import 'core/connectivity_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
 import 'models/completed_workout.dart';
@@ -27,6 +28,8 @@ void main() async {
   Hive.registerAdapter(BiometricRecordAdapter());
 
   final failedBoxes = await DatabaseService.openBox();
+
+  await ConnectivityService.initialize();
 
   // ── Interceptor 401: logout forzato da qualsiasi punto dell'app ──
   onUnauthorized = () async {

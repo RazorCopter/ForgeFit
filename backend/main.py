@@ -14,6 +14,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import ai_service
 import config_manager
+from version import APP_VERSION
 
 load_dotenv() # Carica variabili da .env
 
@@ -359,7 +360,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title="Forge Fit API",
     description="Backend per la gestione di utenti, schede di allenamento e catalogo esercizi.",
-    version="1.6.4",
+    version=APP_VERSION,
     lifespan=lifespan,
 )
 
