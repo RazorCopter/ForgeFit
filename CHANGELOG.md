@@ -1,5 +1,12 @@
 # Changelog — ForgeFit
 
+## [1.8.4] — 2026-06-10
+### Added
+- **AI Models:** Integrazione completa del supporto per i modelli DeepSeek (DeepSeek V3 Chat e R1 Reasoner) come alternativa a Gemini, accessibili tramite un wrapper unificato compatibile con OpenAI SDK.
+- **System Settings:** Aggiunta la chiave `deepseek_api_key_override` nel database per configurare dinamicamente le credenziali di DeepSeek.
+### Fixed
+- **Frontend Build:** Creata cartella mancante `assets/images` per risolvere i warning di compilazione di Flutter in `pubspec.yaml`.
+
 ## [1.8.3] — 2026-06-10
 ### Changed
 - **AI Models:** Aggiunto `gemini-2.5-flash` alla whitelist dei modelli e impostato come default globale per evitare addebiti extra previsti dai futuri tier di Gemini 3.x.

@@ -63,6 +63,8 @@ def get_supported_ai_models(current_user: models.User = Depends(get_current_user
         {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Bilanciato e Veloce)"},
         {"id": "gemini-3.5-pro", "name": "Gemini 3.5 Pro (Ragionamento Complesso)"},
         {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Ultra Veloce)"},
+        {"id": "deepseek-chat", "name": "DeepSeek V3 (Chat)"},
+        {"id": "deepseek-reasoner", "name": "DeepSeek R1 (Reasoner)"},
     ]
     return whitelist
 
@@ -74,10 +76,12 @@ def get_system_settings(db: Session = Depends(get_db), current_user: models.User
     
     _, ai_model = ai_service.get_ai_config(db)
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
+    deepseek_key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
     
     return {
         "ai_model": ai_model,
-        "ai_api_key_override": key_setting.value if key_setting else ""
+        "ai_api_key_override": key_setting.value if key_setting else "",
+        "deepseek_api_key_override": deepseek_key_setting.value if deepseek_key_setting else ""
     }
 
 
@@ -103,6 +107,17 @@ def update_system_settings(data: schemas.SystemSettingsUpdate, db: Session = Dep
     else:
         if key_setting:
             db.delete(key_setting)
+            
+    deepseek_key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
+    if data.deepseek_api_key_override:
+        if not deepseek_key_setting:
+            deepseek_key_setting = models.SystemSettings(key="deepseek_api_key_override", value=data.deepseek_api_key_override)
+            db.add(deepseek_key_setting)
+        else:
+            deepseek_key_setting.value = data.deepseek_api_key_override
+    else:
+        if deepseek_key_setting:
+            db.delete(deepseek_key_setting)
 
     db.commit()
     return {"message": "Impostazioni aggiornate con successo."}

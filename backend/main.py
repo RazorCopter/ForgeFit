@@ -2,23 +2,16 @@
 # Entry point dell'applicazione FastAPI.
 # Configura CORS, monta i file statici e definisce tutti gli endpoint REST.
 
-import csv
-import io
-import json
 import logging
 import os
-import shutil
 from contextlib import asynccontextmanager
-import google.generativeai as genai
-from typing import Optional
 from dotenv import load_dotenv
-import ai_service
 import config_manager
 from version import APP_VERSION
 
 load_dotenv() # Carica variabili da .env
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -26,12 +19,9 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 
-# Import dei modelli per la registrazione dei metadati di SQLAlchemy
 import models
 import schemas
-import auth
-from auth import get_current_user
-from database import engine, get_db
+from database import engine
 from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai, admin
 
 
@@ -44,10 +34,6 @@ logger = logging.getLogger(__name__)
 # ===========================================================================
 # Funzioni Helper per Configurazioni di Sistema
 # ===========================================================================
-
-# ---------------------------------------------------------------------------
-# La creazione delle tabelle è stata spostata nell'evento 'startup' dell'app.
-
 
 # ---------------------------------------------------------------------------
 # DATABASE SEEDING - Catalogo esercizi massivo al primo avvio
@@ -331,11 +317,6 @@ def seed_catalog() -> None:
         db.close()
 
 
-# seed_admin è stata rimossa per favorire il setup iniziale dinamico.
-
-
-# Il seeding è stato spostato nell'evento 'startup' dell'app.
-
 # ---------------------------------------------------------------------------
 # Lifespan — startup/shutdown dell'applicazione
 # ---------------------------------------------------------------------------
@@ -425,18 +406,6 @@ def root():
 def policy():
     """Serve la pagina dei Termini e Condizioni / Privacy Policy."""
     return FileResponse("static/policy.html")
-
-
-
-
-
-# CRUD MISURAZIONI sono stati spostati nel router measurements.
-
-
-# ---------------------------------------------------------------------------
-# Gli endpoint di Autenticazione (register, login, setup, ecc.)
-# sono stati spostati in routers/auth.py
-# ---------------------------------------------------------------------------
 
 
 # ===========================================================================

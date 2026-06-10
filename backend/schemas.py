@@ -362,6 +362,7 @@ class SystemSettingsUpdate(BaseModel):
     """Schema per aggiornare le impostazioni di sistema."""
     ai_model: str
     ai_api_key_override: Optional[str] = None
+    deepseek_api_key_override: Optional[str] = None
 
 
 class AIModelResponse(BaseModel):

@@ -142,16 +142,7 @@ def generate_ai_plan(
         raise HTTPException(status_code=500, detail=f"Errore durante la generazione AI: {str(e)}")
 
 
-@router.get(
-    "/supported-models",
-    response_model=list[str],
-    summary="Restituisce la lista dei modelli AI (Gemini) supportati dal sistema"
-)
-def get_supported_ai_models(current_user: models.User = Depends(get_current_user)):
-    """Restituisce l'elenco dei modelli Gemini che possono essere scelti nel pannello Impostazioni."""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Solo l'admin può vedere i modelli supportati.")
-    return ai_service.SUPPORTED_MODELS
+
 
 
 @router.post(
