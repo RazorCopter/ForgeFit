@@ -39,20 +39,23 @@ class UnifiedAIModel:
             
         elif self.provider == "deepseek":
             # Convertiamo il generation_config in params per openai
-            response_format = {"type": "text"}
-            if generation_config and hasattr(generation_config, 'response_mime_type'):
-                if generation_config.response_mime_type == "application/json":
-                    response_format = {"type": "json_object"}
-                    # DeepSeek requires "json" to be in the prompt if using json_object
-                    if "json" not in prompt.lower():
-                        prompt += "\nOutput in JSON format."
-
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                stream=stream,
-                response_format=response_format
-            )
+            kwargs = {
+                "model": self.model_name,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": stream
+            }
+            
+            if self.model_name == "deepseek-chat":
+                response_format = {"type": "text"}
+                if generation_config and hasattr(generation_config, 'response_mime_type'):
+                    if generation_config.response_mime_type == "application/json":
+                        response_format = {"type": "json_object"}
+                        # DeepSeek requires "json" to be in the prompt if using json_object
+                        if "json" not in prompt.lower():
+                            prompt += "\nOutput in JSON format."
+                kwargs["response_format"] = response_format
+            
+            response = self.client.chat.completions.create(**kwargs)
 
             if stream:
                 # Creiamo un generatore fittizio che simula chunk.text
