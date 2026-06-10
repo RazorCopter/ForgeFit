@@ -487,9 +487,14 @@ class _SetupScreenState extends State<SetupScreen> {
                     style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Backend API v${SyncService.backendVersion ?? "1.7.4"}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  ValueListenableBuilder<String?>(
+                    valueListenable: SyncService.backendVersionNotifier,
+                    builder: (context, version, _) {
+                      return Text(
+                        'Backend API v${version ?? "Caricamento..."}',
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      );
+                    },
                   ),
                 ],
               ),

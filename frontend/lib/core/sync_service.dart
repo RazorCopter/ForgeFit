@@ -10,7 +10,7 @@ import '../models/user_profile.dart';
 
 class SyncService {
   static bool _isSyncing = false;
-  static String? backendVersion;
+  static final ValueNotifier<String?> backendVersionNotifier = ValueNotifier(null);
 
   static Future<void> syncAllPendingData() async {
     if (_isSyncing) return;
@@ -128,7 +128,7 @@ class SyncService {
       // 2C. Download User Profile
       try {
         final userData = await ApiService.getMe();
-        backendVersion = userData['version']?.toString();
+        backendVersionNotifier.value = userData['version']?.toString();
         final int eta = userData['age'] ?? 0;
         final int birthYear = DateTime.now().year - eta;
         final newProfile = UserProfile(
