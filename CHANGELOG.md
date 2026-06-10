@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.7.6] — 2026-06-10
+### Added
+- Implementato il 2-way sync completo (pull): se un utente cancella un allenamento tramite API/FitConsole, il prossimo avvio dell'app riconoscerà che l'ID non è più presente sul server e cancellerà silenziosamente la sessione "orfana" anche dal database locale Hive del telefono/browser.
+
 ## [1.7.5] — 2026-06-10
 ### Fixed
 - Eliminata l'ultima chiamata ridondante a `/api/auth/me` proveniente da `SetupScreen`. Ora l'app all'avvio effettua esattamente 1 singola chiamata per ogni risorsa necessaria.

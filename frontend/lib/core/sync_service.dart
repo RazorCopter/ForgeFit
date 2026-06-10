@@ -86,6 +86,20 @@ class SyncService {
             if (kDebugMode) debugPrint('✅ Pull nuovo Workout: ${cw.id}');
           }
         }
+
+        // Eliminiamo localmente gli allenamenti che sono stati cancellati sul server
+        final remoteIds = remoteWorkouts.map((rw) => rw['id'].toString()).toSet();
+        for (final lw in localWorkouts) {
+          // Se un allenamento è marcato come sincronizzato (quindi esiste/esisteva sul server)
+          // e ha un ID numerico (assegnato dal server), ma non è più presente nella lista remota,
+          // significa che è stato eliminato da un altro client o dal web. Lo rimuoviamo.
+          if (lw.isSynced && int.tryParse(lw.id) != null) {
+            if (!remoteIds.contains(lw.id)) {
+              await DatabaseService.deleteWorkout(lw);
+              if (kDebugMode) debugPrint('🗑️ Allenamento ${lw.id} eliminato in remoto, rimosso localmente');
+            }
+          }
+        }
       } catch (e) {
         debugPrint('❌ Pull fallito per Storico Workouts: $e');
       }
