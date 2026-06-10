@@ -28,7 +28,7 @@ dependencies:
   audioplayers: ^6.0.0
   video_player: ^2.8.2
   local_auth: ^3.0.1
-  passkeys: ^2.19.0
+  sqflite: ^2.3.0
   js: ^0.7.2
 
 dev_dependencies:
