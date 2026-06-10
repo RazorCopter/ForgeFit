@@ -18,12 +18,10 @@ from version import APP_VERSION
 
 load_dotenv() # Carica variabili da .env
 
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, StreamingResponse
-from sqlalchemy.orm import Session
+from fastapi.responses import FileResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
