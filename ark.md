@@ -34,7 +34,7 @@ Il sistema permette di:
 | DB backend | SQLite (via SQLAlchemy ORM) |
 | DB locale (app) | Hive (NoSQL binary, 5 box) |
 | Auth | JWT Bearer HS256, access 7gg + refresh 30gg |
-| AI | Google Gemini (gemini-2.5-flash default) |
+| AI | Google Gemini (gemini-3.5-flash default) |
 | Deployment | Docker + docker-compose su Portainer |
 
 ---

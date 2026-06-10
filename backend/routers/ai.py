@@ -182,7 +182,7 @@ from typing import Optional
     summary="Genera un report di analisi dei progressi tramite AI",
 )
 def generate_athlete_analysis(
-    model_name: Optional[str] = "gemini-2.5-flash",
+    model_name: Optional[str] = "gemini-3.5-flash",
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):

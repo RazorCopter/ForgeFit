@@ -20,8 +20,8 @@ def get_ai_config(db: Session) -> Tuple[str, str]:
     model_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_model").first()
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
     
-    # Fallback sicuro: gemini-2.5-flash
-    ai_model = model_setting.value if model_setting and model_setting.value else "gemini-2.5-flash"
+    # Fallback sicuro: gemini-3.5-flash
+    ai_model = model_setting.value if model_setting and model_setting.value else "gemini-3.5-flash"
     api_key_override = key_setting.value if key_setting and key_setting.value else None
     
     api_key = api_key_override or os.getenv("GOOGLE_API_KEY")
@@ -51,9 +51,9 @@ def get_model(db: Session, model_override: Optional[str] = None) -> genai.Genera
     except Exception as e:
         logger.error(f"Errore durante l'inizializzazione del modello {selected_model}: {e}")
         # Fallback estremo se il modello selezionato fallisce (es. 404)
-        if selected_model != "gemini-2.5-flash":
-            logger.warning("Tentativo di fallback su gemini-2.5-flash")
-            return genai.GenerativeModel("gemini-2.5-flash")
+        if selected_model != "gemini-3.5-flash":
+            logger.warning("Tentativo di fallback su gemini-3.5-flash")
+            return genai.GenerativeModel("gemini-3.5-flash")
         raise
 
 def generate_athlete_analysis_prompt(user: models.User, db: Session) -> str:

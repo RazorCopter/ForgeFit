@@ -1,5 +1,11 @@
 # Changelog — ForgeFit
 
+## [1.8.0] — 2026-06-10
+### Changed
+- Upgrade dell'intelligenza artificiale: i modelli selezionabili passano ufficialmente alla nuova famiglia Gemini 3.5 (Flash, Pro, e Flash-Lite), offrendo maggiore velocità e ragionamento.
+- Rimozione del vecchio endpoint `/api/register` obsoleto (e dei dati biometrici superflui durante la registrazione) dal `main.py` per una totale pulizia e coerenza architetturale.
+
+
 ## [1.7.9] — 2026-06-10
 ### Changed
 - Rimossi i tasti obsoleti e fuorvianti di "Importa/Esporta Backup" locale dalla schermata `SetupScreen` per evitare conflitti con la sincronizzazione in tempo reale.
