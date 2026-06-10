@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             String dateStr = '';
                             if (rawDate != null) {
                               try {
-                                final d = DateTime.parse(rawDate.endsWith('Z') ? rawDate : rawDate + 'Z').toLocal();
+                                final d = DateTime.parse(rawDate).toLocal();
                                 dateStr = '${d.day}/${d.month}/${d.year}';
                               } catch (_) {}
                             }

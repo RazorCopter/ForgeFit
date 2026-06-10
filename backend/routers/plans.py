@@ -120,28 +120,20 @@ def get_plan_history(
             id=p.id,
             version=p.version,
             label=p.label,
-            created_at=p.created_at,
+            created_at=p.created_at.isoformat() + "Z" if p.created_at else None,
             plan=json.loads(p.plan_json),
         )
         for p in plans
     ]
 
-@router.delete(
-    "/history/{plan_id}",
-    summary="Elimina una specifica versione della scheda",
-)
-def delete_plan_version(
-    plan_id: int,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-):
+@router.delete("/{user_id}/history/{plan_id}", summary="Elimina una scheda dallo storico")
+def delete_plan_from_history(user_id: int, plan_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Permesso negato.")
-        
-    plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id).first()
+        raise HTTPException(status_code=403, detail="Solo il Personal Trainer può eliminare schede.")
+    plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id, models.WorkoutPlan.user_id == user_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Scheda non trovata.")
-        
     db.delete(plan)
     db.commit()
-    return {"status": "success", "detail": "Scheda eliminata correttamente."}
+    return {"status": "ok", "message": "Scheda eliminata dallo storico."}
+
