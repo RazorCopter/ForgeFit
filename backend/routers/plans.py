@@ -125,3 +125,23 @@ def get_plan_history(
         )
         for p in plans
     ]
+
+@router.delete(
+    "/history/{plan_id}",
+    summary="Elimina una specifica versione della scheda",
+)
+def delete_plan_version(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permesso negato.")
+        
+    plan = db.query(models.WorkoutPlan).filter(models.WorkoutPlan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Scheda non trovata.")
+        
+    db.delete(plan)
+    db.commit()
+    return {"status": "success", "detail": "Scheda eliminata correttamente."}
