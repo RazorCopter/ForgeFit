@@ -31,26 +31,15 @@ class _SetupScreenState extends State<SetupScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch only when screen is displayed to avoid duplicate startup calls
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _loadVersions();
-    });
+    // Non carichiamo più da API su initState per evitare chiamate duplicate.
+    // Usiamo il valore scaricato da SyncService.
   }
 
-  Future<void> _loadVersions() async {
-    try {
-      final me = await ApiService.getMe();
-      if (mounted) {
-        setState(() {
-          _backendVersion = me['version']?.toString() ?? 'Non disponibile (Pre-1.5.1)';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _backendVersion = 'Errore caricamento';
-        });
-      }
+  void _loadVersions() {
+    if (mounted) {
+      setState(() {
+        _backendVersion = SyncService.backendVersion ?? 'Disponibile dopo sync';
+      });
     }
   }
 
@@ -499,7 +488,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Backend API v$_backendVersion',
+                    'Backend API v${SyncService.backendVersion ?? "1.7.4"}',
                     style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
                 ],

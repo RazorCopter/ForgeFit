@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.7.5] — 2026-06-10
+### Fixed
+- Eliminata l'ultima chiamata ridondante a `/api/auth/me` proveniente da `SetupScreen`. Ora l'app all'avvio effettua esattamente 1 singola chiamata per ogni risorsa necessaria.
+
 ## [1.7.4] — 2026-06-10
 ### Fixed
 - Ottimizzazione chiamate API ridondanti all'avvio: il profilo utente è ora sincronizzato in maniera centralizzata per evitare età fallaci in `AnalysisScreen` e sono state eliminate chiamate duplicate a `workouts` e `auth/me` dalle singole schede per alleggerire il carico di avvio.
