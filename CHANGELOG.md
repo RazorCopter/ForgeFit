@@ -5,6 +5,16 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
+## [1.6.4] — 2026-06-10
+
+### Fixed
+- **App PWA Android**: Risolto il bug che mostrava la barra di sistema rossa su Chrome/Android (impostato il theme-color corretto a `#141419`).
+- **Pannello Admin**: Aggiunta la voce mancante `Core` nel menu a tendina "Gruppo Muscolare" durante la creazione di un nuovo esercizio.
+- **Pannello Admin**: Copiata l'iconcina `favicon.ico` per eliminare l'errore 404 sui browser web.
+- **Autenticazione**: Risolto il conflitto di account (Errore 404 Schede) quando il Personal Trainer accedeva con il proprio account sull'app mobile.
+
+---
+
 ## [1.6.3] — 2026-06-10
 
 ### Added

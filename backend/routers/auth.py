@@ -136,7 +136,7 @@ def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db
             refresh_token=refresh,
             role="admin",
             user_id=real_user_id,
-            version="1.6.3",
+            version="1.6.4",
             user=user_response
         )
     else:
@@ -146,7 +146,7 @@ def auth_login(request: Request, data: OAuth2PasswordRequestForm = Depends(), db
             refresh_token=refresh,
             role=user.role,
             user_id=user.id,
-            version="1.6.3",
+            version="1.6.4",
             user=schemas.UserResponse.model_validate(user)
         )
 

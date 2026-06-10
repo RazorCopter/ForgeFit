@@ -208,7 +208,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     user_id: int
-    version: str = "1.6.3"
+    version: str = "1.6.4"
     user: UserResponse
 
 
