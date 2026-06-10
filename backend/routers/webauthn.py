@@ -81,6 +81,7 @@ def verify_registration(
     if not expected_challenge:
         raise HTTPException(status_code=400, detail="Challenge non trovato o scaduto.")
         
+    logger.info(f"Verify Payload: {data}")
     try:
         from webauthn.helpers import parse_registration_credential_json
         credential = parse_registration_credential_json(data)
@@ -93,9 +94,11 @@ def verify_registration(
             require_user_verification=False,
         )
         
+        from webauthn.helpers import bytes_to_base64url
+        
         # Salva a DB
         new_passkey = models.PasskeyCredential(
-            credential_id=verification.credential_id.decode("utf-8") if isinstance(verification.credential_id, bytes) else str(verification.credential_id),
+            credential_id=bytes_to_base64url(verification.credential_id) if isinstance(verification.credential_id, bytes) else str(verification.credential_id),
             user_id=current_user.id,
             public_key=verification.credential_public_key.hex() if isinstance(verification.credential_public_key, bytes) else str(verification.credential_public_key),
             sign_count=verification.sign_count,
@@ -110,7 +113,7 @@ def verify_registration(
         return {"verified": True, "message": "Dispositivo registrato con successo"}
         
     except Exception as e:
-        logger.error(f"Errore verifica webauthn: {e}")
+        logger.error(f"Errore verifica webauthn: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Registrazione fallita: {str(e)}")
 
 
@@ -200,5 +203,5 @@ def verify_login(
         )
         
     except Exception as e:
-        logger.error(f"Errore login webauthn: {e}")
-        raise HTTPException(status_code=401, detail=f"Login fallito: {str(e)}")
+        logger.error(f"Errore login webauthn: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=f"Login fallito: {str(e)}")
