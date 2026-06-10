@@ -346,6 +346,26 @@ class DatabaseService {
     }
   }
 
+  /// Aggiorna l'ID di un workout (usato per sostituire l'UUID locale con l'ID assegnato dal backend)
+  static Future<void> updateWorkoutId(String oldId, String newId) async {
+    final key = _workoutBox.keys.firstWhere(
+      (k) => _workoutBox.get(k)?.id == oldId,
+      orElse: () => null,
+    );
+    if (key != null) {
+      final oldW = _workoutBox.get(key)!;
+      final newW = CompletedWorkout(
+        id: newId,
+        title: oldW.title,
+        date: oldW.date,
+        durationSeconds: oldW.durationSeconds,
+        exercises: oldW.exercises,
+        isSynced: oldW.isSynced,
+      );
+      await _workoutBox.put(key, newW);
+    }
+  }
+
   static List<CompletedWorkout> getAllWorkouts() {
     return _workoutBox.values.toList();
   }

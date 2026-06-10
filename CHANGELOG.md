@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.7.3] — 2026-06-10
+### Fixed
+- Risolto un bug critico di duplicazione degli allenamenti in storico. Il frontend ora aggiorna il proprio UUID locale con l'ID autoincrementale assegnato dal backend, prevenendo salvataggi multipli durante i successivi cicli di sincronizzazione offline.
+
 ## [1.7.2] — 2026-06-10
 ### Added
 - Aggiunto endpoint `DELETE /api/workouts/{log_id}` per permettere l'eliminazione remota degli allenamenti dallo storico.

@@ -101,8 +101,9 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
 
       // 2. Sincronizzazione con il Cloud (FastAPI Backend)
       try {
-        await ApiService.saveWorkout(completedWorkout);
-        await DatabaseService.markWorkoutSynced(completedWorkout.id);
+        final backendId = await ApiService.saveWorkout(completedWorkout);
+        await DatabaseService.updateWorkoutId(completedWorkout.id, backendId);
+        await DatabaseService.markWorkoutSynced(backendId);
       } catch (_) {
         // Sync fallita — workout salvato offline, retry al prossimo avvio
       }

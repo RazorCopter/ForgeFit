@@ -229,7 +229,7 @@ class ApiService {
   // ------------------------------------------------------------------
   // POST /api/workouts/save [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
-  static Future<void> saveWorkout(dynamic workout) async {
+  static Future<String> saveWorkout(dynamic workout) async {
     final userId = await AuthService.getUserId();
     if (userId == null) throw Exception("Utente non autenticato o ID mancante.");
 
@@ -261,7 +261,8 @@ class ApiService {
       }
 
       await _checkUnauthorized(response);
-      _handleResponse(response);
+      final jsonResponse = _handleResponse(response);
+      return jsonResponse['id'].toString();
     } on ApiException {
       rethrow;
     } catch (e) {

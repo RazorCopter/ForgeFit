@@ -26,9 +26,10 @@ class SyncService {
       final pendingWorkouts = DatabaseService.getUnsyncedWorkouts();
       for (final workout in pendingWorkouts) {
         try {
-          await ApiService.saveWorkout(workout);
-          await DatabaseService.markWorkoutSynced(workout.id);
-          if (kDebugMode) debugPrint('✅ Push Workout ${workout.id} completato');
+          final backendId = await ApiService.saveWorkout(workout);
+          await DatabaseService.updateWorkoutId(workout.id, backendId);
+          await DatabaseService.markWorkoutSynced(backendId);
+          if (kDebugMode) debugPrint('✅ Push Workout $backendId completato');
         } catch (e) {
           debugPrint('❌ Push fallito per Workout ${workout.id}: $e');
         }
