@@ -64,11 +64,7 @@ def seed_catalog() -> None:
 
     db = SessionLocal()
     try:
-        if db.query(models.ExerciseCatalog).count() > 0:
-            logger.info("Catalogo esercizi già popolato — seeding saltato.")
-            return
-
-        logger.info("Tabella ExerciseCatalog vuota — avvio seeding catalogo...")
+        count = db.query(models.ExerciseCatalog).count()
 
         esercizi = [
             # ----------------------------------------------------------------
@@ -78,21 +74,25 @@ def seed_catalog() -> None:
                 nome="Panca Piana Bilanciere", gruppo_muscolare="Petto",
                 default_serie=4, default_ripetizioni="8-10", default_recupero_secondi=120,
                 default_note="Scapole depresse e addotte.",
+                video_url="https://www.youtube.com/watch?v=nclAIgM4NJE"
             ),
             models.ExerciseCatalog(
                 nome="Spinte Panca Inclinata Manubri", gruppo_muscolare="Petto",
                 default_serie=4, default_ripetizioni="10-12", default_recupero_secondi=90,
                 default_note="Massimo allungamento al petto.",
+                video_url="https://www.youtube.com/watch?v=Hujpl-ujRtg"
             ),
             models.ExerciseCatalog(
                 nome="Croci ai Cavi dall'alto", gruppo_muscolare="Petto",
                 default_serie=3, default_ripetizioni="12-15", default_recupero_secondi=60,
                 default_note="Focus sulla contrazione di picco, strizzare in chiusura.",
+                video_url="https://www.youtube.com/watch?v=-kZ5A7aPiCw"
             ),
             models.ExerciseCatalog(
                 nome="Croci ai Cavi dal basso", gruppo_muscolare="Petto",
                 default_serie=3, default_ripetizioni="12-15", default_recupero_secondi=60,
                 default_note="Movimento dal basso verso l'alto, focus petto alto.",
+                video_url="https://www.youtube.com/watch?v=jzKDCuJVLjo"
             ),
             models.ExerciseCatalog(
                 nome="Pectoral Machine", gruppo_muscolare="Petto",
@@ -103,6 +103,7 @@ def seed_catalog() -> None:
                 nome="Chest Press Machine", gruppo_muscolare="Petto",
                 default_serie=3, default_ripetizioni="10", default_recupero_secondi=90,
                 default_note="Spinta esplosiva, ritorno controllato.",
+                video_url="https://www.youtube.com/watch?v=dYF2d_I24uE"
             ),
             models.ExerciseCatalog(
                 nome="Dip alle parallele", gruppo_muscolare="Petto",
@@ -136,6 +137,7 @@ def seed_catalog() -> None:
                 nome="Rematore Manubrio singolo", gruppo_muscolare="Schiena",
                 default_serie=3, default_ripetizioni="10 per braccio", default_recupero_secondi=90,
                 default_note="Tirare verso l'anca, non verso il petto.",
+                video_url="https://www.youtube.com/watch?v=1e-Ks7gpp44"
             ),
             models.ExerciseCatalog(
                 nome="Pulley Basso", gruppo_muscolare="Schiena",
@@ -216,16 +218,19 @@ def seed_catalog() -> None:
                 nome="Military Press Bilanciere", gruppo_muscolare="Spalle",
                 default_serie=4, default_ripetizioni="8-10", default_recupero_secondi=120,
                 default_note="Traiettoria dritta, core serrato.",
+                video_url="https://www.youtube.com/watch?v=e2Waz_LKmNQ"
             ),
             models.ExerciseCatalog(
                 nome="Arnold Press Manubri", gruppo_muscolare="Spalle",
                 default_serie=3, default_ripetizioni="10-12", default_recupero_secondi=90,
                 default_note="Rotazione fluida dei polsi durante la spinta.",
+                video_url="https://www.youtube.com/watch?v=hyLSswC97MA"
             ),
             models.ExerciseCatalog(
                 nome="Alzate Laterali Manubri", gruppo_muscolare="Spalle",
                 default_serie=4, default_ripetizioni="15", default_recupero_secondi=60,
                 default_note="Mignolo leggermente ruotato verso l'alto, braccia non completamente tese.",
+                video_url="https://www.youtube.com/watch?v=PhFOzmpjUak"
             ),
             models.ExerciseCatalog(
                 nome="Alzate Laterali ai cavi", gruppo_muscolare="Spalle",
@@ -236,6 +241,7 @@ def seed_catalog() -> None:
                 nome="Face Pull ai cavi altezza occhi", gruppo_muscolare="Spalle",
                 default_serie=3, default_ripetizioni="15", default_recupero_secondi=60,
                 default_note="Tirare verso il viso, aprire i gomiti per il deltoide posteriore.",
+                video_url="https://www.youtube.com/watch?v=0Po47vvj9g4"
             ),
             models.ExerciseCatalog(
                 nome="Peck Deck Inverso", gruppo_muscolare="Spalle",
@@ -254,6 +260,7 @@ def seed_catalog() -> None:
                 nome="Curl Manubri alternato", gruppo_muscolare="Braccia",
                 default_serie=3, default_ripetizioni="12 per braccio", default_recupero_secondi=60,
                 default_note="Supinazione completa in salita.",
+                video_url="https://www.youtube.com/watch?v=RhVdFHcHKDE"
             ),
             models.ExerciseCatalog(
                 nome="Panca Scott / Preacher Curl", gruppo_muscolare="Braccia",
@@ -264,16 +271,19 @@ def seed_catalog() -> None:
                 nome="French Press Bilanciere EZ", gruppo_muscolare="Braccia",
                 default_serie=4, default_ripetizioni="10", default_recupero_secondi=90,
                 default_note="Gomiti fermi e stretti, scendere verso la fronte.",
+                video_url="https://www.youtube.com/watch?v=FANzZyWdmbs"
             ),
             models.ExerciseCatalog(
                 nome="Pushdown Tricipiti ai cavi con corda", gruppo_muscolare="Braccia",
                 default_serie=3, default_ripetizioni="12-15", default_recupero_secondi=60,
                 default_note="Aprire la corda in chiusura.",
+                video_url="https://www.youtube.com/watch?v=vdwP7HxDAo4"
             ),
             models.ExerciseCatalog(
                 nome="Estensioni dietro nuca al cavo", gruppo_muscolare="Braccia",
                 default_serie=3, default_ripetizioni="12", default_recupero_secondi=60,
                 default_note="Focus sull'allungamento del capo lungo del tricipite.",
+                video_url="https://www.youtube.com/shorts/U5Fi0VQpzmc"
             ),
             # ----------------------------------------------------------------
             # CORE E ACCESSORI
@@ -282,6 +292,7 @@ def seed_catalog() -> None:
                 nome="Crunch al cavo inginocchiato", gruppo_muscolare="Core",
                 default_serie=3, default_ripetizioni="15", default_recupero_secondi=60,
                 default_note="Flettere la colonna, non usare le anche.",
+                video_url="https://www.youtube.com/watch?v=um0ZlKz30KQv"
             ),
             models.ExerciseCatalog(
                 nome="Plank classico", gruppo_muscolare="Core",
@@ -295,9 +306,23 @@ def seed_catalog() -> None:
             ),
         ]
 
-        db.add_all(esercizi)
-        db.commit()
-        logger.info(f"Seeding completato: {len(esercizi)} esercizi inseriti nel catalogo.")
+        if count == 0:
+            logger.info("Tabella ExerciseCatalog vuota — avvio seeding catalogo...")
+            db.add_all(esercizi)
+            db.commit()
+            logger.info(f"Seeding completato: {len(esercizi)} esercizi inseriti nel catalogo.")
+        else:
+            # Aggiornamento dei record esistenti (per video_url e altri default)
+            for ex in esercizi:
+                db_ex = db.query(models.ExerciseCatalog).filter(models.ExerciseCatalog.nome == ex.nome).first()
+                if db_ex:
+                    if ex.video_url and not db_ex.video_url:
+                        db_ex.video_url = ex.video_url
+                else:
+                    db.add(ex)
+            db.commit()
+            logger.info("Catalogo esercizi aggiornato con successo.")
+
 
     except Exception as exc:
         db.rollback()
