@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.8.5] — 2026-06-11
+### Added
+- **Registrazione — Guida Visiva Misurazioni**: Aggiunto accordion expandable (aperto di default) nella sezione "Misurazioni Iniziali" della schermata di registrazione. Mostra l'immagine `rilievo.jpg` con overlay gradient premium, badge "Guida Visiva", caption con istruzioni d'uso e chip informativi per ogni punto di rilievo (Vita, Fianchi, Petto, Bicipite, Coscia, Collo). Il pannello si apre/chiude con animazione fluida (`AnimatedCrossFade` + rotazione freccia).
+
 ## [1.8.4] — 2026-06-10
 ### Added
 - **AI Models:** Integrazione completa del supporto per i modelli DeepSeek (DeepSeek V3 Chat e R1 Reasoner) come alternativa a Gemini, accessibili tramite un wrapper unificato compatibile con OpenAI SDK.

@@ -1,7 +1,7 @@
 name: forgefit
 description: "Your AI-powered personal trainer."
 publish_to: 'none'
-version: 1.8.4+29
+version: 1.8.5+30
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -50,4 +50,5 @@ flutter:
   assets:
     - assets/images/
     - assets/icona.png
+    - assets/rilievo.jpg
     - assets/videos/
