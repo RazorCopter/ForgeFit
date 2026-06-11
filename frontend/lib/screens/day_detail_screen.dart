@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:uuid/uuid.dart';
 import '../models/training_data.dart';
 import '../models/completed_workout.dart';
@@ -518,10 +519,36 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
   }
 }
 
-class _YoutubeThumbnailWidget extends StatelessWidget {
+class _YoutubeThumbnailWidget extends StatefulWidget {
   final String videoUrl;
 
   const _YoutubeThumbnailWidget({Key? key, required this.videoUrl}) : super(key: key);
+
+  @override
+  State<_YoutubeThumbnailWidget> createState() => _YoutubeThumbnailWidgetState();
+}
+
+class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
+  YoutubePlayerController? _controller;
+  bool _isValid = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = _getVideoId(widget.videoUrl);
+    if (videoId != null) {
+      _controller = YoutubePlayerController.fromVideoId(
+        videoId: videoId,
+        autoPlay: false,
+        params: const YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: true,
+        ),
+      );
+    } else {
+      _isValid = false;
+    }
+  }
 
   String? _getVideoId(String url) {
     if (url.isEmpty) return null;
@@ -535,18 +562,15 @@ class _YoutubeThumbnailWidget extends StatelessWidget {
     return null;
   }
 
-  Future<void> _launchVideo() async {
-    final uri = Uri.parse(videoUrl);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      debugPrint('Could not launch $videoUrl');
-    }
+  @override
+  void dispose() {
+    _controller?.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final videoId = _getVideoId(videoUrl);
-
-    if (videoId == null) {
+    if (!_isValid || _controller == null) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -562,42 +586,11 @@ class _YoutubeThumbnailWidget extends StatelessWidget {
       );
     }
 
-    final thumbnailUrl = 'https://img.youtube.com/vi/$videoId/0.jpg';
-
-    return GestureDetector(
-      onTap: _launchVideo,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              thumbnailUrl,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 200,
-                  width: double.infinity,
-                  color: Colors.black26,
-                  child: const Center(
-                    child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
-                  ),
-                );
-              },
-            ),
-          ),
-          Container(
-            width: 60,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: YoutubePlayer(
+        controller: _controller!,
+        aspectRatio: 16 / 9,
       ),
     );
   }

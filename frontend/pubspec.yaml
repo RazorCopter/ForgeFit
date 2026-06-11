@@ -32,6 +32,7 @@ dependencies:
   js: ^0.7.2
   connectivity_plus: ^6.0.3
   wakelock_plus: ^1.5.2
+  youtube_player_iframe: ^6.0.2
 
 dev_dependencies:
   flutter_test:
