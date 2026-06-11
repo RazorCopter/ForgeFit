@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-11. Riferimento: branch `main`.
-> **v1.8.6 — Ottimizzazioni UX e AI**.
-> Migliorata UX di fine sessione e supporto espanso ai modelli DeepSeek.
+> **v1.8.7 — Ottimizzazioni UX Form e AI**.
+> Migliorata interfaccia del form di registrazione e supporto espanso ai modelli DeepSeek.
 
 ---
 

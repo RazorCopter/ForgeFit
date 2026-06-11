@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.8.7] — 2026-06-11
+### Changed
+- **UX Form Registrazione:** Rimossa la legenda a chip dei punti di misurazione sottostante l'immagine della guida visiva nella schermata di registrazione, snellendo l'interfaccia visiva.
+
 ## [1.8.6] — 2026-06-11
 ### Changed
 - **UX Fine Allenamento:** Migliorata l'interfaccia del popup di fine allenamento. Il pulsante "Termina Sessione e Salva" è stato riposizionato in alto al centro (colore rosso) per evitare tocchi accidentali con il tasto "Continua Allenamento" e vi è stato aggiunto un dialog di conferma.
