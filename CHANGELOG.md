@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.9.0] � 2026-06-11
+### Changed
+- **UX YouTube Player:** Sostituito YoutubeThumbnail con l'embed nativo youtube_player_iframe per riprodurre i video di istruzioni tecniche direttamente in-app senza rimbalzare su app esterne.
+
+
 ## [1.8.8] — 2026-06-11
 ### Added
 - **Active Session Persistence:** Implementato il salvataggio automatico progressivo dell'allenamento in corso. Chiudendo l'app o uscendo dalla schermata, la sessione viene salvata in locale e ricaricata alla riapertura, permettendo di non perdere i progressi (e mantenendo in pausa il timer) anche in caso di disconnessioni, crash o logout per token scaduto.
