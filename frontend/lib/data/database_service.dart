@@ -97,6 +97,43 @@ class DatabaseService {
   static Future<void> setSoundEnabled(bool value) =>
       _settingsBox.put('rest_sound_enabled', value);
 
+  // --- ACTIVE SESSION ---
+  static Future<void> saveActiveSession(String dayId, DateTime startTime, int elapsedSeconds, List<CompletedExercise> completed, Set<int> completedIndexes) async {
+    final data = {
+      'startTime': startTime.toIso8601String(),
+      'elapsedSeconds': elapsedSeconds,
+      'completed': completed.map((e) => e.toJson()).toList(),
+      'indexes': completedIndexes.toList(),
+    };
+    await _settingsBox.put('active_session_$dayId', jsonEncode(data));
+  }
+
+  static Map<String, dynamic>? getActiveSession(String dayId) {
+    final raw = _settingsBox.get('active_session_$dayId') as String?;
+    if (raw == null) return null;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final startTime = DateTime.tryParse(data['startTime'] as String? ?? '') ?? DateTime.now();
+      final elapsedSeconds = data['elapsedSeconds'] as int? ?? 0;
+      final completed = (data['completed'] as List<dynamic>?)
+          ?.map((e) => CompletedExercise.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [];
+      final indexes = (data['indexes'] as List<dynamic>?)?.cast<int>().toSet() ?? {};
+      return {
+        'startTime': startTime,
+        'elapsedSeconds': elapsedSeconds,
+        'completed': completed,
+        'indexes': indexes,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> clearActiveSession(String dayId) async {
+    await _settingsBox.delete('active_session_$dayId');
+  }
+
   /// Elimina tutti i dati salvati sul dispositivo
   static Future<void> clearAllData() async {
     await _workoutBox.clear();

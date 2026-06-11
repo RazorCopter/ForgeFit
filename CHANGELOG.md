@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.8.8] — 2026-06-11
+### Added
+- **Active Session Persistence:** Implementato il salvataggio automatico progressivo dell'allenamento in corso. Chiudendo l'app o uscendo dalla schermata, la sessione viene salvata in locale e ricaricata alla riapertura, permettendo di non perdere i progressi (e mantenendo in pausa il timer) anche in caso di disconnessioni, crash o logout per token scaduto.
+- **Sospensione Sessione:** Aggiunta la possibilità di sospendere volontariamente la sessione ("Sospendi per dopo") premendo il tasto "Indietro" del dispositivo durante un allenamento.
+
 ## [1.8.7] — 2026-06-11
 ### Changed
 - **UX Form Registrazione:** Rimossa la legenda a chip dei punti di misurazione sottostante l'immagine della guida visiva nella schermata di registrazione, snellendo l'interfaccia visiva.

@@ -30,6 +30,30 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   final Set<int> _completedIndexes = {};
 
   @override
+  void initState() {
+    super.initState();
+    _loadActiveSession();
+  }
+
+  void _loadActiveSession() {
+    final session = DatabaseService.getActiveSession(widget.day.id);
+    if (session != null) {
+      setState(() {
+        _completedExercises.addAll(session['completed'] as List<CompletedExercise>);
+        _completedIndexes.addAll(session['indexes'] as Set<int>);
+        _elapsedSeconds = session['elapsedSeconds'] as int;
+        _workoutStartTime = session['startTime'] as DateTime;
+      });
+      // Riprendi il timer dal tempo salvato
+      _globalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _globalTimer?.cancel();
     WakelockPlus.disable();
@@ -64,6 +88,16 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       final CompletedExercise completed = result['data'];
       _completedExercises.add(completed);
       _completedIndexes.add(index);
+      
+      // Salva progressivamente la sessione in corso
+      DatabaseService.saveActiveSession(
+        widget.day.id,
+        _workoutStartTime ?? DateTime.now(),
+        _elapsedSeconds,
+        _completedExercises,
+        _completedIndexes,
+      );
+      
       setState(() {});
 
       if (result['action'] == 'finish' || _completedIndexes.length == widget.day.exercises.length) {
@@ -103,6 +137,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     try {
       // 1. Salvataggio locale
       await DatabaseService.saveWorkout(completedWorkout);
+      await DatabaseService.clearActiveSession(widget.day.id);
 
       // 2. Sincronizzazione con il Cloud (FastAPI Backend)
       try {
@@ -141,7 +176,50 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   Widget build(BuildContext context) {
     final accentColor = AppTheme.getAccentForDay(widget.day.id);
 
-    return AppTheme.buildBackground(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_workoutStartTime != null && _completedExercises.isNotEmpty) {
+          final choice = await showDialog<String>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppTheme.surfaceVariant,
+              title: const Text('Sessione in corso', style: TextStyle(color: Colors.white)),
+              content: const Text(
+                'Hai esercizi completati. Cosa vuoi fare?',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 'continue'),
+                  child: const Text('Resta qui', style: TextStyle(color: AppTheme.cyan)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 'suspend'),
+                  child: const Text('Sospendi per dopo', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 'abandon'),
+                  child: const Text('Annulla allenamento', style: TextStyle(color: Colors.redAccent)),
+                ),
+              ],
+            ),
+          );
+          if (!context.mounted) return;
+          if (choice == 'suspend') {
+            Navigator.pop(context); // esce ma la sessione rimane salvata
+          } else if (choice == 'abandon') {
+            await DatabaseService.clearActiveSession(widget.day.id);
+            Navigator.pop(context);
+          }
+          // 'continue' o dismiss: non fa nulla, resta sulla schermata
+        } else {
+          await DatabaseService.clearActiveSession(widget.day.id);
+          Navigator.pop(context);
+        }
+      },
+      child: AppTheme.buildBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -248,6 +326,10 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 if (result != null) {
                   final exercises = result['completed'] as List<CompletedExercise>;
                   _completedExercises.addAll(exercises);
+                  // Gli indici corrispondono agli esercizi del giorno nell'ordine originale
+                  for (int i = 0; i < widget.day.exercises.length; i++) {
+                    _completedIndexes.add(i);
+                  }
                   _workoutStartTime ??= DateTime.now();
                   _elapsedSeconds += (result['duration'] as int?) ?? 0;
                   await _finishWorkout();
@@ -270,6 +352,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

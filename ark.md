@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-11. Riferimento: branch `main`.
-> **v1.8.7 — Ottimizzazioni UX Form e AI**.
-> Migliorata interfaccia del form di registrazione e supporto espanso ai modelli DeepSeek.
+> **v1.8.8 — Active Session Persistence**.
+> Introdotto il salvataggio progressivo e automatico della sessione di allenamento in corso per proteggere i progressi da chiusure accidentali e token scaduti.
 
 ---
 
