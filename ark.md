@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
-> Documento aggiornato il 2026-06-10. Riferimento: branch `main`.
-> **v1.7.4 — Sync Call Optimizations**.
-> Risolti i bug di caricamento del profilo e ridotte drasticamente le chiamate API duplicate in fase di boot dell'app.
+> Documento aggiornato il 2026-06-11. Riferimento: branch `main`.
+> **v1.8.6 — Ottimizzazioni UX e AI**.
+> Migliorata UX di fine sessione e supporto espanso ai modelli DeepSeek.
 
 ---
 

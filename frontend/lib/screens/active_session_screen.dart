@@ -223,6 +223,42 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppTheme.surfaceVariant,
+                        title: const Text('Termina Sessione', style: TextStyle(color: Colors.white)),
+                        content: const Text('Sei sicuro di voler terminare e salvare l\'allenamento corrente?', style: TextStyle(color: AppTheme.textSecondary)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Annulla', style: TextStyle(color: AppTheme.cyan)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Termina e Salva', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true && context.mounted) {
+                      Navigator.pop(context); // chiudi dialog principale
+                      Navigator.pop(context, {'action': 'finish', 'data': completedExercise});
+                    }
+                  },
+                  icon: const Icon(Icons.stop_circle_outlined, size: 20),
+                  label: const Text('TERMINA SESSIONE E SALVA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                ),
+                const SizedBox(height: 32),
                 const Icon(Icons.emoji_events, color: Colors.amber, size: 64),
                 const SizedBox(height: 16),
                 const Text('Ottimo Lavoro!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -250,21 +286,6 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('CONTINUA ALLENAMENTO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // chiudi dialog
-                      Navigator.pop(context, {'action': 'finish', 'data': completedExercise});
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text('TERMINA SESSIONE E SALVA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
               ],

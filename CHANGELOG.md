@@ -1,5 +1,9 @@
 # Changelog — ForgeFit
 
+## [1.8.6] — 2026-06-11
+### Changed
+- **UX Fine Allenamento:** Migliorata l'interfaccia del popup di fine allenamento. Il pulsante "Termina Sessione e Salva" è stato riposizionato in alto al centro (colore rosso) per evitare tocchi accidentali con il tasto "Continua Allenamento" e vi è stato aggiunto un dialog di conferma.
+
 ## [1.8.5] — 2026-06-11
 ### Added
 - **Registrazione — Guida Visiva Misurazioni**: Aggiunto accordion expandable (aperto di default) nella sezione "Misurazioni Iniziali" della schermata di registrazione. Mostra l'immagine `rilievo.jpg` con overlay gradient premium, badge "Guida Visiva", caption con istruzioni d'uso e chip informativi per ogni punto di rilievo (Vita, Fianchi, Petto, Bicipite, Coscia, Collo). Il pannello si apre/chiude con animazione fluida (`AnimatedCrossFade` + rotazione freccia).
