@@ -1,106 +1,111 @@
-# Changelog — ForgeFit
+# Changelog â€” ForgeFit
 
-## [1.9.0] � 2026-06-11
+## [1.9.1] â€” 2026-06-12
+### Changed
+- **UX Layout:** Spostata l'icona di stato di sincronizzazione e connessione dalla riga del titolo principale alla riga "Sinc", migliorando l'equilibrio visivo.
+- **Bug Fix:** Risolto un bug per cui interrompere un esercizio dal tasto indietro generava un caricamento infinito (spinner bloccato) nella schermata di Workout Session.
+
+## [1.9.0] â€” 2026-06-11
 ### Changed
 - **UX YouTube Player:** Sostituito YoutubeThumbnail con l'embed nativo youtube_player_iframe per riprodurre i video di istruzioni tecniche direttamente in-app senza rimbalzare su app esterne.
 
 
-## [1.8.8] — 2026-06-11
+## [1.8.8] â€” 2026-06-11
 ### Added
 - **Active Session Persistence:** Implementato il salvataggio automatico progressivo dell'allenamento in corso. Chiudendo l'app o uscendo dalla schermata, la sessione viene salvata in locale e ricaricata alla riapertura, permettendo di non perdere i progressi (e mantenendo in pausa il timer) anche in caso di disconnessioni, crash o logout per token scaduto.
-- **Sospensione Sessione:** Aggiunta la possibilità di sospendere volontariamente la sessione ("Sospendi per dopo") premendo il tasto "Indietro" del dispositivo durante un allenamento.
+- **Sospensione Sessione:** Aggiunta la possibilitÃ  di sospendere volontariamente la sessione ("Sospendi per dopo") premendo il tasto "Indietro" del dispositivo durante un allenamento.
 
-## [1.8.7] — 2026-06-11
+## [1.8.7] â€” 2026-06-11
 ### Changed
 - **UX Form Registrazione:** Rimossa la legenda a chip dei punti di misurazione sottostante l'immagine della guida visiva nella schermata di registrazione, snellendo l'interfaccia visiva.
 
-## [1.8.6] — 2026-06-11
+## [1.8.6] â€” 2026-06-11
 ### Changed
-- **UX Fine Allenamento:** Migliorata l'interfaccia del popup di fine allenamento. Il pulsante "Termina Sessione e Salva" è stato riposizionato in alto al centro (colore rosso) per evitare tocchi accidentali con il tasto "Continua Allenamento" e vi è stato aggiunto un dialog di conferma.
+- **UX Fine Allenamento:** Migliorata l'interfaccia del popup di fine allenamento. Il pulsante "Termina Sessione e Salva" Ã¨ stato riposizionato in alto al centro (colore rosso) per evitare tocchi accidentali con il tasto "Continua Allenamento" e vi Ã¨ stato aggiunto un dialog di conferma.
 
-## [1.8.5] — 2026-06-11
+## [1.8.5] â€” 2026-06-11
 ### Added
-- **Registrazione — Guida Visiva Misurazioni**: Aggiunto accordion expandable (aperto di default) nella sezione "Misurazioni Iniziali" della schermata di registrazione. Mostra l'immagine `rilievo.jpg` con overlay gradient premium, badge "Guida Visiva", caption con istruzioni d'uso e chip informativi per ogni punto di rilievo (Vita, Fianchi, Petto, Bicipite, Coscia, Collo). Il pannello si apre/chiude con animazione fluida (`AnimatedCrossFade` + rotazione freccia).
+- **Registrazione â€” Guida Visiva Misurazioni**: Aggiunto accordion expandable (aperto di default) nella sezione "Misurazioni Iniziali" della schermata di registrazione. Mostra l'immagine `rilievo.jpg` con overlay gradient premium, badge "Guida Visiva", caption con istruzioni d'uso e chip informativi per ogni punto di rilievo (Vita, Fianchi, Petto, Bicipite, Coscia, Collo). Il pannello si apre/chiude con animazione fluida (`AnimatedCrossFade` + rotazione freccia).
 
-## [1.8.4] — 2026-06-10
+## [1.8.4] â€” 2026-06-10
 ### Added
 - **AI Models:** Integrazione completa del supporto per i modelli DeepSeek (DeepSeek V3 Chat e R1 Reasoner) come alternativa a Gemini, accessibili tramite un wrapper unificato compatibile con OpenAI SDK.
 - **System Settings:** Aggiunta la chiave `deepseek_api_key_override` nel database per configurare dinamicamente le credenziali di DeepSeek.
 ### Fixed
 - **Frontend Build:** Creata cartella mancante `assets/images` per risolvere i warning di compilazione di Flutter in `pubspec.yaml`.
 
-## [1.8.3] — 2026-06-10
+## [1.8.3] â€” 2026-06-10
 ### Changed
 - **AI Models:** Aggiunto `gemini-2.5-flash` alla whitelist dei modelli e impostato come default globale per evitare addebiti extra previsti dai futuri tier di Gemini 3.x.
 
-## [1.8.2] — 2026-06-10
+## [1.8.2] â€” 2026-06-10
 ### Fixed
-- **AI timeout:** Risolto errore 524 Cloudflare durante la generazione di schede. Il backend ora sfrutta `StreamingResponse` per inviare i frammenti in tempo reale (keep-alive) bypassando il timeout di inattività dei load balancer.
+- **AI timeout:** Risolto errore 524 Cloudflare durante la generazione di schede. Il backend ora sfrutta `StreamingResponse` per inviare i frammenti in tempo reale (keep-alive) bypassando il timeout di inattivitÃ  dei load balancer.
 - **Wakelock:** Implementato fallback globale nativo tramite JS nel web `index.html` per assicurare che il display non si spenga durante il workout su iOS e Android.
 
-## [1.8.1] — 2026-06-10
+## [1.8.1] â€” 2026-06-10
 ### Fixed
 - **SyncService:** Risolto bug che azzerava gli esercizi scaricati dal server sovrascrivendo la cronologia locale con array vuoti.
 - **Wakelock (PWA):** Spostata l'abilitazione del blocco schermo direttamente negli handler dei bottoni (Avvia Tutto / Start) per bypassare i blocchi energetici di Safari iOS e Android Chrome, risolvendo il problema dello schermo che si spegneva durante il workout.
 - **Backend:** Fix import mancante (`models` invece di `UserProfile`) in `backend/routers/admin.py` che mandava in crash il backend.
 
 
-## [1.8.0] — 2026-06-10
+## [1.8.0] â€” 2026-06-10
 ### Changed
-- Upgrade dell'intelligenza artificiale: i modelli selezionabili passano ufficialmente alla nuova famiglia Gemini 3.5 (Flash, Pro, e Flash-Lite), offrendo maggiore velocità e ragionamento.
+- Upgrade dell'intelligenza artificiale: i modelli selezionabili passano ufficialmente alla nuova famiglia Gemini 3.5 (Flash, Pro, e Flash-Lite), offrendo maggiore velocitÃ  e ragionamento.
 - Rimozione del vecchio endpoint `/api/register` obsoleto (e dei dati biometrici superflui durante la registrazione) dal `main.py` per una totale pulizia e coerenza architetturale.
 
 
-## [1.7.9] — 2026-06-10
+## [1.7.9] â€” 2026-06-10
 ### Changed
 - Rimossi i tasti obsoleti e fuorvianti di "Importa/Esporta Backup" locale dalla schermata `SetupScreen` per evitare conflitti con la sincronizzazione in tempo reale.
 - Spostata la logica di esportazione del database a livello server: creato nuovo endpoint `/api/admin/backup` per scaricare direttamente l'intero database di produzione SQLite.
 
-## [1.7.8] — 2026-06-10
+## [1.7.8] â€” 2026-06-10
 ### Added
 - Integrazione del pacchetto `wakelock_plus` per mantenere lo schermo sempre acceso durante la sessione di allenamento (impedendo lo standby del dispositivo sia su Web PWA che su app mobile).
 
-## [1.7.7] — 2026-06-10
+## [1.7.7] â€” 2026-06-10
 ### Fixed
 - Corretto un artefatto visivo in `SetupScreen` per cui veniva renderizzata una versione del backend cablata fissa (1.7.4) nell'istante di caricamento prima che `SyncService` finisse. Ora usa un `ValueNotifier` per aggiornarsi reattivamente.
 
-## [1.7.6] — 2026-06-10
+## [1.7.6] â€” 2026-06-10
 ### Added
-- Implementato il 2-way sync completo (pull): se un utente cancella un allenamento tramite API/FitConsole, il prossimo avvio dell'app riconoscerà che l'ID non è più presente sul server e cancellerà silenziosamente la sessione "orfana" anche dal database locale Hive del telefono/browser.
+- Implementato il 2-way sync completo (pull): se un utente cancella un allenamento tramite API/FitConsole, il prossimo avvio dell'app riconoscerÃ  che l'ID non Ã¨ piÃ¹ presente sul server e cancellerÃ  silenziosamente la sessione "orfana" anche dal database locale Hive del telefono/browser.
 
-## [1.7.5] — 2026-06-10
+## [1.7.5] â€” 2026-06-10
 ### Fixed
 - Eliminata l'ultima chiamata ridondante a `/api/auth/me` proveniente da `SetupScreen`. Ora l'app all'avvio effettua esattamente 1 singola chiamata per ogni risorsa necessaria.
 
-## [1.7.4] — 2026-06-10
+## [1.7.4] â€” 2026-06-10
 ### Fixed
-- Ottimizzazione chiamate API ridondanti all'avvio: il profilo utente è ora sincronizzato in maniera centralizzata per evitare età fallaci in `AnalysisScreen` e sono state eliminate chiamate duplicate a `workouts` e `auth/me` dalle singole schede per alleggerire il carico di avvio.
+- Ottimizzazione chiamate API ridondanti all'avvio: il profilo utente Ã¨ ora sincronizzato in maniera centralizzata per evitare etÃ  fallaci in `AnalysisScreen` e sono state eliminate chiamate duplicate a `workouts` e `auth/me` dalle singole schede per alleggerire il carico di avvio.
 - Fix in backend `auth.py`: utilizzo della variabile `APP_VERSION` dinamica al posto della stringa "1.7.2" hardcoded in `TokenResponse`.
 
-## [1.7.3] — 2026-06-10
+## [1.7.3] â€” 2026-06-10
 ### Fixed
 - Risolto un bug critico di duplicazione degli allenamenti in storico. Il frontend ora aggiorna il proprio UUID locale con l'ID autoincrementale assegnato dal backend, prevenendo salvataggi multipli durante i successivi cicli di sincronizzazione offline.
 
-## [1.7.2] — 2026-06-10
+## [1.7.2] â€” 2026-06-10
 ### Added
 - Aggiunto endpoint `DELETE /api/workouts/{log_id}` per permettere l'eliminazione remota degli allenamenti dallo storico.
 ### Fixed
-- L'eliminazione locale di un allenamento sul client mobile ora notifica il backend affinché l'allenamento venga rimosso anche in FitConsole (la dashboard web).
-- I dati dell'utente (età e altezza) risultavano "0" in `AnalysisScreen` perché l'account Admin non prevede questi dati nella configurazione. Ora il fallback è noto come un comportamento atteso e sicuro per l'amministratore.
+- L'eliminazione locale di un allenamento sul client mobile ora notifica il backend affinchÃ© l'allenamento venga rimosso anche in FitConsole (la dashboard web).
+- I dati dell'utente (etÃ  e altezza) risultavano "0" in `AnalysisScreen` perchÃ© l'account Admin non prevede questi dati nella configurazione. Ora il fallback Ã¨ noto come un comportamento atteso e sicuro per l'amministratore.
 
 Tutte le modifiche rilevanti vengono documentate in questo file.  
-Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Removed**.
+Formato: `[versione] â€” YYYY-MM-DD` â†’ sezioni **Added / Changed / Fixed / Removed**.
 
 ---
 
-## [1.7.1] — 2026-06-10
+## [1.7.1] â€” 2026-06-10
 
 ### Fixed
 - **Sincronizzazione Storico Allenamenti**: Aggiunto il salvataggio e recupero del campo `title` nel backend per gli allenamenti completati. Questo risolve il bug per cui il badge mensile ("cerchietto") non si aggiornava sui dispositivi remoti a causa del titolo nullo.
 
 ---
 
-## [1.7.0] — 2026-06-10
+## [1.7.0] â€” 2026-06-10
 
 ### Fixed & Changed
 - **Audit Sicurezza & Fix**: Risolti i problemi evidenziati nel recente audit di sicurezza e funzionale:
@@ -114,7 +119,7 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.6.4] — 2026-06-10
+## [1.6.4] â€” 2026-06-10
 
 ### Fixed
 - **App PWA Android**: Risolto il bug che mostrava la barra di sistema rossa su Chrome/Android (impostato il theme-color corretto a `#141419`).
@@ -124,21 +129,21 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.6.3] — 2026-06-10
+## [1.6.3] â€” 2026-06-10
 
 ### Added
-- **Storico Schede**: Aggiunta la possibilità di navigare nello storico delle schede di allenamento sia dal Pannello Admin (nel Builder) sia dall'app per il Cliente (nella schermata principale).
+- **Storico Schede**: Aggiunta la possibilitÃ  di navigare nello storico delle schede di allenamento sia dal Pannello Admin (nel Builder) sia dall'app per il Cliente (nella schermata principale).
 
 ---
 
-## [1.6.2] — 2026-06-10
+## [1.6.2] â€” 2026-06-10
 
 ### Added
-- **Pannello Admin**: Aggiunta la possibilità di modificare i dati anagrafici (nome, cognome, email) e la password degli utenti direttamente dalla tabella "Clienti Registrati".
+- **Pannello Admin**: Aggiunta la possibilitÃ  di modificare i dati anagrafici (nome, cognome, email) e la password degli utenti direttamente dalla tabella "Clienti Registrati".
 
 ---
 
-## [1.6.1] — 2026-06-10
+## [1.6.1] â€” 2026-06-10
 
 ### Removed & Changed
 - **Passkeys (WebAuthn)**: Rimozione totale di tutto il sistema Passkey dall'intero applicativo (Frontend e Backend).
@@ -146,7 +151,7 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.6.0] — 2026-06-10
+## [1.6.0] â€” 2026-06-10
 
 ### Fixed & Changed
 - **Passkeys (WebAuthn)**: Spostata la registrazione della Passkey nella schermata "Setup & Sicurezza" ("Sicurezza account") rimuovendola dal menu Analisi IA.
@@ -154,17 +159,17 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.5.1] — 2026-06-09
+## [1.5.1] â€” 2026-06-09
 
 ### Fixed
 - **Version Number**: Sincronizzata la versione dell'app a `1.5.1` globalmente (frontend e backend).
 
 ---
 
-## [1.5.0] — 2026-06-09
+## [1.5.0] â€” 2026-06-09
 
 ### Added
-- **Passkeys (WebAuthn)**: Implementata l'autenticazione biometrica senza password tramite Passkeys. Gli utenti possono ora registrare il proprio dispositivo (FaceID/TouchID/Windows Hello) e accedere istantaneamente con l'impronta digitale o il volto, anche se l'app non è installata nativamente ma gira nel browser come PWA.
+- **Passkeys (WebAuthn)**: Implementata l'autenticazione biometrica senza password tramite Passkeys. Gli utenti possono ora registrare il proprio dispositivo (FaceID/TouchID/Windows Hello) e accedere istantaneamente con l'impronta digitale o il volto, anche se l'app non Ã¨ installata nativamente ma gira nel browser come PWA.
 - **SyncService Resiliente (Two-Way Sync)**: Implementata una sincronizzazione a due vie (Push/Pull) per Workouts e Misure Biometriche. I dati creati offline vengono ritentati in background ogni 5 minuti. Inoltre, facendo login su un nuovo dispositivo o premendo "Sincronizza ora", l'app popola il database locale (Hive) scaricando interamente lo storico dal server (nuove API backend `/history/{user_id}`).
 
 ### Fixed
@@ -172,7 +177,7 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.4.0] — 2026-06-09
+## [1.4.0] â€” 2026-06-09
 
 ### Added
 - **Video Splash Screen**: Sostituita l'immagine statica di caricamento con un video animato in loop (`splash_video.mp4`), migliorando l'impatto visivo all'avvio.
@@ -186,7 +191,7 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.3.0] — 2026-06-08
+## [1.3.0] â€” 2026-06-08
 
 ### Changed / Fixed
 - **Architettura Backend Modulare**: Refactoring totale di main.py in moduli dedicati dentro ackend/routers/ (i.py, uth.py, catalog.py, measurements.py, plans.py, system.py, users.py, workouts.py).
@@ -197,7 +202,7 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.2.0] — 2026-06-08
+## [1.2.0] â€” 2026-06-08
 
 ### Changed / Fixed
 - Eseguite modifiche strutturali da lista task:
@@ -215,75 +220,75 @@ Formato: `[versione] — YYYY-MM-DD` → sezioni **Added / Changed / Fixed / Rem
 
 ---
 
-## [1.1.8] — 2026-06-08
+## [1.1.8] â€” 2026-06-08
 
 ### Fixed
-- **Installazione App (PWA) / CORS**: Risolto il blocco di Cloudflare Access sul file `manifest.json`. È stato aggiunto l'attributo `crossorigin="use-credentials"` al tag link HTML. Ora il browser invia i cookie di sessione di Cloudflare anche per il caricamento del manifest, permettendo al prompt PWA di apparire correttamente.
+- **Installazione App (PWA) / CORS**: Risolto il blocco di Cloudflare Access sul file `manifest.json`. Ãˆ stato aggiunto l'attributo `crossorigin="use-credentials"` al tag link HTML. Ora il browser invia i cookie di sessione di Cloudflare anche per il caricamento del manifest, permettendo al prompt PWA di apparire correttamente.
 
 ---
 
-## [1.1.7] — 2026-06-08
+## [1.1.7] â€” 2026-06-08
 
 ### Fixed
 - **Installazione App (PWA)**: Corretto un errore di sintassi nel file `manifest.json` (parentesi mancante) che impediva ai browser di riconoscere l'app come installabile e di mostrare il popup di installazione su Android e desktop.
 
 ---
 
-## [1.1.6] — 2026-06-08
+## [1.1.6] â€” 2026-06-08
 
 ### Added
 - **YouTube Embed Nativo**: Aggiunto il pacchetto `youtube_player_iframe` per incorporare nativamente i video YouTube (se disponibili per l'esercizio) all'interno dell'app. I video si riproducono senza problemi CORS direttamente nella schermata dell'allenamento. Sostituisce il vecchio pulsante "Guarda Tutorial".
 
 ---
 
-## [1.1.5] — 2026-06-08
+## [1.1.5] â€” 2026-06-08
 
 ### Fixed
-- **Ordinamento giorni scheda**: I giorni di allenamento ora vengono ordinati numericamente (Giorno 1, 2, 3…) dopo il parsing del JSON, indipendentemente dall'ordine in cui il backend li restituisce.
+- **Ordinamento giorni scheda**: I giorni di allenamento ora vengono ordinati numericamente (Giorno 1, 2, 3â€¦) dopo il parsing del JSON, indipendentemente dall'ordine in cui il backend li restituisce.
 
 ---
 
-## [1.1.4] — 2026-06-08
+## [1.1.4] â€” 2026-06-08
 
 ### Fixed
-- **CORS eliminato alla radice**: Il frontend Nginx ora fa da reverse-proxy per tutte le chiamate `/api/` verso il container backend. Browser e API sono serviti dalla stessa origin (`forgefit.ghome.it`), eliminando completamente la necessità di header CORS.
+- **CORS eliminato alla radice**: Il frontend Nginx ora fa da reverse-proxy per tutte le chiamate `/api/` verso il container backend. Browser e API sono serviti dalla stessa origin (`forgefit.ghome.it`), eliminando completamente la necessitÃ  di header CORS.
 
 ### Changed
 - **`frontend/nginx.conf`**: Aggiunto blocco `location /api/` con `proxy_pass` verso `http://backend:8000`.
-- **`frontend/Dockerfile`**: Build web con `--dart-define=API_BASE_URL=` (URL relative) per instradare le chiamate API attraverso il proxy Nginx locale anziché cross-origin verso `fitconsole.ghome.it`.
+- **`frontend/Dockerfile`**: Build web con `--dart-define=API_BASE_URL=` (URL relative) per instradare le chiamate API attraverso il proxy Nginx locale anzichÃ© cross-origin verso `fitconsole.ghome.it`.
 
 ---
 
-## [1.1.3] — 2026-06-08
+## [1.1.3] â€” 2026-06-08
 
 ### Fixed
-- **CORS Empty Env Handling**: Gestione migliorata del fallback per le origini CORS nel backend. Se la variabile d'ambiente `ALLOWED_ORIGINS` è presente ma vuota o contiene solo spazi (ad esempio, impostata vuota in Portainer), il backend ora applica correttamente l'elenco di fallback predefinito, risolvendo gli errori di CORS.
+- **CORS Empty Env Handling**: Gestione migliorata del fallback per le origini CORS nel backend. Se la variabile d'ambiente `ALLOWED_ORIGINS` Ã¨ presente ma vuota o contiene solo spazi (ad esempio, impostata vuota in Portainer), il backend ora applica correttamente l'elenco di fallback predefinito, risolvendo gli errori di CORS.
 
-## [1.1.2] — 2026-06-08
+## [1.1.2] â€” 2026-06-08
 
 ### Fixed
 - **CORS Fallback**: Aggiunti i domini di produzione `forgefit.ghome.it`, `fitconsole.ghome.it` e l'IP locale `10.0.0.105:8083` come fallback predefiniti nelle origini CORS consentite dal backend nel caso in cui la variabile d'ambiente `ALLOWED_ORIGINS` sia assente.
 - **Portainer Deploy Script**: Corretto il bug nello script PowerShell che azzerava le variabili d'ambiente dello stack Portainer durante i redeploy. Ora le variabili preesistenti vengono conservate correttamente.
 
-## [1.1.1] — 2026-06-08
+## [1.1.1] â€” 2026-06-08
 
 ### Fixed
 - **Database robusto**: Aggiunta gestione degli errori (try-catch) durante l'apertura delle box Hive con pulizia automatica/ricreazione in caso di box corrotta o schema mismatch, prevenendo crash all'avvio su web.
-- **BiometricRecord JSON mapping**: Corretto il mapping della chiave `hips` (in italiano `fianchi`), `calf` (`polpaccio`), `neck` (`collo`) e `wrist` (`polso`) nel parser `fromJson` per garantire compatibilità bidirezionale con i dati esportati.
+- **BiometricRecord JSON mapping**: Corretto il mapping della chiave `hips` (in italiano `fianchi`), `calf` (`polpaccio`), `neck` (`collo`) e `wrist` (`polso`) nel parser `fromJson` per garantire compatibilitÃ  bidirezionale con i dati esportati.
 
-## [1.1.0] — 2026-06-08
+## [1.1.0] â€” 2026-06-08
 
 ### Added
-- **Rest timer — prossima serie visibile**: durante il periodo di recupero viene mostrata una card con il numero di serie, il peso (kg) e le ripetizioni previste per la serie successiva, così l'atleta può preparare l'attrezzatura in anticipo.
-- **Bottone GO! a fine countdown**: al termine del conto alla rovescia il timer non avvia più automaticamente la serie successiva. Appare invece un pulsante **GO!** (con animazione elastica) che l'utente deve premere esplicitamente per iniziare la serie. Il flusso garantisce piena consapevolezza prima di riprendere il carico.
+- **Rest timer â€” prossima serie visibile**: durante il periodo di recupero viene mostrata una card con il numero di serie, il peso (kg) e le ripetizioni previste per la serie successiva, cosÃ¬ l'atleta puÃ² preparare l'attrezzatura in anticipo.
+- **Bottone GO! a fine countdown**: al termine del conto alla rovescia il timer non avvia piÃ¹ automaticamente la serie successiva. Appare invece un pulsante **GO!** (con animazione elastica) che l'utente deve premere esplicitamente per iniziare la serie. Il flusso garantisce piena consapevolezza prima di riprendere il carico.
 
 ### Changed
-- `RestTimerWidget`: aggiunto parametro opzionale `nextSet: NextSetInfo?`; la callback `onFinish` è ora invocata solo alla pressione del bottone GO! (non allo scadere del timer).
+- `RestTimerWidget`: aggiunto parametro opzionale `nextSet: NextSetInfo?`; la callback `onFinish` Ã¨ ora invocata solo alla pressione del bottone GO! (non allo scadere del timer).
 - `ActiveSessionScreen`: calcola e passa `NextSetInfo` al `RestTimerWidget` alla conferma di ogni serie.
 
 ---
 
-## [1.0.0] — 2026-06-01
+## [1.0.0] â€” 2026-06-01
 
 ### Added
 - Prima release stabile del monorepo ForgeFit (frontend Flutter + backend FastAPI).
