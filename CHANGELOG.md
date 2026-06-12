@@ -1,5 +1,16 @@
 # Changelog — ForgeFit
 
+## [1.9.7] — 2026-06-12
+### Fixed
+- **Mobile Keyboard Autocorrect:** Aggiunto il supporto ai trattini lunghi (En Dash `–` ed Em Dash `—`) generati automaticamente dai correttori delle tastiere iOS e Android, per garantire il corretto split del titolo dei giorni.
+
+## [1.9.6] — 2026-06-12
+### Changed
+- **Robust Title Parsing:** Riscritto il motore di parsing in Dart per i titoli delle schede d'allenamento. Ora utilizza un normalizzatore universale in grado di sdoppiare retroattivamente anche le vecchie sintassi (es. "DAY 1 - Petto + Tricipiti"), garantendo sempre un titolo pulito "DAY X" e un elenco puntato dei muscoli.
+
+## [1.9.5] — 2026-06-12
+### Added
+- **Centralized Versioning:** Creato lo script automatizzato `execution/bump_version.py` per sincronizzare in un solo colpo il numero di build in `pubspec.yaml`, la costante hardcoded nel frontend e la variabile backend, prevenendo disallineamenti di versione in cache.
 ## [1.9.4] — 2026-06-12
 ### Added & Changed
 - **UI Card Split:** Sdoppiamento visivo automatico del titolo del giorno di allenamento (es. `DAY 1` e `Petto + Tricipiti`) nella Home Screen senza impatto sul backend o sui modelli dati, per risolvere problemi di troncamento testo su mobile.
