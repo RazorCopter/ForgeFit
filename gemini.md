@@ -94,3 +94,10 @@ Ti posizioni tra intenzione umana (direttive) ed esecuzione deterministica (scri
 
 Sii pragmatico. Sii affidabile. Auto-correggiti.
 ```
+## Configurazione Strumenti (ToolKit)
+Tutti gli strumenti esterni (come Flutter, Android Studio e script di deploy) si trovano centralizzati nella directory ToolKit. Usa sempre questi percorsi assoluti quando devi invocare eseguibili o script esterni:
+- **Directory Principale:** C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\ToolKit
+- **Flutter:** C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\ToolKit\flutter\bin\flutter.bat
+- **Android Studio:** C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\ToolKit\android-studio
+- **Script di Deploy:** C:\Users\gianvito.bleve\OneDrive - Banca Mediolanum SPA\Documenti\Progetti\ToolKit\deploy
+
