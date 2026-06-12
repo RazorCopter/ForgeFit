@@ -1,7 +1,7 @@
 name: forgefit
 description: "Your AI-powered personal trainer."
 publish_to: 'none'
-version: 1.9.1+35
+version: 1.9.1+36
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -43,7 +43,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icona.png"
+  image_path: "assets/iconapk.png"
   min_sdk_android: 21
 
 flutter:

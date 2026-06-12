@@ -79,6 +79,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         setState(() => _currentIndex++);
         _startCurrentExercise();
       }
+    } else {
+      // L'utente ha interrotto l'esercizio dal tasto back (result == null)
+      if (_completedExercises.isEmpty) {
+        // Se non ha completato niente, annulliamo la sessione tornando a null
+        Navigator.pop(context, null);
+      } else {
+        // Se ha completato qualcosa, salviamo la sessione finora
+        _finishWorkout();
+      }
     }
   }
 
