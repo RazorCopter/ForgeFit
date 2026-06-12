@@ -765,28 +765,38 @@ class _HomeScreenState extends State<HomeScreen> {
                           String dTitle = day.title;
                           String dSubtitle = day.subtitle;
                           
-                          if (dTitle.contains(' + ')) {
-                              final parts = dTitle.split(' + ');
-                              dTitle = parts[0].trim();
-                              final extractedSub = parts.sublist(1).join(' + ').trim();
-                              if (extractedSub.isNotEmpty) {
-                                  final bulletList = extractedSub.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                                  dSubtitle = bulletList.map((e) => "• $e").join('\n');
-                              }
-                          } else if (dTitle.contains(' - ')) {
-                              final parts = dTitle.split(' - ');
-                              dTitle = parts[0].trim();
-                              final extractedSub = parts.sublist(1).join(' - ').trim();
-                              if (extractedSub.isNotEmpty) {
-                                  dSubtitle = extractedSub;
-                              }
-                          } else if (dTitle.contains(': ')) {
-                              final parts = dTitle.split(': ');
-                              dTitle = parts[0].trim();
-                              final extractedSub = parts.sublist(1).join(': ').trim();
-                              if (extractedSub.isNotEmpty) {
-                                  dSubtitle = extractedSub;
-                              }
+                          int firstSepIndex = -1;
+                          String? usedSep;
+                          final separators = [' - ', ' + ', ': '];
+                          
+                          for (var sep in separators) {
+                            int idx = dTitle.indexOf(sep);
+                            if (idx != -1 && (firstSepIndex == -1 || idx < firstSepIndex)) {
+                              firstSepIndex = idx;
+                              usedSep = sep;
+                            }
+                          }
+                          
+                          if (firstSepIndex != -1 && usedSep != null) {
+                            String leftPart = dTitle.substring(0, firstSepIndex).trim();
+                            String rightPart = dTitle.substring(firstSepIndex + usedSep.length).trim();
+                            
+                            dTitle = leftPart;
+                            
+                            String normalizedRight = rightPart
+                                .replaceAll(' + ', ';')
+                                .replaceAll(' - ', ';')
+                                .replaceAll(' e ', ';')
+                                .replaceAll(',', ';');
+                                
+                            final bulletList = normalizedRight.split(';')
+                                .map((e) => e.trim())
+                                .where((e) => e.isNotEmpty)
+                                .toList();
+                                
+                            if (bulletList.isNotEmpty) {
+                                dSubtitle = bulletList.map((e) => "• $e").join('\n');
+                            }
                           }
 
                           return Column(
