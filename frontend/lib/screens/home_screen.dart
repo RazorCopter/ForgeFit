@@ -12,6 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/training_data.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
+import '../core/connectivity_service.dart';
+import '../core/sync_service.dart';
 import '../data/database_service.dart';
 import '../services/plan_service.dart';
 import 'day_detail_screen.dart';
@@ -302,36 +304,101 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Banner "FORGE FIT" ───────────────────────────
-              Center(
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [AppTheme.cyan, AppTheme.vividPurple],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ).createShader(bounds),
-                  child: Text(
-                    'FORGE FIT',
-                    style: GoogleFonts.orbitron(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
-                      color: Colors.white, // Richiesto da ShaderMask
-                      shadows: [
-                        Shadow(
-                          color: AppTheme.cyan.withOpacity(0.5),
-                          blurRadius: 15,
-                        ),
-                        Shadow(
-                          color: AppTheme.vividPurple.withOpacity(0.5),
-                          blurRadius: 15,
-                        ),
-                      ],
-                    ),
-                  ),
-                ).animate().fadeIn(duration: 800.ms).scale(
-                      begin: const Offset(0.9, 0.9),
-                    ),
+              // ── Banner "FORGE FIT" + indicatore server ───────
+              ValueListenableBuilder<bool>(
+                valueListenable: ConnectivityService.isOnline,
+                builder: (context, online, _) {
+                  return ValueListenableBuilder(
+                    valueListenable: DatabaseService.workoutBoxListenable(),
+                    builder: (context, _, __) {
+                      final pending = DatabaseService.getUnsyncedWorkouts().length;
+                      final Color statusColor;
+                      final IconData statusIcon;
+                      final String statusTooltip;
+                      final bool canForceSync = online && pending > 0;
+
+                      if (!online) {
+                        statusColor = Colors.redAccent;
+                        statusIcon = Icons.wifi_off_rounded;
+                        statusTooltip = 'Offline';
+                      } else if (pending > 0) {
+                        statusColor = Colors.orange;
+                        statusIcon = Icons.cloud_upload_rounded;
+                        statusTooltip = '$pending allenament${pending == 1 ? 'o' : 'i'} da sincronizzare — tocca per sync';
+                      } else {
+                        statusColor = Colors.greenAccent;
+                        statusIcon = Icons.wifi_rounded;
+                        statusTooltip = 'Online — tutto sincronizzato';
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [AppTheme.cyan, AppTheme.vividPurple],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ).createShader(bounds),
+                            child: Text(
+                              'FORGE FIT',
+                              style: GoogleFonts.orbitron(
+                                fontSize: 38,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: AppTheme.cyan.withOpacity(0.5),
+                                    blurRadius: 15,
+                                  ),
+                                  Shadow(
+                                    color: AppTheme.vividPurple.withOpacity(0.5),
+                                    blurRadius: 15,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Tooltip(
+                            message: statusTooltip,
+                            child: GestureDetector(
+                              onTap: canForceSync
+                                  ? () async {
+                                      await SyncService.syncAllPendingData();
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Sincronizzazione completata'),
+                                            backgroundColor: Colors.green,
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  : null,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 400),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: statusColor.withOpacity(0.5), width: 1.5),
+                                  boxShadow: [
+                                    BoxShadow(color: statusColor.withOpacity(0.3), blurRadius: 8),
+                                  ],
+                                ),
+                                child: Icon(statusIcon, color: statusColor, size: 20),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 800.ms).scale(begin: const Offset(0.9, 0.9));
+                    },
+                  );
+                },
               ),
 
               const SizedBox(height: 32),
