@@ -760,32 +760,59 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Titolo giorno (es. PUSH, PULL, LEGS)
-                      Text(
-                        day.title,
-                        maxLines: 2,
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: accentColor,
-                          letterSpacing: 1.2,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Sottotitolo (muscoli bersaglio)
-                      Text(
-                        day.subtitle,
-                        maxLines: 2,
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          String dTitle = day.title;
+                          String dSubtitle = day.subtitle;
+                          
+                          if (dSubtitle.isEmpty || dSubtitle.trim().isEmpty) {
+                            if (dTitle.contains(' - ')) {
+                              final parts = dTitle.split(' - ');
+                              dTitle = parts[0].trim();
+                              dSubtitle = parts.sublist(1).join(' - ').trim();
+                            } else if (dTitle.contains(': ')) {
+                              final parts = dTitle.split(': ');
+                              dTitle = parts[0].trim();
+                              dSubtitle = parts.sublist(1).join(': ').trim();
+                            }
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Titolo giorno (es. DAY 1)
+                              Text(
+                                dTitle,
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.fade,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: accentColor,
+                                  letterSpacing: 1.2,
+                                  height: 1.1,
+                                ),
+                              ),
+                              if (dSubtitle.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                // Sottotitolo (muscoli bersaglio)
+                                Text(
+                                  dSubtitle,
+                                  maxLines: 2,
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }
                       ),
                     ],
                   ),

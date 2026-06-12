@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [1.9.4] — 2026-06-12
+### Added & Changed
+- **UI Card Split:** Sdoppiamento visivo automatico del titolo del giorno di allenamento (es. `DAY 1` e `Petto + Tricipiti`) nella Home Screen senza impatto sul backend o sui modelli dati, per risolvere problemi di troncamento testo su mobile.
+- **AI Prompt:** Aggiunta regola ferrea al prompt AI nel backend per garantire che il nome giorno sia generato sempre col formato stringente `DAY X - Descrizione muscoli`, ottimizzando il parsing visivo frontend su schede future.
+
 ## [1.9.3] — 2026-06-12
 ### Added & Changed
 - **Icon App & Build:** Aggiornate le icone dell'app (launcher icons) per Android e iOS.
