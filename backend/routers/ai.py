@@ -95,13 +95,13 @@ def generate_ai_plan(
     4. RECUPERO: Il campo "recupero_secondi" deve essere ESCLUSIVAMENTE un numero intero che rappresenta i secondi (es. 90, 120). USA SEMPRE la chiave "recupero_secondi", non "recupero".
     5. GRUPPO: Specifica sempre il gruppo muscolare principale dell'esercizio.
     6. FORMATO: Restituisci la risposta ESCLUSIVAMENTE in formato JSON valido, senza testo prima o dopo.
-    7. TITOLO GIORNO: Il campo "nome_giorno" deve SEMPRE rispettare la struttura "DAY X - Descrizione muscoli" (es. "DAY 1 - Petto e Tricipiti"). Usa sempre e solo il separatore " - " tra il giorno e la descrizione.
+    7. TITOLO GIORNO: Il campo "nome_giorno" deve SEMPRE rispettare la struttura "DAY X + Muscolo1 ; Muscolo2 ; Muscolo3" (es. "DAY 1 + Petto ; Spalle ; Tricipiti"). Usa " + " per separare il giorno dai muscoli, e " ; " per separare i vari muscoli.
 
     STRUTTURA JSON RICHIESTA:
     {{
     "giorni": [
         {{
-        "nome_giorno": "DAY 1 - Petto e Tricipiti",
+        "nome_giorno": "DAY 1 + Petto ; Spalle ; Tricipiti",
         "esercizi": [
             {{
             "gruppo": "Petto",
