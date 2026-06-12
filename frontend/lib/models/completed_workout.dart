@@ -7,6 +7,7 @@ class CompletedWorkout {
   final int durationSeconds;
   final List<CompletedExercise> exercises;
   bool isSynced;
+  final String? dayId;
 
   CompletedWorkout({
     required this.id,
@@ -15,6 +16,7 @@ class CompletedWorkout {
     required this.durationSeconds,
     required this.exercises,
     this.isSynced = false,
+    this.dayId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -23,6 +25,7 @@ class CompletedWorkout {
     'date': date.toIso8601String(),
     'durationSeconds': durationSeconds,
     'exercises': exercises.map((e) => e.toJson()).toList(),
+    'dayId': dayId,
   };
 
   factory CompletedWorkout.fromJson(Map<String, dynamic> json) => CompletedWorkout(
@@ -33,6 +36,7 @@ class CompletedWorkout {
     exercises: (json['exercises'] as List<dynamic>?)
         ?.map((e) => CompletedExercise.fromJson(e as Map<String, dynamic>))
         .toList() ?? [],
+    dayId: json['dayId'] as String?,
   );
 }
 
@@ -101,8 +105,10 @@ class CompletedWorkoutAdapter extends TypeAdapter<CompletedWorkout> {
     final durationSeconds = reader.readInt();
     final exercises = reader.readList().cast<CompletedExercise>();
     bool isSynced = false;
+    String? dayId;
     try {
       isSynced = reader.read() as bool? ?? false;
+      dayId = reader.readString();
     } catch (_) {}
     return CompletedWorkout(
       id: id,
@@ -111,6 +117,7 @@ class CompletedWorkoutAdapter extends TypeAdapter<CompletedWorkout> {
       durationSeconds: durationSeconds,
       exercises: exercises,
       isSynced: isSynced,
+      dayId: dayId,
     );
   }
 
@@ -122,6 +129,7 @@ class CompletedWorkoutAdapter extends TypeAdapter<CompletedWorkout> {
     writer.writeInt(obj.durationSeconds);
     writer.writeList(obj.exercises);
     writer.write(obj.isSynced);
+    writer.writeString(obj.dayId ?? '');
   }
 }
 

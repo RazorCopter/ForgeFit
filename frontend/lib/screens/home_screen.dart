@@ -709,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------------------
   Widget _buildDayCard(TrainingDay day) {
     final accentColor = AppTheme.getAccentForDay(day.id);
-    final monthlyDone = DatabaseService.getMonthlyCompletionsForDay(day.title);
+    final monthlyDone = DatabaseService.getMonthlyCompletionsForDay(day);
     // Target di riferimento: 4 sessioni/mese (circa 1 a settimana)
     const int monthlyTarget = 4;
     final double ringProgress = (monthlyDone / monthlyTarget).clamp(0.0, 1.0);

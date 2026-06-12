@@ -1,5 +1,9 @@
 # Changelog â€” ForgeFit
 
+## [1.9.2] â€” 2026-06-12
+### Fixed
+- **Training Indicators:** Risolto un bug per cui gli indicatori di completamento della Home perdevano il conteggio cambiando versione della scheda. Ora il calcolo è diventato completamente *cross-scheda*: il sistema raggruppa gli allenamenti per "numero di giorno" e per ID strutturale, mantenendo lo storico intatto indipendentemente dal nome generato dall'IA.
+
 ## [1.9.1] â€” 2026-06-12
 ### Changed
 - **UX Layout:** Spostata l'icona di stato di sincronizzazione e connessione dalla riga del titolo principale alla riga "Sinc", migliorando l'equilibrio visivo.

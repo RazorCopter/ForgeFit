@@ -133,6 +133,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       date: DateTime.now(),
       durationSeconds: duration,
       exercises: _completedExercises,
+      dayId: widget.day.id,
     );
 
     try {

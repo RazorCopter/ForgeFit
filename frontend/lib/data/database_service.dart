@@ -406,6 +406,7 @@ class DatabaseService {
         durationSeconds: oldW.durationSeconds,
         exercises: oldW.exercises,
         isSynced: oldW.isSynced,
+        dayId: oldW.dayId,
       );
       await _workoutBox.put(key, newW);
     }
@@ -415,12 +416,26 @@ class DatabaseService {
     return _workoutBox.values.toList();
   }
 
-  /// Conta quante volte un giorno specifico (per titolo) è stato completato nell'ultimo mese.
-  static int getMonthlyCompletionsForDay(String dayTitle) {
+  /// Conta quante volte un giorno specifico (per dayId o titolo) è stato completato nell'ultimo mese.
+  static int getMonthlyCompletionsForDay(TrainingDay day) {
     final cutoff = DateTime.now().subtract(const Duration(days: 30));
-    return _workoutBox.values
-        .where((w) => w.title == dayTitle && w.date.isAfter(cutoff))
-        .length;
+    final targetNum = RegExp(r'\d+').firstMatch(day.title)?.group(0);
+
+    return _workoutBox.values.where((w) {
+      if (!w.date.isAfter(cutoff)) return false;
+      
+      // Priorità 1: Match esatto su dayId (nuovi salvataggi)
+      if (w.dayId != null && w.dayId == day.id) return true;
+      
+      // Priorità 2: Match cross-scheda cercando lo stesso numero nel titolo (es. "DAY 1" e "Giorno 1")
+      if (targetNum != null) {
+        final wNum = RegExp(r'\d+').firstMatch(w.title)?.group(0);
+        if (wNum == targetNum) return true;
+      }
+      
+      // Priorità 3: Match sul titolo esatto (fallback generico)
+      return w.title == day.title;
+    }).length;
   }
 
   /// Calcola il numero di giorni consecutivi con almeno un allenamento fino a oggi.
