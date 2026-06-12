@@ -765,16 +765,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           String dTitle = day.title;
                           String dSubtitle = day.subtitle;
                           
-                          if (dSubtitle.isEmpty || dSubtitle.trim().isEmpty) {
-                            if (dTitle.contains(' - ')) {
+                          if (dTitle.contains(' - ')) {
                               final parts = dTitle.split(' - ');
                               dTitle = parts[0].trim();
-                              dSubtitle = parts.sublist(1).join(' - ').trim();
-                            } else if (dTitle.contains(': ')) {
+                              final extractedSub = parts.sublist(1).join(' - ').trim();
+                              if (extractedSub.isNotEmpty) {
+                                  dSubtitle = extractedSub;
+                              }
+                          } else if (dTitle.contains(': ')) {
                               final parts = dTitle.split(': ');
                               dTitle = parts[0].trim();
-                              dSubtitle = parts.sublist(1).join(': ').trim();
-                            }
+                              final extractedSub = parts.sublist(1).join(': ').trim();
+                              if (extractedSub.isNotEmpty) {
+                                  dSubtitle = extractedSub;
+                              }
                           }
 
                           return Column(
@@ -783,9 +787,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               // Titolo giorno (es. DAY 1)
                               Text(
                                 dTitle,
-                                maxLines: 1,
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
+                                maxLines: 2,
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w900,
