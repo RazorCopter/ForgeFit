@@ -767,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           
                           int firstSepIndex = -1;
                           String? usedSep;
-                          final separators = [' - ', ' + ', ': '];
+                          final separators = [' - ', ' + ', ': ', ' – ', ' — '];
                           
                           for (var sep in separators) {
                             int idx = dTitle.indexOf(sep);
@@ -786,6 +786,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             String normalizedRight = rightPart
                                 .replaceAll(' + ', ';')
                                 .replaceAll(' - ', ';')
+                                .replaceAll(' – ', ';')
+                                .replaceAll(' — ', ';')
                                 .replaceAll(' e ', ';')
                                 .replaceAll(',', ';');
                                 
