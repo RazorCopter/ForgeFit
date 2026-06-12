@@ -765,7 +765,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           String dTitle = day.title;
                           String dSubtitle = day.subtitle;
                           
-                          if (dTitle.contains(' - ')) {
+                          if (dTitle.contains(' + ')) {
+                              final parts = dTitle.split(' + ');
+                              dTitle = parts[0].trim();
+                              final extractedSub = parts.sublist(1).join(' + ').trim();
+                              if (extractedSub.isNotEmpty) {
+                                  final bulletList = extractedSub.split(';').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+                                  dSubtitle = bulletList.map((e) => "• $e").join('\n');
+                              }
+                          } else if (dTitle.contains(' - ')) {
                               final parts = dTitle.split(' - ');
                               dTitle = parts[0].trim();
                               final extractedSub = parts.sublist(1).join(' - ').trim();
@@ -800,17 +808,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               if (dSubtitle.isNotEmpty) ...[
                                 const SizedBox(height: 6),
-                                // Sottotitolo (muscoli bersaglio)
+                                // Sottotitolo (muscoli bersaglio in elenco o riga)
                                 Text(
                                   dSubtitle,
-                                  maxLines: 2,
+                                  maxLines: 6,
                                   softWrap: true,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: AppTheme.textPrimary,
                                     fontWeight: FontWeight.w600,
-                                    height: 1.3,
+                                    height: 1.4,
                                   ),
                                 ),
                               ],
