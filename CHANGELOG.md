@@ -1,4 +1,9 @@
-# Changelog â€” ForgeFit
+# Changelog — ForgeFit
+
+## [1.9.3] — 2026-06-12
+### Added & Changed
+- **Icon App & Build:** Aggiornate le icone dell'app (launcher icons) per Android e iOS.
+- **APK Optimization:** Ottimizzazione e generazione di un APK compatto.
 
 ## [1.9.2] â€” 2026-06-12
 ### Fixed
