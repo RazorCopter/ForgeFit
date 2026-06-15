@@ -66,29 +66,44 @@ class _PennantBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isUnlocked ? achievement.color : AppTheme.textSecondary.withValues(alpha: 0.15);
-    
-    return Column(
+    Widget image = Image.asset(
+      'assets/achievements/${achievement.id}.png',
+      fit: BoxFit.contain,
+    );
+
+    if (!isUnlocked) {
+      image = ColorFiltered(
+        colorFilter: const ColorFilter.matrix([
+          0.2126, 0.7152, 0.0722, 0, 0,
+          0.2126, 0.7152, 0.0722, 0, 0,
+          0.2126, 0.7152, 0.0722, 0, 0,
+          0,      0,      0,      1, 0,
+        ]), // Scala di grigi
+        child: Opacity(
+          opacity: 0.25,
+          child: image,
+        ),
+      );
+    }
+
+    Widget badgeContent = Column(
       children: [
         Expanded(
-          child: CustomPaint(
-            painter: _PennantPainter(color: color, isUnlocked: isUnlocked),
-            child: Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                isUnlocked ? achievement.name.substring(0, 1).toUpperCase() : '?',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: isUnlocked ? Colors.white : AppTheme.textSecondary.withValues(alpha: 0.5),
-                  shadows: isUnlocked ? [
-                    Shadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 4, offset: const Offset(1, 2))
-                  ] : null,
-                ),
-              ),
-            ),
-          ),
+          child: isUnlocked
+              ? Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: achievement.color.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      )
+                    ],
+                  ),
+                  child: image,
+                )
+              : image,
         ),
         const SizedBox(height: 12),
         Text(
@@ -104,73 +119,27 @@ class _PennantBadge extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _PennantPainter extends CustomPainter {
-  final Color color;
-  final bool isUnlocked;
-
-  _PennantPainter({required this.color, required this.isUnlocked});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-
-    final path = Path();
-    // Gagliardetto: rettangolo superiore e punta inferiore
-    path.moveTo(0, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height - 20);
-    path.lineTo(size.width / 2, size.height);
-    path.lineTo(0, size.height - 20);
-    path.close();
 
     if (isUnlocked) {
-      final rect = Offset.zero & size;
-      paint.shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          color.withValues(alpha: 0.8),
-          color,
-          color.withValues(alpha: 0.9),
-        ],
-      ).createShader(rect);
-
-      // Effetto Glow (neon vivido)
-      canvas.drawShadow(path, color, 8, true);
-    } else {
-      paint.color = color;
-    }
-
-    canvas.drawPath(path, paint);
-    
-    final borderPaint = Paint()
-      ..color = isUnlocked ? Colors.white.withValues(alpha: 0.4) : Colors.transparent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    
-    canvas.drawPath(path, borderPaint);
-    
-    // Disegna una riga decorativa in alto se sbloccato
-    if (isUnlocked) {
-      final linePaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawLine(
-        const Offset(10, 8), 
-        Offset(size.width - 10, 8), 
-        linePaint
+      final dateStr = unlockedAt != null 
+          ? '\nSbloccato il ${unlockedAt!.day.toString().padLeft(2, '0')}/${unlockedAt!.month.toString().padLeft(2, '0')}/${unlockedAt!.year}'
+          : '';
+      return Tooltip(
+        message: '${achievement.description}$dateStr',
+        triggerMode: TooltipTriggerMode.tap,
+        showDuration: const Duration(seconds: 3),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceVariant,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: achievement.color.withValues(alpha: 0.5)),
+        ),
+        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(12),
+        child: badgeContent,
       );
     }
-  }
 
-  @override
-  bool shouldRepaint(covariant _PennantPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.isUnlocked != isUnlocked;
+    return badgeContent;
   }
 }

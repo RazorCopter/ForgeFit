@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-16. Riferimento: branch `main`.
-> **v2.0.1 — Custom Achievements Tab**.
-> Spostata la sezione Traguardi in una tab dedicata nella BottomNav e implementati gagliardetti personalizzati procedurali.
+> **v2.0.2 — Gamification Assets & Tooltips**.
+> Sostituiti i gagliardetti procedurali con 8 asset 2D custom in stile neon e aggiunto tooltip interattivo.
 
 ---
 

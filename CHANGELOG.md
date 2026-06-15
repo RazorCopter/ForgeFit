@@ -1,5 +1,14 @@
 # Changelog — ForgeFit
 
+## [2.0.2] — 2026-06-16
+
+### Added
+- **Gamification Assets**: Generate 8 immagini custom 2D in stile neon per i traguardi.
+- **Tooltip Interattivo**: Aggiunto un tooltip con descrizione dettagliata e data di sblocco che compare al tocco sui traguardi conquistati.
+
+### Changed
+- Sostituito il `CustomPainter` procedurale con `Image.asset` per visualizzare le nuove grafiche dei badge.
+
 ## [2.0.1] — 2026-06-16
 
 ### Added
