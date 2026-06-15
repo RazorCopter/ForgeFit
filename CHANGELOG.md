@@ -1,5 +1,27 @@
 # Changelog — ForgeFit
 
+## [2.0.0] — 2026-06-16
+
+### Added
+- **Gamification & Achievements**: Aggiunto un sistema di traguardi (es. Primo Allenamento, Costanza, PR Hunter) con popup animati e griglia di riepilogo in Setup.
+- **Integrazione Wearable/Salute**: Scrittura automatica degli allenamenti su Google Fit (Android) e Apple Health (iOS) tramite `HealthService`.
+- **Miglioramenti UI/UX**: Inserite animazioni Lottie per gli stati vuoti, chip per Gruppo Muscolare sulle card degli esercizi e Bottom Navigation bar animata.
+- **Offline-First**: Nuovo indicatore `cloud_off` per gli allenamenti non ancora sincronizzati col backend.
+- **Statistiche Interattive**: Aggiunti i tooltip `lineTouchData` a tutti i grafici delle statistiche (Volume, 1RM Epley, Progressi Esercizio) per lettura esatta dei valori.
+
+### Changed
+- **UX Timer Recupero**: Aggiunto un effetto *glow* e un'animazione pulsante durante gli ultimi 5 secondi del countdown per preparare l'atleta.
+- **Colori Dinamici Scheda**: Utilizzo di una palette ciclica di 8 colori associata ad un hash dell'ID dinamico dei giorni, per non avere più il limite di `d1-d4`.
+- **Tech Debt e Ottimizzazione**: 
+  - Pattern retry per il token JWT centralizzato via helper generico `_authenticatedRequest` per evitare fallimenti nei salvataggi su token 401.
+  - Implementato un caching dei permessi HealthService per non richiederli due volte nella stessa sessione.
+  - Track dei Personal Record ottimizzato a passaggio singolo (*single-pass*).
+  - Backend SQLAlchemy aggiornato a v2.0 (`DeclarativeBase`) e migrazioni SQLite raw rimosse.
+
+### Fixed
+- **Parsing URL Shorts**: Il parser video ora riconosce anche il link nel formato `youtube.com/shorts/VIDEO_ID`.
+- Evitato il fallback forzato al logout (401-retry gap) durante la sincronizzazione attiva del workout.
+
 ## [1.9.8] — 2026-06-15
 
 ### Changed

@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
-> Documento aggiornato il 2026-06-15. Riferimento: branch `main`.
-> **v1.9.8 — Youtube Player UI and Session Controls**.
-> Introdotto il salvataggio progressivo e automatico della sessione di allenamento in corso per proteggere i progressi da chiusure accidentali e token scaduti.
+> Documento aggiornato il 2026-06-16. Riferimento: branch `main`.
+> **v2.0.0 — Wearable Health, Gamification, and UX Enhancements**.
+> Introdotto sistema di traguardi (Achievements), salvataggio su Google Fit / Apple Health, e major upgrade visivo con animazioni Lottie, statistiche interattive e offline-first cloud badge.
 
 ---
 
