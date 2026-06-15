@@ -21,14 +21,34 @@ class AppTheme {
   static const Color legsAccent = Color(0xFF00B8D4); // Cyan un po' più profondo o mix
   static const Color homeAccent = Color(0xFFE0B0FF); // Viola chiaro
 
+  /// Palette ciclica per giorni con ID dinamici (generati dal backend con AI).
+  /// 8 colori vibranti ben distanziati sulla ruota cromatica.
+  static const List<Color> _dayPalette = [
+    Color(0xFF00E5FF), // Cyan
+    Color(0xFFBB86FC), // Purple
+    Color(0xFF00B8D4), // Teal
+    Color(0xFFFF6D00), // Orange
+    Color(0xFF00E676), // Green
+    Color(0xFFFF4081), // Pink
+    Color(0xFFFFD740), // Amber
+    Color(0xFF7C4DFF), // Deep Purple
+  ];
+
   static Color getAccentForDay(String dayId) {
+    // Compatibilità legacy: mappatura esplicita per gli ID fissi d1–d4
     switch (dayId) {
-      case 'd1': return pushAccent; // Cyan
-      case 'd2': return pullAccent; // Purple
-      case 'd3': return legsAccent; // Deep Cyan
-      case 'd4': return homeAccent; // Light Purple
-      default: return vividPurple;
+      case 'd1': return pushAccent;
+      case 'd2': return pullAccent;
+      case 'd3': return legsAccent;
+      case 'd4': return homeAccent;
     }
+    // ID dinamici: colore deterministico basato su hash dell'ID
+    // (stesso ID → stesso colore, sempre)
+    int hash = 0;
+    for (final ch in dayId.codeUnits) {
+      hash = (hash * 31 + ch) & 0x7FFFFFFF;
+    }
+    return _dayPalette[hash % _dayPalette.length];
   }
 
   static ThemeData get darkTheme {

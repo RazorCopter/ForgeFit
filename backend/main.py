@@ -22,6 +22,7 @@ from limiter import limiter
 import models
 import schemas
 from database import engine
+from sqlalchemy import text, inspect as sa_inspect
 from routers import measurements, auth as auth_router, plans, workouts, users, catalog, system, ai, admin
 
 
@@ -325,17 +326,20 @@ async def lifespan(_app: FastAPI):
     logger.info("Inizializzazione database in corso...")
     models.Base.metadata.create_all(bind=engine)
     
-    # Esegui migrazione manuale per aggiungere la colonna title se non esiste
+    # Migrazione sicura via SQLAlchemy: aggiunge la colonna 'title' a workout_logs se non esiste.
+    # Usa sa_inspect() per verificare l'esistenza prima di ALTER TABLE, evitando errori.
     try:
-        import sqlite3
-        conn = sqlite3.connect("./data/fitness.db")
-        conn.execute("ALTER TABLE workout_logs ADD COLUMN title VARCHAR")
-        conn.commit()
-        conn.close()
-        logger.info("Colonna 'title' aggiunta a workout_logs con successo (migrazione).")
+        with engine.connect() as conn:
+            inspector = sa_inspect(engine)
+            columns = [col['name'] for col in inspector.get_columns('workout_logs')]
+            if 'title' not in columns:
+                conn.execute(text("ALTER TABLE workout_logs ADD COLUMN title VARCHAR"))
+                conn.commit()
+                logger.info("Migrazione: colonna 'title' aggiunta a workout_logs.")
+            else:
+                logger.debug("Migrazione: colonna 'title' già presente, skip.")
     except Exception as e:
-        # Se la colonna esiste già o c'è un altro errore, ignoriamo
-        pass
+        logger.warning(f"Migrazione colonna 'title': {e}")
 
     seed_catalog()
     if not config_manager.is_admin_configured():

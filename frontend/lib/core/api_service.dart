@@ -171,24 +171,42 @@ class ApiService {
   }
 
   // ------------------------------------------------------------------
+  // HELPER PRIVATO: request autenticata con retry automatico su 401
+  // ------------------------------------------------------------------
+
+  /// Esegue una richiesta HTTP autenticata con gestione automatica del refresh token.
+  ///
+  /// Flusso:
+  /// 1. Legge l'header JWT corrente da [AuthService]
+  /// 2. Esegue la request tramite la factory [requestFn]
+  /// 3. Se 401 → prova il refresh token (via [_checkUnauthorizedAsync])
+  /// 4. Se il refresh riesce → rilancia la request con il nuovo token
+  /// 5. Se il refresh fallisce → logout e lancia [ApiException] 401
+  static Future<dynamic> _authenticatedRequest(
+    Future<http.Response> Function(Map<String, String> headers) requestFn,
+  ) async {
+    var headers = await AuthService.authHeaders();
+    var response = await requestFn(headers);
+    try {
+      await _checkUnauthorizedAsync(response);
+    } on _RetryWithNewToken catch (_) {
+      headers = await AuthService.authHeaders();
+      response = await requestFn(headers);
+      await _checkUnauthorized(response);
+    }
+    return _handleResponse(response);
+  }
+
+  // ------------------------------------------------------------------
   // GET /api/plans/{user_id}/history  [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
   static Future<List<dynamic>> getPlanHistory(int userId) async {
     final url = '${ApiConfig.plans(userId)}/history';
-    Future<http.Response> doRequest(Map<String, String> headers) =>
-        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
-
     try {
-      var headers = await AuthService.authHeaders();
-      var response = await doRequest(headers);
-      try {
-        await _checkUnauthorizedAsync(response);
-      } on _RetryWithNewToken catch (_) {
-        headers = await AuthService.authHeaders();
-        response = await doRequest(headers);
-        await _checkUnauthorized(response);
-      }
-      return _handleResponse(response) as List<dynamic>;
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
+      );
+      return result as List<dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -201,20 +219,11 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<Map<String, dynamic>> getPlans(int userId) async {
     final url = ApiConfig.plans(userId);
-    Future<http.Response> doRequest(Map<String, String> headers) =>
-        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
-
     try {
-      var headers = await AuthService.authHeaders();
-      var response = await doRequest(headers);
-      try {
-        await _checkUnauthorizedAsync(response);
-      } on _RetryWithNewToken catch (r) {
-        headers = await AuthService.authHeaders();
-        response = await doRequest(headers);
-        await _checkUnauthorized(response);
-      }
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
         throw const ApiException(statusCode: 404, message: 'Nessuna scheda trovata per questo utente.');
@@ -276,20 +285,11 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<List<dynamic>> getWorkoutHistory(int userId) async {
     final url = ApiConfig.workoutHistory(userId);
-    Future<http.Response> doRequest(Map<String, String> headers) =>
-        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
-
     try {
-      var headers = await AuthService.authHeaders();
-      var response = await doRequest(headers);
-      try {
-        await _checkUnauthorizedAsync(response);
-      } on _RetryWithNewToken catch (_) {
-        headers = await AuthService.authHeaders();
-        response = await doRequest(headers);
-        await _checkUnauthorized(response);
-      }
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
+      );
+      return result as List<dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -302,20 +302,11 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<List<dynamic>> getBiometricHistory(int userId) async {
     final url = ApiConfig.measurementHistory(userId);
-    Future<http.Response> doRequest(Map<String, String> headers) =>
-        http.get(Uri.parse(url), headers: headers).timeout(_timeout);
-
     try {
-      var headers = await AuthService.authHeaders();
-      var response = await doRequest(headers);
-      try {
-        await _checkUnauthorizedAsync(response);
-      } on _RetryWithNewToken catch (_) {
-        headers = await AuthService.authHeaders();
-        response = await doRequest(headers);
-        await _checkUnauthorized(response);
-      }
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
+      );
+      return result as List<dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {

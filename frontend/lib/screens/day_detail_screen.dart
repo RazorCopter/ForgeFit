@@ -553,7 +553,16 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
     if (uri.host.contains('youtube.com')) {
-      return uri.queryParameters['v'];
+      // Formato standard: youtube.com/watch?v=VIDEO_ID
+      if (uri.queryParameters.containsKey('v')) {
+        return uri.queryParameters['v'];
+      }
+      // Formato Shorts: youtube.com/shorts/VIDEO_ID
+      final segments = uri.pathSegments;
+      final shortsIdx = segments.indexOf('shorts');
+      if (shortsIdx != -1 && shortsIdx + 1 < segments.length) {
+        return segments[shortsIdx + 1];
+      }
     } else if (uri.host.contains('youtu.be')) {
       return uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
     }

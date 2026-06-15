@@ -3,8 +3,7 @@
 # Questo modulo espone il motore (engine), la sessione e la classe base per i modelli.
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 import os
 
 # URL del database SQLite locale.
@@ -27,7 +26,9 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base è la classe padre da cui ereditano tutti i modelli SQLAlchemy.
-Base = declarative_base()
+# Utilizziamo la sintassi moderna (SQLAlchemy 2.0) con classe ereditata.
+class Base(DeclarativeBase):
+    pass
 
 
 # Dependency per FastAPI: fornisce una sessione DB per ogni request e la chiude dopo.
