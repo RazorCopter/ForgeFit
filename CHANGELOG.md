@@ -1,5 +1,14 @@
 # Changelog — ForgeFit
 
+## [1.9.8] — 2026-06-15
+
+### Changed
+- Sostituito il player in linea di YouTube con una thumbnail che apre il video in pop-up per migliorare performance e stabilità.
+- Aggiunti controlli Stop e Pausa/Riprendi nella barra superiore durante gli esercizi e rimosso FloatingActionButton avvia tutto a sessione in corso.
+
+### Fixed
+- Risolto bug UI di sovrapposizione del video YouTube durante lo scroll in day_detail_screen.
+
 ## [1.9.7] — 2026-06-12
 ### Fixed
 - **Mobile Keyboard Autocorrect:** Aggiunto il supporto ai trattini lunghi (En Dash `–` ed Em Dash `—`) generati automaticamente dai correttori delle tastiere iOS e Android, per garantire il corretto split del titolo dei giorni.

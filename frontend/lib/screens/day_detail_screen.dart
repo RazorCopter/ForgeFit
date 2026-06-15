@@ -27,6 +27,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
   DateTime? _workoutStartTime;
   Timer? _globalTimer;
   int _elapsedSeconds = 0;
+  bool _isPaused = false;
   final List<CompletedExercise> _completedExercises = [];
   final Set<int> _completedIndexes = {};
 
@@ -46,10 +47,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         _workoutStartTime = session['startTime'] as DateTime;
       });
       // Riprendi il timer dal tempo salvato
+      _isPaused = false;
       _globalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        setState(() {
-          _elapsedSeconds++;
-        });
+        if (!_isPaused) {
+          setState(() {
+            _elapsedSeconds++;
+          });
+        }
       });
     }
   }
@@ -67,10 +71,13 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     
     if (_workoutStartTime == null) {
       _workoutStartTime = DateTime.now();
+      _isPaused = false;
       _globalTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        setState(() {
-          _elapsedSeconds++;
-        });
+        if (!_isPaused) {
+          setState(() {
+            _elapsedSeconds++;
+          });
+        }
       });
       setState(() {});
     }
@@ -275,6 +282,22 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const Spacer(),
+                        IconButton(
+                          icon: Icon(
+                            _isPaused ? Icons.play_arrow : Icons.pause,
+                            color: Colors.amber,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPaused = !_isPaused;
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.stop, color: Colors.redAccent),
+                          onPressed: _finishWorkout,
+                        ),
                       ],
                     ),
                   ],
@@ -308,51 +331,38 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
             ),
           ],
         ),
-        floatingActionButton: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FloatingActionButton.extended(
-              heroTag: 'guided',
-              onPressed: () async {
-                WakelockPlus.enable();
-                final result = await Navigator.push<Map<String, dynamic>>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => WorkoutSessionScreen(
-                      exercises: widget.day.exercises,
-                      accentColor: AppTheme.getAccentForDay(widget.day.id),
-                      dayTitle: widget.day.title,
+        floatingActionButton: _workoutStartTime == null
+            ? FloatingActionButton.extended(
+                heroTag: 'guided',
+                onPressed: () async {
+                  WakelockPlus.enable();
+                  final result = await Navigator.push<Map<String, dynamic>>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => WorkoutSessionScreen(
+                        exercises: widget.day.exercises,
+                        accentColor: AppTheme.getAccentForDay(widget.day.id),
+                        dayTitle: widget.day.title,
+                      ),
                     ),
-                  ),
-                );
-                if (result != null) {
-                  final exercises = result['completed'] as List<CompletedExercise>;
-                  _completedExercises.addAll(exercises);
-                  // Gli indici corrispondono agli esercizi del giorno nell'ordine originale
-                  for (int i = 0; i < widget.day.exercises.length; i++) {
-                    _completedIndexes.add(i);
+                  );
+                  if (result != null) {
+                    final exercises = result['completed'] as List<CompletedExercise>;
+                    _completedExercises.addAll(exercises);
+                    for (int i = 0; i < widget.day.exercises.length; i++) {
+                      _completedIndexes.add(i);
+                    }
+                    _workoutStartTime ??= DateTime.now();
+                    _elapsedSeconds += (result['duration'] as int?) ?? 0;
+                    await _finishWorkout();
                   }
-                  _workoutStartTime ??= DateTime.now();
-                  _elapsedSeconds += (result['duration'] as int?) ?? 0;
-                  await _finishWorkout();
-                }
-              },
-              backgroundColor: AppTheme.getAccentForDay(widget.day.id),
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('AVVIA TUTTO', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            if (_workoutStartTime != null) ...[
-              const SizedBox(height: 8),
-              FloatingActionButton.small(
-                heroTag: 'stop',
-                onPressed: _finishWorkout,
-                backgroundColor: Colors.redAccent,
-                child: const Icon(Icons.stop, color: Colors.white),
-              ),
-            ],
-          ],
-        ),
+                },
+                backgroundColor: AppTheme.getAccentForDay(widget.day.id),
+                foregroundColor: Colors.black,
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('AVVIA TUTTO', style: TextStyle(fontWeight: FontWeight.bold)),
+              )
+            : null,
       ),
     ),
     );
@@ -530,25 +540,12 @@ class _YoutubeThumbnailWidget extends StatefulWidget {
 }
 
 class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
-  YoutubePlayerController? _controller;
-  bool _isValid = true;
+  String? _videoId;
 
   @override
   void initState() {
     super.initState();
-    final videoId = _getVideoId(widget.videoUrl);
-    if (videoId != null) {
-      _controller = YoutubePlayerController.fromVideoId(
-        videoId: videoId,
-        autoPlay: false,
-        params: const YoutubePlayerParams(
-          showControls: true,
-          showFullscreenButton: true,
-        ),
-      );
-    } else {
-      _isValid = false;
-    }
+    _videoId = _getVideoId(widget.videoUrl);
   }
 
   String? _getVideoId(String url) {
@@ -563,15 +560,17 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
     return null;
   }
 
-  @override
-  void dispose() {
-    _controller?.close();
-    super.dispose();
+  void _playVideo() {
+    if (_videoId == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => _VideoPlayerDialog(videoId: _videoId!),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isValid || _controller == null) {
+    if (_videoId == null) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -587,11 +586,87 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: YoutubePlayer(
-        controller: _controller!,
-        aspectRatio: 16 / 9,
+    return GestureDetector(
+      onTap: _playVideo,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                'https://img.youtube.com/vi/$_videoId/hqdefault.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.black12,
+                  child: const Icon(Icons.video_library, color: Colors.white54, size: 48),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.play_arrow, color: Colors.white, size: 36),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoPlayerDialog extends StatefulWidget {
+  final String videoId;
+  const _VideoPlayerDialog({required this.videoId});
+
+  @override
+  State<_VideoPlayerDialog> createState() => _VideoPlayerDialogState();
+}
+
+class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = YoutubePlayerController.fromVideoId(
+      videoId: widget.videoId,
+      autoPlay: true,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: YoutubePlayer(
+          controller: _controller,
+          aspectRatio: 16 / 9,
+        ),
       ),
     );
   }

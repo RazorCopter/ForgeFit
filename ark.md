@@ -1,7 +1,7 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
-> Documento aggiornato il 2026-06-11. Riferimento: branch `main`.
-> **v1.8.8 — Active Session Persistence**.
+> Documento aggiornato il 2026-06-15. Riferimento: branch `main`.
+> **v1.9.8 — Youtube Player UI and Session Controls**.
 > Introdotto il salvataggio progressivo e automatico della sessione di allenamento in corso per proteggere i progressi da chiusure accidentali e token scaduti.
 
 ---
