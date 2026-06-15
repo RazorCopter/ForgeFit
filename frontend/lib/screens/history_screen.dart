@@ -195,13 +195,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                           child: ExpansionTile(
                             tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            title: Text(
-                              w.title,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.homeAccent,
-                              ),
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    w.title,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.homeAccent,
+                                    ),
+                                  ),
+                                ),
+                                if (!w.isSynced)
+                                  Tooltip(
+                                    message: 'In attesa di sincronizzazione',
+                                    child: const Icon(
+                                      Icons.cloud_off_rounded,
+                                      size: 18,
+                                      color: Colors.orangeAccent,
+                                    ),
+                                  ),
+                              ],
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 8.0),
