@@ -41,17 +41,29 @@ class RestTimerWidget extends StatefulWidget {
   State<RestTimerWidget> createState() => _RestTimerWidgetState();
 }
 
-class _RestTimerWidgetState extends State<RestTimerWidget> {
+class _RestTimerWidgetState extends State<RestTimerWidget>
+    with SingleTickerProviderStateMixin {
   late int _remainingSeconds;
   Timer? _timer;
   bool _countdownFinished = false;
   late bool _soundEnabled;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnim;
+
+  static const int _glowThreshold = 5;
 
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.durationSeconds;
     _soundEnabled = widget.soundEnabled;
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _pulseAnim = Tween<double>(begin: 0.15, end: 0.7).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
     _startTimer();
   }
 
@@ -61,8 +73,14 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
         setState(() {
           _remainingSeconds--;
         });
+        if (_remainingSeconds <= _glowThreshold && _remainingSeconds > 0) {
+          if (!_pulseController.isAnimating) {
+            _pulseController.repeat(reverse: true);
+          }
+        }
       } else {
         _timer?.cancel();
+        _pulseController.stop();
         HapticFeedback.heavyImpact();
         if (_soundEnabled) SoundService.playBeep();
         setState(() {
@@ -75,6 +93,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
   @override
   void dispose() {
     _timer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -124,17 +143,39 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
             ),
 
             // Cerchio countdown
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.accentColor.withOpacity(isZero ? 0.6 : 0.2),
-                    blurRadius: isZero ? 40 : 20,
-                    spreadRadius: isZero ? 10 : 2,
-                  )
-                ],
-              ),
+            AnimatedBuilder(
+              animation: _pulseAnim,
+              builder: (context, child) {
+                final isPulsing = _remainingSeconds <= _glowThreshold && _remainingSeconds > 0;
+                final glowOpacity = isZero
+                    ? 0.6
+                    : isPulsing
+                        ? _pulseAnim.value
+                        : 0.2;
+                final blurRadius = isZero
+                    ? 40.0
+                    : isPulsing
+                        ? 20 + _pulseAnim.value * 30
+                        : 20.0;
+                final spreadRadius = isZero
+                    ? 10.0
+                    : isPulsing
+                        ? 2 + _pulseAnim.value * 10
+                        : 2.0;
+                return Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.accentColor.withOpacity(glowOpacity),
+                        blurRadius: blurRadius,
+                        spreadRadius: spreadRadius,
+                      )
+                    ],
+                  ),
+                  child: child,
+                );
+              },
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -161,20 +202,32 @@ class _RestTimerWidgetState extends State<RestTimerWidget> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        _formattedTime,
-                        style: TextStyle(
-                          fontSize: 52,
-                          fontWeight: FontWeight.w900,
-                          color: isZero ? Colors.white : widget.accentColor,
-                          shadows: [
-                            if (isZero)
-                              Shadow(
-                                color: widget.accentColor,
-                                blurRadius: 10,
-                              )
-                          ],
-                        ),
+                      AnimatedBuilder(
+                        animation: _pulseAnim,
+                        builder: (context, _) {
+                          final isPulsing = _remainingSeconds <= _glowThreshold && _remainingSeconds > 0;
+                          return Text(
+                            _formattedTime,
+                            style: TextStyle(
+                              fontSize: 52,
+                              fontWeight: FontWeight.w900,
+                              color: isZero
+                                  ? Colors.white
+                                  : isPulsing
+                                      ? Color.lerp(widget.accentColor, Colors.red, _pulseAnim.value * 0.6)
+                                      : widget.accentColor,
+                              shadows: [
+                                if (isZero)
+                                  Shadow(color: widget.accentColor, blurRadius: 10)
+                                else if (isPulsing)
+                                  Shadow(
+                                    color: widget.accentColor.withOpacity(_pulseAnim.value),
+                                    blurRadius: 12 + _pulseAnim.value * 16,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

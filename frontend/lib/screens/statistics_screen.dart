@@ -322,6 +322,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
                       borderData: FlBorderData(show: false),
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipItems: (touchedSpots) => touchedSpots.map((s) {
+                            final idx = s.x.toInt();
+                            final label = idx >= 0 && idx < volumeLabels.length ? volumeLabels[idx] : '';
+                            return LineTooltipItem(
+                              '${s.y.toInt()} kg\n$label',
+                              TextStyle(color: AppTheme.vividPurple, fontSize: 11, fontWeight: FontWeight.bold),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                       lineBarsData: [
                         LineChartBarData(
                           spots: _getVolumeSpots(workouts),
@@ -389,6 +401,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                   ),
                                   borderData: FlBorderData(show: false),
+                                  lineTouchData: LineTouchData(
+                                    touchTooltipData: LineTouchTooltipData(
+                                      getTooltipItems: (touchedSpots) => touchedSpots.map((s) => LineTooltipItem(
+                                        '1RM est.\n${s.y.toStringAsFixed(1)} kg',
+                                        const TextStyle(color: AppTheme.cyan, fontSize: 11, fontWeight: FontWeight.bold),
+                                      )).toList(),
+                                    ),
+                                  ),
                                   lineBarsData: [
                                     LineChartBarData(
                                       spots: spots,
@@ -497,6 +517,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                   ),
                                   borderData: FlBorderData(show: false),
+                                  lineTouchData: LineTouchData(
+                                    touchTooltipData: LineTouchTooltipData(
+                                      getTooltipItems: (touchedSpots) => touchedSpots.map((s) => LineTooltipItem(
+                                        '${s.y.toStringAsFixed(1)} kg',
+                                        const TextStyle(color: AppTheme.legsAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                                      )).toList(),
+                                    ),
+                                  ),
                                   lineBarsData: [
                                     LineChartBarData(
                                       spots: spots,
