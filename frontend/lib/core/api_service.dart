@@ -242,8 +242,6 @@ class ApiService {
     final userId = await AuthService.getUserId();
     if (userId == null) throw Exception("Utente non autenticato o ID mancante.");
 
-    // Assume workout is an instance of CompletedWorkout. We serialize it to JSON.
-    // Convert to the exact payload expected by backend.
     final payload = {
       'user_id': userId,
       'title': workout.title,
@@ -251,27 +249,15 @@ class ApiService {
       'exercises': workout.exercises.map((e) => e.toJson()).toList(),
     };
 
-    final headers = await AuthService.authHeaders();
-
     if (kDebugMode) debugPrint('🚀 [ApiService] POST ${ApiConfig.saveWorkout}');
 
     try {
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.saveWorkout),
-            headers: headers,
-            body: jsonEncode(payload),
-          )
-          .timeout(_timeout);
-
-      if (kDebugMode) debugPrint('📥 [ApiService] saveWorkout Status: ${response.statusCode}');
-      if (kDebugMode && response.statusCode >= 300) {
-        debugPrint('❌ [ApiService] Error Body: ${response.body}');
-      }
-
-      await _checkUnauthorized(response);
-      final jsonResponse = _handleResponse(response);
-      return jsonResponse['id'].toString();
+      final result = await _authenticatedRequest(
+        (h) => http
+            .post(Uri.parse(ApiConfig.saveWorkout), headers: h, body: jsonEncode(payload))
+            .timeout(_timeout),
+      );
+      return result['id'].toString();
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -324,20 +310,11 @@ class ApiService {
     required String newPassword,
   }) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .put(
-            Uri.parse(ApiConfig.changePassword),
-            headers: headers,
-            body: jsonEncode({
-              'vecchia_password': oldPassword,
-              'nuova_password': newPassword,
-            }),
-          )
-          .timeout(_timeout);
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final body = jsonEncode({'vecchia_password': oldPassword, 'nuova_password': newPassword});
+      final result = await _authenticatedRequest(
+        (h) => http.put(Uri.parse(ApiConfig.changePassword), headers: h, body: body).timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -352,17 +329,10 @@ class ApiService {
   /// Invia le misurazioni fisiologiche al backend per il tracking.
   static Future<Map<String, dynamic>> postMeasurements(Map<String, dynamic> data) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.measurements),
-            headers: headers,
-            body: jsonEncode(data),
-          )
-          .timeout(_timeout);
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.measurements), headers: h, body: jsonEncode(data)).timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -377,13 +347,10 @@ class ApiService {
   /// Recupera i dati anagrafici e fisiologici dell'utente loggato.
   static Future<Map<String, dynamic>> getMe() async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .get(Uri.parse(ApiConfig.userMe), headers: headers)
-          .timeout(_timeout);
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(ApiConfig.userMe), headers: h).timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -401,20 +368,12 @@ class ApiService {
     String? ptNotes,
   }) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.generateAIPlan),
-            headers: headers,
-            body: jsonEncode({
-              'experience_level': experienceLevel,
-              'pt_notes': ptNotes ?? '',
-            }),
-          )
-          .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final body = jsonEncode({'experience_level': experienceLevel, 'pt_notes': ptNotes ?? ''});
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.generateAIPlan), headers: h, body: body)
+            .timeout(const Duration(seconds: 45)),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -429,16 +388,11 @@ class ApiService {
   /// Richiede al backend di generare un report di analisi performance tramite AI.
   static Future<Map<String, dynamic>> generateAnalysis() async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.generateAnalysis),
-            headers: headers,
-          )
-          .timeout(const Duration(seconds: 45)); // Timeout lungo per AI
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.generateAnalysis), headers: h)
+            .timeout(const Duration(seconds: 45)),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -454,17 +408,11 @@ class ApiService {
   /// Restituisce `{ "valid": true, "expires_at": "ISO8601" }` se corretto.
   static Future<Map<String, dynamic>> unlockAI({required String code}) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.unlockAI),
-            headers: headers,
-            body: jsonEncode({'code': code}),
-          )
-          .timeout(_timeout);
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.unlockAI), headers: h, body: jsonEncode({'code': code}))
+            .timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -479,12 +427,10 @@ class ApiService {
   /// Recupera i suggerimenti di progressive overload per l'utente.
   static Future<Map<String, dynamic>> getOverloadSuggestions(int userId) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: headers)
-          .timeout(_timeout);
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final result = await _authenticatedRequest(
+        (h) => http.get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: h).timeout(_timeout),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -502,20 +448,12 @@ class ApiService {
     Map<String, dynamic>? contextData,
   }) async {
     try {
-      final headers = await AuthService.authHeaders();
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.aiAnalyze),
-            headers: headers,
-            body: jsonEncode({
-              'prompt_text': prompt,
-              'context_data': contextData ?? {},
-            }),
-          )
-          .timeout(const Duration(seconds: 45));
-
-      await _checkUnauthorized(response);
-      return _handleResponse(response);
+      final body = jsonEncode({'prompt_text': prompt, 'context_data': contextData ?? {}});
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.aiAnalyze), headers: h, body: body)
+            .timeout(const Duration(seconds: 45)),
+      );
+      return result as Map<String, dynamic>;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -607,20 +545,10 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<void> deleteWorkout(int logId) async {
     final url = ApiConfig.deleteWorkout(logId);
-    Future<http.Response> doRequest(Map<String, String> headers) =>
-        http.delete(Uri.parse(url), headers: headers).timeout(_timeout);
-
     try {
-      var headers = await AuthService.authHeaders();
-      var response = await doRequest(headers);
-      try {
-        await _checkUnauthorizedAsync(response);
-      } on _RetryWithNewToken catch (_) {
-        headers = await AuthService.authHeaders();
-        response = await doRequest(headers);
-        await _checkUnauthorized(response);
-      }
-      _handleResponse(response);
+      await _authenticatedRequest(
+        (h) => http.delete(Uri.parse(url), headers: h).timeout(_timeout),
+      );
     } on ApiException {
       rethrow;
     } catch (e) {

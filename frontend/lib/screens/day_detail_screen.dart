@@ -459,23 +459,9 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                               fontSize: 14,
                             ),
                           ),
-                          if (widget.exercise.gruppoMuscolare != null) ...[
+                          if (widget.exercise.gruppoMuscolare case final gruppo?) ...[
                             const SizedBox(height: 6),
-                            Builder(builder: (context) {
-                              final chipColor = AppTheme.getMuscleGroupColor(widget.exercise.gruppoMuscolare!);
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: chipColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: chipColor.withValues(alpha: 0.5)),
-                                ),
-                                child: Text(
-                                  widget.exercise.gruppoMuscolare!,
-                                  style: TextStyle(color: chipColor, fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              );
-                            }),
+                            _MuscleChip(group: gruppo),
                           ],
                         ],
                       ),
@@ -543,6 +529,29 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Chip colorato per il gruppo muscolare — stateless, dipende solo dal valore del dato
+class _MuscleChip extends StatelessWidget {
+  final String group;
+  const _MuscleChip({required this.group});
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = AppTheme.getMuscleGroupColor(group);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: chipColor.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        group,
+        style: TextStyle(color: chipColor, fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }

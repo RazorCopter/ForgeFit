@@ -470,6 +470,9 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 }
 
+String _formatDate(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sezione Traguardi (achievement grid) per SetupScreen
 // ─────────────────────────────────────────────────────────────────────────────
@@ -554,7 +557,7 @@ class _BadgeCard extends StatelessWidget {
           if (isUnlocked && unlockedAt != null) ...[
             const SizedBox(height: 4),
             Text(
-              '${unlockedAt!.day.toString().padLeft(2, '0')}/${unlockedAt!.month.toString().padLeft(2, '0')}/${unlockedAt!.year}',
+              _formatDate(unlockedAt!),
               style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],

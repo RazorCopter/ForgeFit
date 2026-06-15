@@ -134,52 +134,50 @@ class AchievementService {
       }
     }
 
-    final totalWorkouts = workouts.length;
+    // Single pass (sorted by date) for volume, duration, and PR counting.
+    // Sorting is only done once; PR counting early-exits at 10 when already unlocked.
+    final sorted = List<CompletedWorkout>.from(workouts)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
     double totalVolume = 0;
     int totalSeconds = 0;
-    for (final w in workouts) {
+    final bests = <String, double>{};
+    int prs = 0;
+    final prAlreadyUnlocked = unlocked.containsKey('pr_hunter');
+
+    for (final w in sorted) {
       totalSeconds += w.durationSeconds;
       for (final ex in w.exercises) {
         for (final s in ex.sets) {
           totalVolume += s.weight * s.reps;
         }
+        // PR counting — skip once threshold reached and achievement already persisted
+        if (!prAlreadyUnlocked && prs < 10) {
+          final prev = bests[ex.name] ?? 0;
+          double maxWeight = prev;
+          for (final s in ex.sets) {
+            if (s.weight > maxWeight) maxWeight = s.weight;
+          }
+          if (maxWeight > prev) {
+            if (prev > 0) prs++; // il primo record non conta come PR battuto
+            bests[ex.name] = maxWeight;
+          }
+        }
       }
     }
 
-    check('first_workout', totalWorkouts >= 1);
+    check('first_workout', workouts.isNotEmpty);
     check('streak_7', currentStreak >= 7);
     check('streak_30', currentStreak >= 30);
-    check('total_50', totalWorkouts >= 50);
+    check('total_50', workouts.length >= 50);
     check('volume_100k', totalVolume >= 100000);
     check('biometric', hasBiometric);
-    check('pr_hunter', _countPRs(workouts) >= 10);
+    check('pr_hunter', prAlreadyUnlocked || prs >= 10);
     check('marathon', totalSeconds >= 50 * 3600);
 
     if (newlyUnlocked.isNotEmpty) {
       await _saveUnlocked(unlocked);
     }
     return newlyUnlocked;
-  }
-
-  /// Conta quante volte un nuovo record personale viene battuto su qualsiasi esercizio.
-  static int _countPRs(List<CompletedWorkout> workouts) {
-    final sorted = List<CompletedWorkout>.from(workouts)
-      ..sort((a, b) => a.date.compareTo(b.date));
-    final bests = <String, double>{};
-    int prs = 0;
-    for (final w in sorted) {
-      for (final ex in w.exercises) {
-        final prev = bests[ex.name] ?? 0;
-        double maxWeight = prev;
-        for (final s in ex.sets) {
-          if (s.weight > maxWeight) maxWeight = s.weight;
-        }
-        if (maxWeight > prev) {
-          if (prev > 0) prs++; // il primo record non conta come PR battuto
-          bests[ex.name] = maxWeight;
-        }
-      }
-    }
-    return prs;
   }
 }

@@ -4,15 +4,21 @@ import '../models/completed_workout.dart';
 class HealthService {
   static final Health _health = Health();
 
+  // Cached per-session permission result — avoids a platform round-trip on every write.
+  // Reset to null on hot-restart only; null means "not yet checked this session".
+  static bool? _permissionsGranted;
+
   static const _writeTypes = [
     HealthDataType.WORKOUT,
     HealthDataType.ACTIVE_ENERGY_BURNED,
   ];
 
   static Future<bool> requestPermissions() async {
+    if (_permissionsGranted != null) return _permissionsGranted!;
     try {
       final permissions = _writeTypes.map((_) => HealthDataAccess.WRITE).toList();
-      return await _health.requestAuthorization(_writeTypes, permissions: permissions);
+      _permissionsGranted = await _health.requestAuthorization(_writeTypes, permissions: permissions);
+      return _permissionsGranted!;
     } catch (_) {
       return false;
     }

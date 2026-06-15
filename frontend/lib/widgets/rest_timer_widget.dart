@@ -142,71 +142,52 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
               ),
             ),
 
-            // Cerchio countdown
+            // Cerchio countdown — single AnimatedBuilder drives both glow and text color
             AnimatedBuilder(
               animation: _pulseAnim,
-              builder: (context, child) {
+              builder: (context, _) {
                 final isPulsing = _remainingSeconds <= _glowThreshold && _remainingSeconds > 0;
-                final glowOpacity = isZero
-                    ? 0.6
-                    : isPulsing
-                        ? _pulseAnim.value
-                        : 0.2;
-                final blurRadius = isZero
-                    ? 40.0
-                    : isPulsing
-                        ? 20 + _pulseAnim.value * 30
-                        : 20.0;
-                final spreadRadius = isZero
-                    ? 10.0
-                    : isPulsing
-                        ? 2 + _pulseAnim.value * 10
-                        : 2.0;
+                final glowOpacity = isZero ? 0.6 : isPulsing ? _pulseAnim.value : 0.2;
+                final blurRadius = isZero ? 40.0 : isPulsing ? 20 + _pulseAnim.value * 30 : 20.0;
+                final spreadRadius = isZero ? 10.0 : isPulsing ? 2 + _pulseAnim.value * 10 : 2.0;
                 return Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: widget.accentColor.withOpacity(glowOpacity),
+                        color: widget.accentColor.withValues(alpha: glowOpacity),
                         blurRadius: blurRadius,
                         spreadRadius: spreadRadius,
                       )
                     ],
                   ),
-                  child: child,
-                );
-              },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 220,
-                    height: 220,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 12,
-                      backgroundColor: widget.accentColor.withOpacity(0.1),
-                      color: widget.accentColor,
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Text(
-                        'RECUPERO',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                          color: AppTheme.textSecondary,
+                      SizedBox(
+                        width: 220,
+                        height: 220,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 12,
+                          backgroundColor: widget.accentColor.withValues(alpha: 0.1),
+                          color: widget.accentColor,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      AnimatedBuilder(
-                        animation: _pulseAnim,
-                        builder: (context, _) {
-                          final isPulsing = _remainingSeconds <= _glowThreshold && _remainingSeconds > 0;
-                          return Text(
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'RECUPERO',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
                             _formattedTime,
                             style: TextStyle(
                               fontSize: 52,
@@ -221,18 +202,18 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
                                   Shadow(color: widget.accentColor, blurRadius: 10)
                                 else if (isPulsing)
                                   Shadow(
-                                    color: widget.accentColor.withOpacity(_pulseAnim.value),
+                                    color: widget.accentColor.withValues(alpha: _pulseAnim.value),
                                     blurRadius: 12 + _pulseAnim.value * 16,
                                   ),
                               ],
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ).animate(target: isZero ? 1 : 0).shimmer(duration: 500.ms, color: Colors.white).scaleXY(end: 1.05, duration: 200.ms),
 
             const SizedBox(height: 32),
