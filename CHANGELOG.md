@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.0.3] — 2026-06-16
+
+### Added
+- **Gamification Popups**: Aggiunta l'animazione dei confetti personalizzati in base al colore del traguardo direttamente nel popup di sblocco. Sostituita la vecchia icona MDI nel popup con le nuove illustrazioni neon.
+
 ## [2.0.2] — 2026-06-16
 
 ### Added

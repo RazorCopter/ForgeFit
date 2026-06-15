@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-16. Riferimento: branch `main`.
-> **v2.0.2 — Gamification Assets & Tooltips**.
-> Sostituiti i gagliardetti procedurali con 8 asset 2D custom in stile neon e aggiunto tooltip interattivo.
+> **v2.0.3 — Popup Gamification UI**.
+> Migliorato il popup di sblocco traguardi integrando l'animazione dei confetti in-popup e visualizzando gli asset neon 2D al posto delle vecchie icone.
 
 ---
 
