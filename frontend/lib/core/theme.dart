@@ -34,6 +34,20 @@ class AppTheme {
     Color(0xFF7C4DFF), // Deep Purple
   ];
 
+  static Color getMuscleGroupColor(String group) {
+    switch (group.toLowerCase()) {
+      case 'petto': return pushAccent;
+      case 'schiena': return pullAccent;
+      case 'gambe':
+      case 'glutei': return legsAccent;
+      case 'spalle': return Color(0xFFFF6D00);
+      case 'braccia': return Color(0xFFFF4081);
+      case 'addome':
+      case 'core': return Color(0xFF00E676);
+      default: return vividPurple;
+    }
+  }
+
   static Color getAccentForDay(String dayId) {
     // Compatibilità legacy: mappatura esplicita per gli ID fissi d1–d4
     switch (dayId) {

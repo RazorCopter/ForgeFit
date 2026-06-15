@@ -18,6 +18,7 @@ import '../data/database_service.dart';
 import '../services/plan_service.dart';
 import 'day_detail_screen.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:lottie/lottie.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -630,13 +631,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icona cloud animata
-            Icon(
-              Icons.cloud_download_outlined,
-              size: 72,
-              color: AppTheme.cyan.withOpacity(0.7),
-            ).animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(end: 1.1, duration: 1500.ms, curve: Curves.easeInOut),
+            Lottie.asset('assets/lottie/empty_plan.json', width: 160, repeat: true),
 
             const SizedBox(height: 24),
 

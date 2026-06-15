@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ForgeFit legge i tuoi dati di allenamento da Apple Health per sincronizzare le sessioni.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ForgeFit scrive i tuoi allenamenti su Apple Health al termine di ogni sessione.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

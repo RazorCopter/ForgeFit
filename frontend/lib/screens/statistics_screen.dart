@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart';
 import '../core/theme.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
@@ -241,8 +242,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bar_chart_rounded, size: 72, color: AppTheme.textSecondary),
-                    const SizedBox(height: 16),
+                    Lottie.asset('assets/lottie/empty_workout.json', width: 160, repeat: true),
+                    const SizedBox(height: 8),
                     const Text(
                       'Nessun allenamento registrato',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),

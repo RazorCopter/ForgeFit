@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart';
 import '../core/theme.dart';
 import '../data/database_service.dart';
 import '../models/biometric_record.dart';
@@ -68,11 +69,23 @@ class _BiometricTrendsScreenState extends State<BiometricTrendsScreen> {
           builder: (context, box, _) {
             final records = _sortedRecords();
             return records.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Nessuna misurazione registrata.\nAggiungi le tue misure dalla schermata Analisi.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset('assets/lottie/empty_biometric.json', width: 160, repeat: true),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Nessuna misurazione registrata.',
+                          style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Aggiungi le tue misure dalla schermata Analisi.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.separated(

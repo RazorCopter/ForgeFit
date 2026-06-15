@@ -3,7 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:confetti/confetti.dart';
 import '../core/theme.dart';
+import '../core/health_service.dart';
+import '../core/achievement_service.dart';
+import '../data/database_service.dart';
 import '../models/completed_workout.dart';
+import '../widgets/achievement_popup.dart';
 
 class WorkoutSummaryScreen extends StatefulWidget {
   final CompletedWorkout workout;
@@ -22,6 +26,28 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _confettiController.play();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      HealthService.writeWorkout(widget.workout);
+      await _checkAchievements();
+    });
+  }
+
+  Future<void> _checkAchievements() async {
+    if (!mounted) return;
+    final workouts = DatabaseService.getAllWorkouts();
+    final streak = DatabaseService.getCurrentStreak();
+    final hasBiometric = DatabaseService.biometricBoxListenable().value.isNotEmpty;
+    final newAchievements = await AchievementService.checkAll(
+      workouts,
+      hasBiometric: hasBiometric,
+      currentStreak: streak,
+    );
+    if (mounted && newAchievements.isNotEmpty) {
+      await Future.delayed(const Duration(seconds: 3));
+      if (mounted) {
+        await AchievementPopup.showSequence(context, newAchievements);
+      }
+    }
   }
 
   @override

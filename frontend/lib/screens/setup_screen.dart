@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../core/app_version.dart';
 import '../core/api_service.dart';
 import '../core/auth_service.dart';
+import '../core/achievement_service.dart';
 import '../data/database_service.dart';
 import '../core/sync_service.dart';
 import '../services/plan_service.dart';
@@ -381,6 +382,8 @@ class _SetupScreenState extends State<SetupScreen> {
             ).animate().fade(delay: 450.ms).slideX(),
 
             const SizedBox(height: 32),
+            _AchievementsSection().animate().fade(delay: 500.ms).slideY(),
+            const SizedBox(height: 32),
             Center(
               child: Column(
                 children: [
@@ -418,6 +421,7 @@ class _SetupScreenState extends State<SetupScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    // (kept for existing cards — see _AchievementsSection below for the new section)
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -461,6 +465,100 @@ class _SetupScreenState extends State<SetupScreen> {
             const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sezione Traguardi (achievement grid) per SetupScreen
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AchievementsSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final unlocked = AchievementService.getUnlocked();
+    final unlockedIds = {for (final u in unlocked) u.achievement.id: u.unlockedAt};
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Traguardi',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'I tuoi achievement sbloccati',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+        ),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.1,
+          ),
+          itemCount: AchievementService.all.length,
+          itemBuilder: (context, i) {
+            final a = AchievementService.all[i];
+            final isUnlocked = unlockedIds.containsKey(a.id);
+            final unlockedAt = unlockedIds[a.id];
+            return _BadgeCard(achievement: a, isUnlocked: isUnlocked, unlockedAt: unlockedAt);
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${unlocked.length} / ${AchievementService.all.length} sbloccati',
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _BadgeCard extends StatelessWidget {
+  final Achievement achievement;
+  final bool isUnlocked;
+  final DateTime? unlockedAt;
+
+  const _BadgeCard({required this.achievement, required this.isUnlocked, this.unlockedAt});
+
+  @override
+  Widget build(BuildContext context) {
+    final a = achievement;
+    final color = isUnlocked ? a.color : AppTheme.textSecondary;
+    return AppTheme.glassContainer(
+      padding: const EdgeInsets.all(16),
+      borderColor: isUnlocked ? a.color.withValues(alpha: 0.5) : AppTheme.textSecondary.withValues(alpha: 0.15),
+      opacity: isUnlocked ? 0.12 : 0.04,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(a.icon, size: 36, color: isUnlocked ? color : color.withValues(alpha: 0.3)),
+          const SizedBox(height: 8),
+          Text(
+            a.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isUnlocked ? Colors.white : AppTheme.textSecondary.withValues(alpha: 0.4),
+            ),
+          ),
+          if (isUnlocked && unlockedAt != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${unlockedAt!.day.toString().padLeft(2, '0')}/${unlockedAt!.month.toString().padLeft(2, '0')}/${unlockedAt!.year}',
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../models/completed_workout.dart';
@@ -160,10 +161,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Expanded(
             child: workoutsForSelectedDay.isEmpty
                 ? Center(
-                    child: const Text(
-                      'Nessun allenamento in questo giorno',
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ).animate().fade(delay: 200.ms),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset('assets/lottie/empty_workout.json', width: 130, repeat: true),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Nessun allenamento in questo giorno',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ).animate().fade(delay: 200.ms),
+                      ],
+                    ),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),

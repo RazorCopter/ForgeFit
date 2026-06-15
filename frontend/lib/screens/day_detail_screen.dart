@@ -459,6 +459,24 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                               fontSize: 14,
                             ),
                           ),
+                          if (widget.exercise.gruppoMuscolare != null) ...[
+                            const SizedBox(height: 6),
+                            Builder(builder: (context) {
+                              final chipColor = AppTheme.getMuscleGroupColor(widget.exercise.gruppoMuscolare!);
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: chipColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: chipColor.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  widget.exercise.gruppoMuscolare!,
+                                  style: TextStyle(color: chipColor, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              );
+                            }),
+                          ],
                         ],
                       ),
                     ),
