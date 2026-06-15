@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-16. Riferimento: branch `main`.
-> **v2.0.0 — Wearable Health, Gamification, and UX Enhancements**.
-> Introdotto sistema di traguardi (Achievements), salvataggio su Google Fit / Apple Health, e major upgrade visivo con animazioni Lottie, statistiche interattive e offline-first cloud badge.
+> **v2.0.1 — Custom Achievements Tab**.
+> Spostata la sezione Traguardi in una tab dedicata nella BottomNav e implementati gagliardetti personalizzati procedurali.
 
 ---
 

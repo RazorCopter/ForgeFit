@@ -1,5 +1,14 @@
 # Changelog — ForgeFit
 
+## [2.0.1] — 2026-06-16
+
+### Added
+- **UI Traguardi Dedicated Tab**: Aggiunta una nuova tab dedicata "Traguardi" nella Bottom Navigation Bar (tra AI e Setup).
+- **Badge Gagliardetto Custom**: Creato un `CustomPainter` per disegnare proceduralmente i badge degli achievement a forma di gagliardetto, abbandonando le icone MDI standard. I badge sbloccati presentano un effetto glow neon e un gradiente vivido.
+
+### Changed
+- Rimosso il blocco dei Traguardi dalla schermata di Setup per una UI più pulita.
+
 ## [2.0.0] — 2026-06-16
 
 ### Added

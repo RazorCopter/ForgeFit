@@ -5,6 +5,7 @@ import 'home_screen.dart';
 import 'history_screen.dart';
 import 'statistics_screen.dart';
 import 'analysis_screen.dart';
+import 'achievements_screen.dart';
 import 'setup_screen.dart';
 import '../core/theme.dart';
 import '../data/database_service.dart';
@@ -49,6 +50,7 @@ class _MainScreenState extends State<MainScreen> {
     const HistoryScreen(),
     const StatisticsScreen(),
     const AnalysisScreen(),
+    const AchievementsScreen(),
     const SetupScreen(),
   ];
 
@@ -109,6 +111,7 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
     (icon: Icons.calendar_month_rounded, label: 'Storico'),
     (icon: Icons.bar_chart_rounded, label: 'Stats'),
     (icon: Icons.auto_awesome_rounded, label: 'AI'),
+    (icon: Icons.emoji_events_rounded, label: 'Traguardi'),
     (icon: Icons.settings_rounded, label: 'Setup'),
   ];
 
