@@ -98,7 +98,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     // Benvenuto vocale del coach a inizio esercizio
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final setsCount = widget.exercise.sets.length;
-      VoiceService.speak("Cominciamo ${widget.exercise.name}. Esegui $setsCount serie.");
+      VoiceService.speak("Cominciamo! ${widget.exercise.name}. Esegui $setsCount serie.");
     });
   }
 
@@ -180,7 +180,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     } else {
       final restSec = widget.exercise.sets[si].targetRestSeconds;
       if (!isNewPR) {
-        VoiceService.speak("Ottimo! Ora riposati per $restSec secondi.");
+        VoiceService.speak("Ottimo! Ora ripòsati per $restSec secondi.");
       } else {
         Future.delayed(const Duration(milliseconds: 2500), () {
           if (mounted && _isResting) {
