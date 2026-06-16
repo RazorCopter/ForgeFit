@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.0.4] — 2026-06-16
+
+### Changed
+- **Home Screen UI Redesign**: Riorganizzato l'header "La tua Settimana". Spostati il selettore del piano (Storico/Attuale) e l'indicatore di sincronizzazione (Sinc: Wi-Fi) all'interno di una singola dashboard control bar unificata con effetto glassmorphism per risolvere i problemi di overflow e migliorare l'estetica.
+
 ## [2.0.3] — 2026-06-16
 
 ### Added

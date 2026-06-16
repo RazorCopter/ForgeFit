@@ -342,57 +342,110 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 32),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    'La tua Settimana',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: ConnectivityService.isOnline,
-                    builder: (context, online, _) {
-                      return ValueListenableBuilder(
-                        valueListenable: DatabaseService.workoutBoxListenable(),
-                        builder: (context, _, __) {
-                          final pending = DatabaseService.getUnsyncedWorkouts().length;
-                          final Color statusColor;
-                          final IconData statusIcon;
-                          final String statusTooltip;
-                          final bool canForceSync = online && pending > 0;
+              const Text(
+                'La tua Settimana',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
+              
+              const SizedBox(height: 16),
 
-                          if (!online) {
-                            statusColor = Colors.redAccent;
-                            statusIcon = Icons.wifi_off_rounded;
-                            statusTooltip = 'Offline';
-                          } else if (pending > 0) {
-                            statusColor = Colors.orange;
-                            statusIcon = Icons.cloud_upload_rounded;
-                            statusTooltip = '$pending allenament${pending == 1 ? 'o' : 'i'} da sincronizzare — tocca per sync';
-                          } else {
-                            statusColor = Colors.greenAccent;
-                            statusIcon = Icons.wifi_rounded;
-                            statusTooltip = 'Online — tutto sincronizzato';
-                          }
-
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Sinc: ${_formatLastSync()}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.textSecondary,
+              // Dashboard Controls (Plan Selector & Sync Status)
+              AppTheme.glassContainer(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                borderColor: AppTheme.cyan.withOpacity(0.3),
+                child: Row(
+                  children: [
+                    // LEFT: Plan Selector
+                    Expanded(
+                      flex: 3,
+                      child: _planHistory.isNotEmpty
+                          ? DropdownButtonHideUnderline(
+                              child: DropdownButton<int?>(
+                                isExpanded: true,
+                                value: _selectedHistoryId,
+                                icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.cyan, size: 20),
+                                dropdownColor: AppTheme.surfaceVariant,
+                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                items: [
+                                  const DropdownMenuItem<int?>(
+                                    value: null,
+                                    child: Text('Piano Attuale'),
+                                  ),
+                                  ..._planHistory.map((hist) {
+                                    final ver = hist['version'];
+                                    final rawDate = hist['created_at'];
+                                    final label = hist['label'];
+                                    String dateStr = '';
+                                    if (rawDate != null) {
+                                      try {
+                                        final d = DateTime.parse(rawDate).toLocal();
+                                        dateStr = '${d.day}/${d.month}/${d.year}';
+                                      } catch (_) {}
+                                    }
+                                    final text = 'v$ver - $dateStr${label != null ? ' ($label)' : ''}';
+                                    return DropdownMenuItem<int?>(
+                                      value: hist['id'] as int,
+                                      child: Text(text, overflow: TextOverflow.ellipsis),
+                                    );
+                                  }),
+                                ],
+                                onChanged: _selectHistory,
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                const Icon(Icons.history, color: AppTheme.cyan, size: 20),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Piano Attuale',
+                                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                                 ),
-                              ).animate().fade(delay: 300.ms),
-                              const SizedBox(width: 8),
-                              Tooltip(
+                              ],
+                            ),
+                    ),
+
+                    // DIVIDER
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: AppTheme.cyan.withOpacity(0.3),
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+
+                    // RIGHT: Sync Status
+                    Expanded(
+                      flex: 2,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: ConnectivityService.isOnline,
+                        builder: (context, online, _) {
+                          return ValueListenableBuilder(
+                            valueListenable: DatabaseService.workoutBoxListenable(),
+                            builder: (context, _, __) {
+                              final pending = DatabaseService.getUnsyncedWorkouts().length;
+                              final Color statusColor;
+                              final IconData statusIcon;
+                              final String statusTooltip;
+                              final bool canForceSync = online && pending > 0;
+
+                              if (!online) {
+                                statusColor = Colors.redAccent;
+                                statusIcon = Icons.wifi_off_rounded;
+                                statusTooltip = 'Offline';
+                              } else if (pending > 0) {
+                                statusColor = Colors.orange;
+                                statusIcon = Icons.cloud_upload_rounded;
+                                statusTooltip = '$pending da sync';
+                              } else {
+                                statusColor = Colors.greenAccent;
+                                statusIcon = Icons.wifi_rounded;
+                                statusTooltip = 'Online';
+                              }
+
+                              return Tooltip(
                                 message: statusTooltip,
                                 child: GestureDetector(
                                   onTap: canForceSync
@@ -409,78 +462,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                           }
                                         }
                                       : null,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 400),
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: statusColor.withOpacity(0.15),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: statusColor.withOpacity(0.5), width: 1.5),
-                                      boxShadow: [
-                                        BoxShadow(color: statusColor.withOpacity(0.3), blurRadius: 8),
-                                      ],
-                                    ),
-                                    child: Icon(statusIcon, color: statusColor, size: 16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          _formatLastSync(),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textSecondary,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ).animate().fade(delay: 300.ms),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      AnimatedContainer(
+                                        duration: const Duration(milliseconds: 400),
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: statusColor.withOpacity(0.15),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: statusColor.withOpacity(0.5), width: 1.5),
+                                          boxShadow: [
+                                            BoxShadow(color: statusColor.withOpacity(0.3), blurRadius: 8),
+                                          ],
+                                        ),
+                                        child: Icon(statusIcon, color: statusColor, size: 14),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-              
-              // Dropdown Storico Schede
-              if (_planHistory.isNotEmpty)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceVariant.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.cyan.withOpacity(0.3)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int?>(
-                        value: _selectedHistoryId,
-                        icon: const Icon(Icons.history, color: AppTheme.cyan, size: 20),
-                        dropdownColor: AppTheme.surfaceVariant,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        items: [
-                          const DropdownMenuItem<int?>(
-                            value: null,
-                            child: Text('Corrente / Attiva'),
-                          ),
-                          ..._planHistory.map((hist) {
-                            final ver = hist['version'];
-                            final rawDate = hist['created_at'];
-                            final label = hist['label'];
-                            String dateStr = '';
-                            if (rawDate != null) {
-                              try {
-                                final d = DateTime.parse(rawDate).toLocal();
-                                dateStr = '${d.day}/${d.month}/${d.year}';
-                              } catch (_) {}
-                            }
-                            final text = 'v$ver - $dateStr${label != null ? ' ($label)' : ''}';
-                            return DropdownMenuItem<int?>(
-                              value: hist['id'] as int,
-                              child: Text(text),
-                            );
-                          }),
-                        ],
-                        onChanged: _selectHistory,
                       ),
                     ),
-                  ).animate().fade(duration: 400.ms),
+                  ],
                 ),
-
+              ).animate().fade(duration: 400.ms),
+              
               const SizedBox(height: 16),
 
               // ValueListenableBuilder che reagisce agli aggiornamenti dei workout (es. fine sync in background)

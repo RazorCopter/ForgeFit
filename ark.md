@@ -1,8 +1,8 @@
 # ForgeFit — Analisi Tecnica e Funzionale
 
 > Documento aggiornato il 2026-06-16. Riferimento: branch `main`.
-> **v2.0.3 — Popup Gamification UI**.
-> Migliorato il popup di sblocco traguardi integrando l'animazione dei confetti in-popup e visualizzando gli asset neon 2D al posto delle vecchie icone.
+> **v2.0.4 — Home Header Reorganization**.
+> Riorganizzato l'header della Home Screen, introducendo una dashboard control bar in glassmorphism che accorpa la dropdown del piano e le info di sync, prevenendo overflow su schermi piccoli.
 
 ---
 

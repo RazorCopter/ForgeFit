@@ -1,7 +1,7 @@
 name: forgefit
 description: "Your AI-powered personal trainer."
 publish_to: 'none'
-version: 2.0.3+46
+version: 2.0.4+47
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
