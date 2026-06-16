@@ -1,5 +1,13 @@
 # Changelog — ForgeFit
 
+## [2.1.11] — 2026-06-16
+
+### Fixed
+- **FitConsole Plan Builder Improvements**: 
+  - Risolto il bug per cui il box di notifica di salvataggio avvenuto con successo non appariva/non era visibile (ora posizionato stabilmente in cima sopra la lista dei giorni).
+  - Aggiunto il caricamento/aggiornamento automatico dello storico delle schede dopo un salvataggio riuscito (simulando la selezione utente), evitando di dover ricaricare manualmente la pagina con F5.
+  - Aggiunti i pulsanti di ordinamento Sposta su (▲) e Sposta giù (▼) per ciascun esercizio all'interno dei giorni del builder, consentendo di riordinare facilmente la sequenza degli esercizi in scheda.
+
 ## [2.1.10] — 2026-06-16
 
 ### Fixed

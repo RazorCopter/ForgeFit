@@ -1816,6 +1816,8 @@
           </div>
         </div>
 
+        <div class="alert" id="alertBuilder" style="margin-bottom: 1rem;"></div>
+
         <div class="builder-container">
           <aside class="builder-sidebar">
             <div class="sidebar-title">GIORNI</div>
@@ -1834,8 +1836,6 @@
         </div>
 
         <div id="hiddenDaysStorage" style="display:none"></div>
-        <div class="alert" id="alertBuilder"></div>
-        <div class="alert" id="alertBuilder"></div>
       </div>
     </section>
 
@@ -3427,7 +3427,11 @@
           <span class="badge badge-v ex-group-badge" style="margin:0; min-width:70px; text-align:center">Gruppo</span>
           <span class="ex-title-text">Seleziona esercizio...</span>
           <div class="ex-chevron">▼</div>
-          <button class="btn btn-danger btn-sm" style="padding:0; width:28px; height:28px; flex-shrink:0; border-radius:50%" onclick="this.closest('.ex-block').remove(); event.stopPropagation();">✕</button>
+          <div class="ex-controls" style="display:flex; gap:6px; align-items:center; margin-right: 0.25rem" onclick="event.stopPropagation();">
+            <button class="btn btn-sm" style="padding:0; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--muted); font-size: 0.6rem; cursor:pointer;" onclick="moveExercise(this, 'up')" title="Sposta su">▲</button>
+            <button class="btn btn-sm" style="padding:0; width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--muted); font-size: 0.6rem; cursor:pointer;" onclick="moveExercise(this, 'down')" title="Sposta giù">▼</button>
+            <button class="btn btn-danger btn-sm" style="padding:0; width:26px; height:26px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="this.closest('.ex-block').remove();" title="Elimina esercizio">✕</button>
+          </div>
         </div>
         <div class="ex-body">
           <div class="ex-selects" style="grid-template-columns: 1fr 2fr; margin-bottom:1rem">
@@ -3496,6 +3500,24 @@
       container.appendChild(block);
     }
 
+    function moveExercise(btn, dir) {
+      const block = btn.closest('.ex-block');
+      if (!block) return;
+      const parent = block.parentNode;
+      if (!parent) return;
+      if (dir === 'up') {
+        const prev = block.previousElementSibling;
+        if (prev && prev.classList.contains('ex-block')) {
+          parent.insertBefore(block, prev);
+        }
+      } else if (dir === 'down') {
+        const next = block.nextElementSibling;
+        if (next && next.classList.contains('ex-block')) {
+          parent.insertBefore(next, block);
+        }
+      }
+    }
+
     async function saveScheda() {
       // Ferma eventuale pulsazione di pericolo
       document.getElementById('btnSaveWorkout').classList.remove('btn-pulse-danger');
@@ -3541,7 +3563,10 @@
         });
         if (r.status === 401) { handleUnauthorized(); return; }
         const d = await r.json();
-        if (r.ok) showAlert('alertBuilder', '✅ Scheda salvata correttamente!', true);
+        if (r.ok) {
+          showAlert('alertBuilder', '✅ Scheda salvata correttamente!', true);
+          document.getElementById('builderUserId').dispatchEvent(new Event('change'));
+        }
         else showAlert('alertBuilder', 'Errore: ' + d.detail, false);
       } catch (e) { showAlert('alertBuilder', 'Errore rete: ' + e.message, false); }
     }
