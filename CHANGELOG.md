@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.2] — 2026-06-16
+
+### Added
+- **Flutter Web Compatibility**: Risolto il supporto e la compatibilità web del servizio di sintesi vocale (`VoiceService`), consentendo la riproduzione fluida di Edge TTS tramite buffer audio in memoria ed evitando crash legati a plugin di piattaforma non supportati.
+
 ## [2.1.1] — 2026-06-16
 
 ### Added
