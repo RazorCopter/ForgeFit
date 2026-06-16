@@ -8,6 +8,8 @@ import '../core/sync_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
 import 'biometric_trends_screen.dart';
+import '../core/achievement_service.dart';
+import '../widgets/achievement_popup.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -206,6 +208,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       // Ricarica per ottenere le nuove metriche calcolate dal backend
       await SyncService.syncAllPendingData();
       await _initData();
+
+      // Controllo sblocco achievements
+      final workouts = DatabaseService.getAllWorkouts();
+      final streak = DatabaseService.getCurrentStreak();
+      final hasBiometric = DatabaseService.biometricBoxListenable().value.length >= 2;
+      final newAchievements = await AchievementService.checkAll(
+        workouts,
+        hasBiometric: hasBiometric,
+        currentStreak: streak,
+      );
+      if (mounted && newAchievements.isNotEmpty) {
+        await AchievementPopup.showSequence(context, newAchievements);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
