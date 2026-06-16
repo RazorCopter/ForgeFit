@@ -344,14 +344,14 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.amber.withOpacity(0.9),
-                    Colors.orange.withOpacity(0.9),
+                    Colors.amber.withValues(alpha: 0.9),
+                    Colors.orange.withValues(alpha: 0.9),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber.withOpacity(0.5),
+                    color: Colors.amber.withValues(alpha: 0.5),
                     blurRadius: 30,
                     spreadRadius: 5,
                   ),
@@ -520,7 +520,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
       key: ValueKey<int>(si),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: AppTheme.glassContainer(
-        borderColor: widget.accentColor.withOpacity(0.8),
+        borderColor: widget.accentColor.withValues(alpha: 0.8),
         opacity: 0.10,
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -543,9 +543,9 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.12),
+                  color: widget.accentColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: widget.accentColor.withOpacity(0.3)),
+                  border: Border.all(color: widget.accentColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -615,18 +615,18 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.timer_outlined, size: 36, color: widget.accentColor.withOpacity(0.7)),
+                  Icon(Icons.timer_outlined, size: 36, color: widget.accentColor.withValues(alpha: 0.7)),
                   const SizedBox(height: 8),
                   Text(
                     _swFormatted,
                     style: TextStyle(
                       fontSize: 80, fontWeight: FontWeight.w900, color: widget.accentColor, height: 1.0,
-                      shadows: [Shadow(color: widget.accentColor.withOpacity(0.4), blurRadius: 20)],
+                      shadows: [Shadow(color: widget.accentColor.withValues(alpha: 0.4), blurRadius: 20)],
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text('Tempo Sotto Tensione', style: TextStyle(fontSize: 13, color: widget.accentColor.withOpacity(0.6), letterSpacing: 1)),
+                  Text('Tempo Sotto Tensione', style: TextStyle(fontSize: 13, color: widget.accentColor.withValues(alpha: 0.6), letterSpacing: 1)),
                 ],
               ),
             ),
@@ -653,7 +653,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
         Text(label, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         AppTheme.glassContainer(
-          borderRadius: BorderRadius.circular(12), borderColor: color.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(12), borderColor: color.withValues(alpha: 0.4),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: TextField(
             controller: controller, enabled: enabled,
@@ -678,7 +678,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(color: widget.accentColor.withOpacity(0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: widget.accentColor.withOpacity(0.4))),
+        decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: widget.accentColor.withValues(alpha: 0.4))),
         child: Text('+3%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: widget.accentColor)),
       ),
     );

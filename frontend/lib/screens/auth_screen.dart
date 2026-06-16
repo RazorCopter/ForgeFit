@@ -177,7 +177,7 @@ class _LoginFormState extends State<_LoginForm> {
           children: [
             AppTheme.glassContainer(
               padding: const EdgeInsets.all(20),
-              borderColor: AppTheme.cyan.withOpacity(0.4),
+              borderColor: AppTheme.cyan.withValues(alpha: 0.4),
               child: Column(
                 children: [
                   const Icon(Icons.lock_outline, color: AppTheme.cyan, size: 40),
@@ -592,7 +592,7 @@ class _RegisterFormState extends State<_RegisterForm> {
   Widget _section(String title, Color color, IconData icon, List<Widget> children) {
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),
-      borderColor: color.withOpacity(0.4),
+      borderColor: color.withValues(alpha: 0.4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -688,7 +688,7 @@ class _RegisterFormState extends State<_RegisterForm> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.18) : Colors.black26,
+          color: selected ? color.withValues(alpha: 0.18) : Colors.black26,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: selected ? color : Colors.white12,
@@ -768,14 +768,14 @@ class _MeasurementGuideState extends State<_MeasurementGuide>
               borderRadius: BorderRadius.circular(12),
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.legsAccent.withOpacity(0.15),
-                  AppTheme.vividPurple.withOpacity(0.08),
+                  AppTheme.legsAccent.withValues(alpha: 0.15),
+                  AppTheme.vividPurple.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               border: Border.all(
-                color: AppTheme.legsAccent.withOpacity(0.35),
+                color: AppTheme.legsAccent.withValues(alpha: 0.35),
                 width: 1,
               ),
             ),
@@ -784,7 +784,7 @@ class _MeasurementGuideState extends State<_MeasurementGuide>
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppTheme.legsAccent.withOpacity(0.2),
+                    color: AppTheme.legsAccent.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -870,7 +870,7 @@ class _MeasurementGuideState extends State<_MeasurementGuide>
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.55),
+                          Colors.black.withValues(alpha: 0.55),
                         ],
                         stops: const [0.55, 1.0],
                       ),
@@ -885,10 +885,10 @@ class _MeasurementGuideState extends State<_MeasurementGuide>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppTheme.legsAccent.withOpacity(0.6),
+                        color: AppTheme.legsAccent.withValues(alpha: 0.6),
                         width: 1,
                       ),
                     ),
@@ -919,7 +919,7 @@ class _MeasurementGuideState extends State<_MeasurementGuide>
                   child: Text(
                     'Usa un metro da sarto per misurazioni precise.\nMantieni il nastro parallelo al suolo.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 11,
                       height: 1.4,
                       shadows: const [
@@ -982,9 +982,9 @@ class _SlidingTabSelectorState extends State<_SlidingTabSelector> {
       margin: const EdgeInsets.symmetric(horizontal: 32),
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Stack(
         children: [
@@ -1007,7 +1007,7 @@ class _SlidingTabSelectorState extends State<_SlidingTabSelector> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00CCFF).withOpacity(0.4),
+                      color: const Color(0xFF00CCFF).withValues(alpha: 0.4),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -1038,7 +1038,7 @@ class _SlidingTabSelectorState extends State<_SlidingTabSelector> {
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 300),
             style: TextStyle(
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
+              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
               fontWeight: FontWeight.bold,
               fontSize: 13,
               letterSpacing: 1.1,

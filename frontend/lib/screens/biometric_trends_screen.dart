@@ -148,7 +148,7 @@ class _MetricCard extends StatelessWidget {
 
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),
-      borderColor: metric.color.withOpacity(0.4),
+      borderColor: metric.color.withValues(alpha: 0.4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -234,7 +234,7 @@ class _MetricCard extends StatelessWidget {
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
-                        colors: [metric.color.withOpacity(0.25), metric.color.withOpacity(0.0)],
+                        colors: [metric.color.withValues(alpha: 0.25), metric.color.withValues(alpha: 0.0)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),

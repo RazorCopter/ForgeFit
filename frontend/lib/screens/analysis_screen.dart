@@ -291,7 +291,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
               // Dati Statici (User Info)
               AppTheme.glassContainer(
                 padding: const EdgeInsets.all(20),
-                borderColor: AppTheme.vividPurple.withOpacity(0.3),
+                borderColor: AppTheme.vividPurple.withValues(alpha: 0.3),
                 child: _profile == null 
                   ? const Center(child: CircularProgressIndicator(color: AppTheme.vividPurple))
                   : Column(
@@ -330,7 +330,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                 AppTheme.glassContainer(
                   padding: const EdgeInsets.all(20),
                   margin: const EdgeInsets.only(bottom: 24),
-                  borderColor: AppTheme.pullAccent.withOpacity(0.3),
+                  borderColor: AppTheme.pullAccent.withValues(alpha: 0.3),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -364,7 +364,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
               // Aggiorna Dati Fisiologici
               AppTheme.glassContainer(
                 padding: const EdgeInsets.all(20),
-                borderColor: AppTheme.cyan.withOpacity(0.3),
+                borderColor: AppTheme.cyan.withValues(alpha: 0.3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -487,7 +487,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
   Widget _buildLockSection() {
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(24),
-      borderColor: Colors.redAccent.withOpacity(0.5),
+      borderColor: Colors.redAccent.withValues(alpha: 0.5),
       child: Column(
         children: [
           const Icon(Icons.lock, color: Colors.redAccent, size: 48),
@@ -536,9 +536,9 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.green.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.green.withOpacity(0.5)),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -560,7 +560,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
                 icon: const Icon(Icons.auto_awesome),
                 label: const Text('Genera Report Performance AI'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.vividPurple.withOpacity(0.2),
+                  backgroundColor: AppTheme.vividPurple.withValues(alpha: 0.2),
                   foregroundColor: AppTheme.vividPurple,
                   side: const BorderSide(color: AppTheme.vividPurple, width: 1.5),
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),

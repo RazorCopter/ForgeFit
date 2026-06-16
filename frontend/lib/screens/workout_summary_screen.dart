@@ -175,7 +175,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 8,
-                    shadowColor: AppTheme.cyan.withOpacity(0.4),
+                    shadowColor: AppTheme.cyan.withValues(alpha: 0.4),
                   ),
                 ).animate().fadeIn(delay: 1200.ms).slideY(begin: 0.2),
 
@@ -225,7 +225,7 @@ class _AnimatedKPICard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),
-      borderColor: color.withOpacity(0.4),
+      borderColor: color.withValues(alpha: 0.4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -265,7 +265,7 @@ class _ExerciseSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: AppTheme.glassContainer(
         padding: const EdgeInsets.all(16),
-        borderColor: AppTheme.vividPurple.withOpacity(0.3),
+        borderColor: AppTheme.vividPurple.withValues(alpha: 0.3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -284,9 +284,9 @@ class _ExerciseSummaryCard extends StatelessWidget {
               children: exercise.sets.map((s) => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.vividPurple.withOpacity(0.15),
+                  color: AppTheme.vividPurple.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.vividPurple.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.vividPurple.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '${s.weight.toStringAsFixed(s.weight == s.weight.roundToDouble() ? 0 : 1)}kg × ${s.reps}',

@@ -278,7 +278,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
                   icon: const Icon(Icons.skip_next),
                   label: const Text('SALTA RECUPERO'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.accentColor.withOpacity(0.1),
+                    backgroundColor: widget.accentColor.withValues(alpha: 0.1),
                     foregroundColor: widget.accentColor,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -294,7 +294,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
   Widget _buildNextSetCard(NextSetInfo next) {
     return AppTheme.glassContainer(
       borderRadius: BorderRadius.circular(20),
-      borderColor: widget.accentColor.withOpacity(0.4),
+      borderColor: widget.accentColor.withValues(alpha: 0.4),
       opacity: 0.10,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
@@ -302,7 +302,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.fitness_center, size: 18, color: widget.accentColor.withOpacity(0.8)),
+              Icon(Icons.fitness_center, size: 18, color: widget.accentColor.withValues(alpha: 0.8)),
               const SizedBox(width: 8),
               Text(
                 'PROSSIMA SERIE ${next.setNumber} / ${next.totalSets}',
@@ -310,7 +310,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
-                  color: widget.accentColor.withOpacity(0.8),
+                  color: widget.accentColor.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -326,7 +326,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
                     : '— kg',
                 label: 'Peso',
               ),
-              Container(width: 1, height: 48, color: widget.accentColor.withOpacity(0.2)),
+              Container(width: 1, height: 48, color: widget.accentColor.withValues(alpha: 0.2)),
               _buildNextSetStat(
                 icon: Icons.repeat,
                 value: '${next.reps} reps',
@@ -342,7 +342,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
   Widget _buildNextSetStat({required IconData icon, required String value, required String label}) {
     return Column(
       children: [
-        Icon(icon, size: 22, color: widget.accentColor.withOpacity(0.7)),
+        Icon(icon, size: 22, color: widget.accentColor.withValues(alpha: 0.7)),
         const SizedBox(height: 6),
         Text(
           value,
@@ -372,7 +372,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
           padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 12,
-          shadowColor: widget.accentColor.withOpacity(0.6),
+          shadowColor: widget.accentColor.withValues(alpha: 0.6),
         ),
         child: const Text(
           'GO!',

@@ -326,11 +326,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            color: AppTheme.cyan.withOpacity(0.5),
+                            color: AppTheme.cyan.withValues(alpha: 0.5),
                             blurRadius: 15,
                           ),
                           Shadow(
-                            color: AppTheme.vividPurple.withOpacity(0.5),
+                            color: AppTheme.vividPurple.withValues(alpha: 0.5),
                             blurRadius: 15,
                           ),
                         ],
@@ -356,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Dashboard Controls (Plan Selector & Sync Status)
               AppTheme.glassContainer(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                borderColor: AppTheme.cyan.withOpacity(0.3),
+                borderColor: AppTheme.cyan.withValues(alpha: 0.3),
                 child: Row(
                   children: [
                     // LEFT: Plan Selector
@@ -412,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       width: 1,
                       height: 24,
-                      color: AppTheme.cyan.withOpacity(0.3),
+                      color: AppTheme.cyan.withValues(alpha: 0.3),
                       margin: const EdgeInsets.symmetric(horizontal: 12),
                     ),
 
@@ -481,11 +481,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                         duration: const Duration(milliseconds: 400),
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withOpacity(0.15),
+                                          color: statusColor.withValues(alpha: 0.15),
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: statusColor.withOpacity(0.5), width: 1.5),
+                                          border: Border.all(color: statusColor.withValues(alpha: 0.5), width: 1.5),
                                           boxShadow: [
-                                            BoxShadow(color: statusColor.withOpacity(0.3), blurRadius: 8),
+                                            BoxShadow(color: statusColor.withValues(alpha: 0.3), blurRadius: 8),
                                           ],
                                         ),
                                         child: Icon(statusIcon, color: statusColor, size: 14),
@@ -539,13 +539,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(24),
                             gradient: LinearGradient(
                               colors: streakGradient
-                                  .map((c) => c.withOpacity(0.15))
+                                  .map((c) => c.withValues(alpha: 0.15))
                                   .toList(),
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
                             border: Border.all(
-                                color: streakColor.withOpacity(0.4), width: 1.5),
+                                color: streakColor.withValues(alpha: 0.4), width: 1.5),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -628,7 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.only(bottom: 20.0),
           child: Shimmer.fromColors(
             baseColor: AppTheme.surfaceVariant,
-            highlightColor: AppTheme.surfaceVariant.withOpacity(0.5),
+            highlightColor: AppTheme.surfaceVariant.withValues(alpha: 0.5),
             child: Container(
               height: 140,
               decoration: BoxDecoration(
@@ -649,7 +649,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Center(
       child: AppTheme.glassContainer(
         padding: const EdgeInsets.all(32),
-        borderColor: AppTheme.cyan.withOpacity(0.3),
+        borderColor: AppTheme.cyan.withValues(alpha: 0.3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -742,7 +742,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       borderRadius: BorderRadius.circular(24),
       child: AppTheme.glassContainer(
-        borderColor: accentColor.withOpacity(0.5),
+        borderColor: accentColor.withValues(alpha: 0.5),
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -754,11 +754,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withOpacity(0.3),
+                        color: accentColor.withValues(alpha: 0.3),
                         blurRadius: 10,
                         spreadRadius: 2,
                       )
@@ -873,7 +873,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_, value, __) => CircularProgressIndicator(
                           value: value,
                           strokeWidth: 3.5,
-                          backgroundColor: accentColor.withOpacity(0.15),
+                          backgroundColor: accentColor.withValues(alpha: 0.15),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             ringProgress >= 1.0
                                 ? Colors.greenAccent
@@ -913,13 +913,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Icon(Icons.list_alt,
-                    size: 14, color: accentColor.withOpacity(0.7)),
+                    size: 14, color: accentColor.withValues(alpha: 0.7)),
                 const SizedBox(width: 4),
                 Text(
                   '${day.exercises.length} esercizi',
                   style: TextStyle(
                     fontSize: 12,
-                    color: accentColor.withOpacity(0.7),
+                    color: accentColor.withValues(alpha: 0.7),
                   ),
                 ),
               ],

@@ -303,13 +303,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     borderRadius: BorderRadius.circular(16),
                     child: AppTheme.glassContainer(
                       padding: const EdgeInsets.all(20),
-                      borderColor: AppTheme.cyan.withOpacity(0.5),
+                      borderColor: AppTheme.cyan.withValues(alpha: 0.5),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppTheme.cyan.withOpacity(0.15),
+                              color: AppTheme.cyan.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.accessibility_new, color: AppTheme.cyan, size: 32),
@@ -359,7 +359,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         show: true,
                         drawVerticalLine: false,
                         getDrawingHorizontalLine: (value) => FlLine(
-                          color: AppTheme.textSecondary.withOpacity(0.1),
+                          color: AppTheme.textSecondary.withValues(alpha: 0.1),
                           strokeWidth: 1,
                         ),
                       ),
@@ -412,8 +412,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                             show: true,
                             gradient: LinearGradient(
                               colors: [
-                                AppTheme.vividPurple.withOpacity(0.4),
-                                AppTheme.vividPurple.withOpacity(0.0),
+                                AppTheme.vividPurple.withValues(alpha: 0.4),
+                                AppTheme.vividPurple.withValues(alpha: 0.0),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -456,7 +456,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                     show: true,
                                     drawVerticalLine: false,
                                     getDrawingHorizontalLine: (value) => FlLine(
-                                      color: AppTheme.textSecondary.withOpacity(0.1),
+                                      color: AppTheme.textSecondary.withValues(alpha: 0.1),
                                       strokeWidth: 1,
                                     ),
                                   ),
@@ -535,7 +535,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: [
                     AppTheme.glassContainer(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      borderColor: AppTheme.cyan.withOpacity(0.3),
+                      borderColor: AppTheme.cyan.withValues(alpha: 0.3),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedExercise,
@@ -567,7 +567,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                     show: true,
                                     drawVerticalLine: false,
                                     getDrawingHorizontalLine: (_) =>
-                                        FlLine(color: AppTheme.textSecondary.withOpacity(0.1), strokeWidth: 1),
+                                        FlLine(color: AppTheme.textSecondary.withValues(alpha: 0.1), strokeWidth: 1),
                                   ),
                                   titlesData: FlTitlesData(
                                     leftTitles: AxisTitles(sideTitles: SideTitles(
@@ -603,8 +603,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                         show: true,
                                         gradient: LinearGradient(
                                           colors: [
-                                            AppTheme.legsAccent.withOpacity(0.3),
-                                            AppTheme.legsAccent.withOpacity(0.0),
+                                            AppTheme.legsAccent.withValues(alpha: 0.3),
+                                            AppTheme.legsAccent.withValues(alpha: 0.0),
                                           ],
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
@@ -638,7 +638,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     return AppTheme.glassContainer(
       padding: const EdgeInsets.all(16),
-      borderColor: color.withOpacity(0.3),
+      borderColor: color.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -714,7 +714,7 @@ class _MuscleRadarChart extends StatelessWidget {
                     dataEntries: entries
                         .map((e) => RadarEntry(value: e.value))
                         .toList(),
-                    fillColor: AppTheme.vividPurple.withOpacity(0.2),
+                    fillColor: AppTheme.vividPurple.withValues(alpha: 0.2),
                     borderColor: AppTheme.vividPurple,
                     borderWidth: 2,
                     entryRadius: 4,
@@ -724,9 +724,9 @@ class _MuscleRadarChart extends StatelessWidget {
                 borderData: FlBorderData(show: false),
                 radarBorderData: const BorderSide(color: Colors.transparent),
                 tickBorderData: BorderSide(
-                    color: AppTheme.textSecondary.withOpacity(0.2), width: 1),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.2), width: 1),
                 gridBorderData: BorderSide(
-                    color: AppTheme.textSecondary.withOpacity(0.15), width: 1),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.15), width: 1),
                 tickCount: 4,
                 ticksTextStyle: const TextStyle(fontSize: 0, color: Colors.transparent),
                 getTitle: (index, angle) {
@@ -765,7 +765,7 @@ class _MuscleRadarChart extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isEmpty
-                          ? AppTheme.textSecondary.withOpacity(0.3)
+                          ? AppTheme.textSecondary.withValues(alpha: 0.3)
                           : AppTheme.vividPurple,
                     ),
                   ),
@@ -775,7 +775,7 @@ class _MuscleRadarChart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       color: isEmpty
-                          ? AppTheme.textSecondary.withOpacity(0.5)
+                          ? AppTheme.textSecondary.withValues(alpha: 0.5)
                           : AppTheme.textSecondary,
                     ),
                   ),

@@ -89,7 +89,7 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
   Color _getMuscleColor(String muscle, {bool isStroke = false, double opacity = 1.0}) {
     final vol = _muscleVolumes[muscle] ?? 0.0;
     if (vol == 0) {
-      return isStroke ? Colors.white24 : Colors.white.withOpacity(0.04);
+      return isStroke ? Colors.white24 : Colors.white.withValues(alpha: 0.04);
     }
 
     final intensity = _maxVolume > 0 ? (vol / _maxVolume) : 0.0;
@@ -97,9 +97,9 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
     final baseColor = Color.lerp(AppTheme.vividPurple, AppTheme.cyan, intensity)!;
 
     if (isStroke) {
-      return baseColor.withOpacity(opacity);
+      return baseColor.withValues(alpha: opacity);
     }
-    return baseColor.withOpacity(0.25 + (intensity * 0.45)); // riempimento neon semitrasparente
+    return baseColor.withValues(alpha: 0.25 + (intensity * 0.45)); // riempimento neon semitrasparente
   }
 
   String _getMuscleMotivation(String muscle) {
@@ -243,7 +243,7 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: AppTheme.cyan.withOpacity(0.3),
+                    color: AppTheme.cyan.withValues(alpha: 0.3),
                     blurRadius: 10,
                     spreadRadius: 1,
                   )
@@ -270,12 +270,12 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 1.5),
             boxShadow: [
               if (color != Colors.white24)
-                BoxShadow(color: color.withOpacity(0.4), blurRadius: 6, spreadRadius: 0.5)
+                BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6, spreadRadius: 0.5)
             ],
           ),
         ),
@@ -293,7 +293,7 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
         child: Center(
           child: Text(
             'Tocca un distretto muscolare per vedere i dettagli',
-            style: TextStyle(color: AppTheme.textSecondary.withOpacity(0.7), fontSize: 13, fontStyle: FontStyle.italic),
+            style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.7), fontSize: 13, fontStyle: FontStyle.italic),
           ),
         ),
       );
@@ -325,9 +325,9 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getMuscleColor(m, isStroke: true).withOpacity(0.15),
+                  color: _getMuscleColor(m, isStroke: true).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _getMuscleColor(m, isStroke: true).withOpacity(0.3)),
+                  border: Border.all(color: _getMuscleColor(m, isStroke: true).withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   'Vol: ${vol.toStringAsFixed(0)} kg',
@@ -449,7 +449,7 @@ class BodyMapPainter extends CustomPainter {
 
     // --- DISEGNO DELLA SAGOMA GENERALE (WIRE-BODY) ---
     final bodyPaint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.white.withValues(alpha: 0.06)
       ..style = PaintingStyle.fill;
     
     final bodyBorder = Paint()
@@ -577,12 +577,12 @@ class BodyMapPainter extends CustomPainter {
       canvas.drawPath(path, fillPaint);
 
       // Disegna bordo neon con glow
-      if (fillColor != Colors.white.withOpacity(0.04)) {
+      if (fillColor != Colors.white.withValues(alpha: 0.04)) {
         final strokeColor = getStrokeColor(group, 1.0);
         
         // Effetto Glow sfocato sotto il bordo principale
         final glowPaint = Paint()
-          ..color = strokeColor.withOpacity(isSelected ? 0.8 : 0.35)
+          ..color = strokeColor.withValues(alpha: isSelected ? 0.8 : 0.35)
           ..style = PaintingStyle.stroke
           ..strokeWidth = isSelected ? 3.5 : 2.0
           ..imageFilter = ImageFilter.blur(

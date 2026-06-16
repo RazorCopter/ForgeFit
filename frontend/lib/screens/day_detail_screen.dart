@@ -244,7 +244,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: accentColor.withOpacity(0.5),
+                    color: accentColor.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
@@ -411,7 +411,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
           curve: Curves.easeInOut,
           child: AppTheme.glassContainer(
             padding: const EdgeInsets.all(16),
-            borderColor: widget.isCompleted ? Colors.green : (widget.isExpanded ? widget.accentColor : widget.accentColor.withOpacity(0.3)),
+            borderColor: widget.isCompleted ? Colors.green : (widget.isExpanded ? widget.accentColor : widget.accentColor.withValues(alpha: 0.3)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -422,7 +422,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: widget.isCompleted ? Colors.green.withOpacity(0.2) : widget.accentColor.withOpacity(0.2),
+                        color: widget.isCompleted ? Colors.green.withValues(alpha: 0.2) : widget.accentColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -517,7 +517,7 @@ class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   elevation: 8,
-                                  shadowColor: widget.accentColor.withOpacity(0.5),
+                                  shadowColor: widget.accentColor.withValues(alpha: 0.5),
                                 ),
                               ),
                             ),
@@ -610,9 +610,9 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
         ),
         child: const Text(
           'URL video non valido.',
@@ -643,11 +643,11 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.9),
+                color: Colors.redAccent.withValues(alpha: 0.9),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),

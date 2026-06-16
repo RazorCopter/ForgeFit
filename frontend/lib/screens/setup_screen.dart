@@ -280,13 +280,13 @@ class _SetupScreenState extends State<SetupScreen> {
               borderRadius: BorderRadius.circular(16),
               child: AppTheme.glassContainer(
                 padding: const EdgeInsets.all(20),
-                borderColor: AppTheme.cyan.withOpacity(0.6),
+                borderColor: AppTheme.cyan.withValues(alpha: 0.6),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.cyan.withOpacity(0.15),
+                        color: AppTheme.cyan.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: _isSyncing
@@ -349,13 +349,13 @@ class _SetupScreenState extends State<SetupScreen> {
             // Switch Suoni di recupero
             AppTheme.glassContainer(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              borderColor: AppTheme.cyan.withOpacity(0.3),
+              borderColor: AppTheme.cyan.withValues(alpha: 0.3),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.cyan.withOpacity(0.15),
+                      color: AppTheme.cyan.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.volume_up, color: AppTheme.cyan, size: 24),
@@ -379,7 +379,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   Switch(
                     value: DatabaseService.getSoundEnabled(),
                     activeThumbColor: AppTheme.cyan,
-                    activeTrackColor: AppTheme.cyan.withOpacity(0.3),
+                    activeTrackColor: AppTheme.cyan.withValues(alpha: 0.3),
                     inactiveThumbColor: AppTheme.textSecondary,
                     inactiveTrackColor: Colors.black26,
                     onChanged: (val) {
@@ -397,13 +397,13 @@ class _SetupScreenState extends State<SetupScreen> {
             // Switch Coach Vocale AI
             AppTheme.glassContainer(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              borderColor: AppTheme.vividPurple.withOpacity(0.3),
+              borderColor: AppTheme.vividPurple.withValues(alpha: 0.3),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.vividPurple.withOpacity(0.15),
+                      color: AppTheme.vividPurple.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.record_voice_over, color: AppTheme.vividPurple, size: 24),
@@ -427,7 +427,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   Switch(
                     value: DatabaseService.getVoiceCoachEnabled(),
                     activeThumbColor: AppTheme.vividPurple,
-                    activeTrackColor: AppTheme.vividPurple.withOpacity(0.3),
+                    activeTrackColor: AppTheme.vividPurple.withValues(alpha: 0.3),
                     inactiveThumbColor: AppTheme.textSecondary,
                     inactiveTrackColor: Colors.black26,
                     onChanged: (val) {
@@ -531,13 +531,13 @@ class _SetupScreenState extends State<SetupScreen> {
       borderRadius: BorderRadius.circular(16),
       child: AppTheme.glassContainer(
         padding: const EdgeInsets.all(20),
-        borderColor: color.withOpacity(0.5),
+        borderColor: color.withValues(alpha: 0.5),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),

@@ -151,7 +151,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: widget.accentColor.withOpacity(0.5),
+                      color: widget.accentColor.withValues(alpha: 0.5),
                     ),
                   ),
                 ],

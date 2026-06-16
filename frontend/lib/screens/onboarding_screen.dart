@@ -107,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: active
                           ? _slides[_currentPage].accentColor
-                          : AppTheme.textSecondary.withOpacity(0.4),
+                          : AppTheme.textSecondary.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -136,7 +136,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(16)),
                       elevation: 8,
                       shadowColor:
-                          _slides[_currentPage].accentColor.withOpacity(0.5),
+                          _slides[_currentPage].accentColor.withValues(alpha: 0.5),
                     ),
                     child: Text(
                       isLast ? 'INIZIA ORA' : 'AVANTI',
@@ -192,16 +192,16 @@ class _SlideWidget extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: slide.accentColor.withOpacity(0.1),
+              color: slide.accentColor.withValues(alpha: 0.1),
               boxShadow: [
                 BoxShadow(
-                  color: slide.accentColor.withOpacity(0.3),
+                  color: slide.accentColor.withValues(alpha: 0.3),
                   blurRadius: 40,
                   spreadRadius: 8,
                 ),
               ],
               border: Border.all(
-                  color: slide.accentColor.withOpacity(0.3), width: 1.5),
+                  color: slide.accentColor.withValues(alpha: 0.3), width: 1.5),
             ),
             child: Icon(slide.icon, size: 56, color: slide.accentColor),
           )

@@ -89,7 +89,7 @@ class AppTheme {
         iconTheme: const IconThemeData(color: textPrimary),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: surface.withOpacity(0.8),
+        backgroundColor: surface.withValues(alpha: 0.8),
         selectedItemColor: cyan,
         unselectedItemColor: textSecondary,
         elevation: 0,
@@ -102,7 +102,7 @@ class AppTheme {
           backgroundColor: vividPurple,
           foregroundColor: bgTop,
           elevation: 8,
-          shadowColor: vividPurple.withOpacity(0.5),
+          shadowColor: vividPurple.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -144,7 +144,7 @@ class AppTheme {
         borderRadius: borderRadius ?? defaultRadius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 15,
             spreadRadius: 2,
             offset: const Offset(0, 8),
@@ -158,16 +158,16 @@ class AppTheme {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(opacity),
+              color: Colors.white.withValues(alpha: opacity),
               borderRadius: borderRadius ?? defaultRadius,
               border: Border.all(
-                color: borderColor ?? Colors.white.withOpacity(0.1),
+                color: borderColor ?? Colors.white.withValues(alpha: 0.1),
                 width: 1.5,
               ),
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.02),
+                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withValues(alpha: 0.02),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

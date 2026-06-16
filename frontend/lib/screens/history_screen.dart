@@ -190,7 +190,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       return AppTheme.glassContainer(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: EdgeInsets.zero,
-                        borderColor: AppTheme.homeAccent.withOpacity(0.5),
+                        borderColor: AppTheme.homeAccent.withValues(alpha: 0.5),
                         child: Theme(
                           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                           child: ExpansionTile(
@@ -257,7 +257,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                 return Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                   decoration: BoxDecoration(
-                                                    color: AppTheme.pullAccent.withOpacity(0.2),
+                                                    color: AppTheme.pullAccent.withValues(alpha: 0.2),
                                                     borderRadius: BorderRadius.circular(4),
                                                   ),
                                                   child: Text('${s.weight}kg x ${s.reps}', style: const TextStyle(color: AppTheme.pullAccent, fontSize: 12)),
@@ -275,7 +275,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       label: const Text('Elimina Allenamento', style: TextStyle(color: Colors.redAccent)),
                                       style: TextButton.styleFrom(
                                         padding: const EdgeInsets.symmetric(vertical: 12),
-                                        backgroundColor: Colors.redAccent.withOpacity(0.1),
+                                        backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                                       ),
                                     ),
                                   ],
