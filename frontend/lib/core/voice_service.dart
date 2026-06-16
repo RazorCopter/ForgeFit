@@ -1,77 +1,122 @@
+import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'auth_service.dart';
+import 'api_config.dart';
 import '../data/database_service.dart';
 
 /// Servizio per la gestione della sintesi vocale (TTS) del Coach AI.
-/// Gestisce l'inizializzazione del motore, la lingua, i canali audio (per le cuffie)
-/// e il rispetto delle preferenze dell'utente.
+/// Utilizza Microsoft Edge TTS (voci neurali cloud) con cache locale
+/// e fallback offline su flutter_tts (sintesi vocale locale).
 class VoiceService {
   VoiceService._(); // Singleton
 
   static final FlutterTts _flutterTts = FlutterTts();
+  static final AudioPlayer _audioPlayer = AudioPlayer();
+  
+  static bool _isTtsInitialized = false;
   static bool _isInitialized = false;
 
-  /// Inizializza il motore TTS con impostazioni ottimali per la palestra.
+  /// Inizializza il motore TTS con impostazioni di fallback.
   static Future<void> init() async {
     if (_isInitialized) return;
+    await _initLocalTts();
+    _isInitialized = true;
+  }
 
+  static Future<void> _initLocalTts() async {
     try {
-      // Imposta la lingua italiana
       await _flutterTts.setLanguage("it-IT");
-      
-      // Velocità del parlato bilanciata (0.5 è il default standard, comodo mentre ci si allena)
       await _flutterTts.setSpeechRate(0.5);
-      
-      // Tono naturale
       await _flutterTts.setPitch(1.0);
-      
-      // Volume massimo del canale audio
       await _flutterTts.setVolume(1.0);
-
-      // Supporto per il ducking dell'audio in background (iOS)
-      // La musica di altre app (Spotify, ecc.) si abbasserà durante il parlato.
       await _flutterTts.setSharedInstance(true);
-
-      // Su Android, configura per usare il canale assistenza/navigazione o media.
-      // Questo aiuta il routing verso cuffie Bluetooth con profilo A2DP/HFP.
       if (!kIsWeb) {
-        // Impostiamo l'audio session appropriato
         await _flutterTts.setEngine("com.google.android.tts");
       }
-
-      _isInitialized = true;
-      debugPrint('🎙️ [VoiceService] Inizializzato con successo in lingua italiana');
+      _isTtsInitialized = true;
+      debugPrint('🎙️ [VoiceService] Fallback Local TTS inizializzato in italiano');
     } catch (e) {
-      debugPrint('❌ [VoiceService] Errore inizializzazione TTS: $e');
+      debugPrint('❌ [VoiceService] Errore inizializzazione Local TTS: $e');
     }
   }
 
-  /// Pronuncia un testo in italiano, a patto che il coach sia abilitato
-  /// nelle impostazioni generali dell'app.
+  /// Calcola un nome file univoco e sicuro basato sull'hash del testo.
+  static String _getSafeFilename(String text) {
+    final clean = text.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    final prefix = clean.substring(0, math.min(15, clean.length));
+    return 'tts_${text.hashCode}_$prefix.mp3';
+  }
+
+  /// Pronuncia un testo in italiano. Tenta la chiamata cloud Edge TTS,
+  /// salva in cache locale e in caso di errore/offline effettua il fallback su Local TTS.
   static Future<void> speak(String text) async {
-    // Verifica se abilitato in Hive settings
     final isEnabled = DatabaseService.getVoiceCoachEnabled();
     if (!isEnabled) {
       debugPrint('🎙️ [VoiceService] Parlato ignorato: Coach Vocale disabilitato');
       return;
     }
 
-    if (!_isInitialized) {
-      await init();
-    }
+    if (text.trim().isEmpty) return;
 
     try {
-      await _flutterTts.stop(); // Interrompi parlato precedente
-      await _flutterTts.speak(text);
-      debugPrint('🎙️ [VoiceService] Speaking: "$text"');
+      final filename = _getSafeFilename(text);
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$filename');
+
+      // 1. Controlla cache locale
+      if (await file.exists()) {
+        debugPrint('🎙️ [VoiceService] Riproduzione da cache locale: $filename');
+        await stop();
+        await _audioPlayer.play(DeviceFileSource(file.path));
+        return;
+      }
+
+      // 2. Chiamata a Edge TTS su backend
+      debugPrint('🎙️ [VoiceService] Richiesta Edge TTS in corso per: "$text"');
+      final headers = await AuthService.authHeaders();
+      final encodedText = Uri.encodeComponent(text);
+      final url = Uri.parse('${ApiConfig.baseUrl}/api/system/tts?text=$encodedText');
+
+      final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        await file.writeAsBytes(response.bodyBytes);
+        debugPrint('🎙️ [VoiceService] Salvato in cache: $filename');
+        
+        await stop();
+        await _audioPlayer.play(DeviceFileSource(file.path));
+      } else {
+        throw Exception('Server risponde con status ${response.statusCode}');
+      }
     } catch (e) {
-      debugPrint('❌ [VoiceService] Errore riproduzione speak: $e');
+      debugPrint('🎙️ [VoiceService] Errore Edge TTS o offline, fallback su Local TTS: $e');
+      await _speakLocal(text);
     }
   }
 
-  /// Interrompe immediatamente qualsiasi parlato in corso.
+  /// Pronuncia tramite motore di sintesi locale
+  static Future<void> _speakLocal(String text) async {
+    if (!_isTtsInitialized) {
+      await _initLocalTts();
+    }
+    try {
+      await stop();
+      await _flutterTts.speak(text);
+      debugPrint('🎙️ [VoiceService] Speaking (Local Fallback): "$text"');
+    } catch (e) {
+      debugPrint('❌ [VoiceService] Errore riproduzione Local TTS: $e');
+    }
+  }
+
+  /// Interrompe immediatamente qualsiasi parlato in corso (sia locale che cloud).
   static Future<void> stop() async {
     try {
+      await _audioPlayer.stop();
       await _flutterTts.stop();
     } catch (_) {}
   }

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 import os
 import shutil
+import edge_tts
 import models
 import schemas
 from database import engine, get_db
@@ -120,3 +121,19 @@ def update_system_settings(data: schemas.SystemSettingsUpdate, db: Session = Dep
 
     db.commit()
     return {"message": "Impostazioni aggiornate con successo."}
+
+
+@router.get("/tts", summary="Genera sintesi vocale neurale tramite Edge TTS")
+async def get_edge_tts(text: str, current_user: models.User = Depends(get_current_user)):
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Il testo non può essere vuoto.")
+    try:
+        communicate = edge_tts.Communicate(text, "it-IT-ElisaNeural")
+        async def audio_generator():
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    yield chunk["data"]
+        return StreamingResponse(audio_generator(), media_type="audio/mpeg")
+    except Exception as e:
+        logger.error(f"Errore generazione Edge TTS: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Errore TTS: {str(e)}")
