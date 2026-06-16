@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../core/theme.dart';
 import '../core/achievement_service.dart';
 
@@ -8,9 +9,6 @@ class AchievementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unlocked = AchievementService.getUnlocked();
-    final unlockedIds = {for (final u in unlocked) u.achievement.id: u.unlockedAt};
-
     return AppTheme.buildBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -19,38 +17,46 @@ class AchievementsScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            const Text(
-              'I tuoi Successi',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-            ).animate().fade().slideY(),
-            const SizedBox(height: 4),
-            Text(
-              'Hai sbloccato ${unlocked.length} su ${AchievementService.all.length} traguardi',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-            ).animate().fade(delay: 100.ms).slideY(),
-            const SizedBox(height: 32),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 24,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.65,
-              ),
-              itemCount: AchievementService.all.length,
-              itemBuilder: (context, i) {
-                final a = AchievementService.all[i];
-                final isUnlocked = unlockedIds.containsKey(a.id);
-                final unlockedAt = unlockedIds[a.id];
-                return _PennantBadge(achievement: a, isUnlocked: isUnlocked, unlockedAt: unlockedAt)
-                    .animate().fade(delay: (150 + i * 30).ms).scale(curve: Curves.easeOutBack);
-              },
-            ),
-          ],
+        body: ValueListenableBuilder(
+          valueListenable: Hive.box('settings').listenable(keys: ['achievements_v1']),
+          builder: (context, Box box, child) {
+            final unlocked = AchievementService.getUnlocked();
+            final unlockedIds = {for (final u in unlocked) u.achievement.id: u.unlockedAt};
+
+            return ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                const Text(
+                  'I tuoi Successi',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                ).animate().fade().slideY(),
+                const SizedBox(height: 4),
+                Text(
+                  'Hai sbloccato ${unlocked.length} su ${AchievementService.all.length} traguardi',
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                ).animate().fade(delay: 100.ms).slideY(),
+                const SizedBox(height: 32),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 24,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.65,
+                  ),
+                  itemCount: AchievementService.all.length,
+                  itemBuilder: (context, i) {
+                    final a = AchievementService.all[i];
+                    final isUnlocked = unlockedIds.containsKey(a.id);
+                    final unlockedAt = unlockedIds[a.id];
+                    return _PennantBadge(achievement: a, isUnlocked: isUnlocked, unlockedAt: unlockedAt)
+                        .animate().fade(delay: (150 + i * 30).ms).scale(curve: Curves.easeOutBack);
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -120,26 +126,26 @@ class _PennantBadge extends StatelessWidget {
       ],
     );
 
-    if (isUnlocked) {
-      final dateStr = unlockedAt != null 
-          ? '\nSbloccato il ${unlockedAt!.day.toString().padLeft(2, '0')}/${unlockedAt!.month.toString().padLeft(2, '0')}/${unlockedAt!.year}'
-          : '';
-      return Tooltip(
-        message: '${achievement.description}$dateStr',
-        triggerMode: TooltipTriggerMode.tap,
-        showDuration: const Duration(seconds: 3),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: achievement.color.withValues(alpha: 0.5)),
-        ),
-        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(12),
-        child: badgeContent,
-      );
-    }
+    final String dateStr = isUnlocked && unlockedAt != null 
+        ? '\nSbloccato il ${unlockedAt!.day.toString().padLeft(2, '0')}/${unlockedAt!.month.toString().padLeft(2, '0')}/${unlockedAt!.year}'
+        : '\nNon ancora sbloccato';
 
-    return badgeContent;
+    return Tooltip(
+      message: '${achievement.description}$dateStr',
+      triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 3),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: achievement.color.withValues(alpha: isUnlocked ? 0.5 : 0.15)),
+      ),
+      textStyle: TextStyle(
+        color: isUnlocked ? Colors.white : Colors.white70,
+        fontSize: 12,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      child: badgeContent,
+    );
   }
 }

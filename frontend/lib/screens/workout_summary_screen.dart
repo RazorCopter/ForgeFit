@@ -36,7 +36,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     if (!mounted) return;
     final workouts = DatabaseService.getAllWorkouts();
     final streak = DatabaseService.getCurrentStreak();
-    final hasBiometric = DatabaseService.biometricBoxListenable().value.isNotEmpty;
+    final hasBiometric = DatabaseService.biometricBoxListenable().value.length >= 2;
     final newAchievements = await AchievementService.checkAll(
       workouts,
       hasBiometric: hasBiometric,
