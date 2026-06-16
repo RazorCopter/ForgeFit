@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.10] — 2026-06-16
+
+### Fixed
+- **Nerd Analytics Stats Layout**: Ottimizzato il layout dei 3 box delle statistiche in alto nella scheda Stats. Ridotto il padding interno dei box e la dimensione delle icone, aggiunto un `FittedBox` per riscalare automaticamente i testi dei valori senza troncarli con l'ellipsis, e spostato il nome dell'esercizio del "Best Set" come sottotitolo nell'angolo in alto a destra anziché concatenato nel valore principale. Risolto anche il bug di formattazione che aggiungeva un `.0` decimale non necessario ai valori interi come le ore.
+
 ## [2.1.9] — 2026-06-16
 
 ### Added

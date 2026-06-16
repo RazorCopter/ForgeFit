@@ -5,7 +5,6 @@ import 'package:lottie/lottie.dart';
 import '../core/theme.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
-import '../core/api_service.dart';
 import 'body_map_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -22,8 +21,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     super.initState();
   }
 
-  String _bestSet(List<CompletedWorkout> workouts) {
-    if (workouts.isEmpty) return 'N/A';
+  Map<String, String> _bestSetData(List<CompletedWorkout> workouts) {
+    if (workouts.isEmpty) return {'value': 'N/A', 'exercise': ''};
     double maxLoad = 0;
     String exName = '';
     for (var w in workouts) {
@@ -36,7 +35,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         }
       }
     }
-    return maxLoad > 0 ? '${maxLoad}kg ($exName)' : 'N/A';
+    final formattedLoad = maxLoad % 1 == 0 ? maxLoad.toInt().toString() : maxLoad.toStringAsFixed(1);
+    return {
+      'value': maxLoad > 0 ? '$formattedLoad kg' : 'N/A',
+      'exercise': exName,
+    };
   }
 
   String _avgVolume(List<CompletedWorkout> workouts) {
@@ -282,11 +285,33 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _buildNerdStat('Best Set', _bestSet(workouts), Icons.emoji_events, AppTheme.vividPurple)),
+                      Expanded(
+                        child: _buildNerdStat(
+                          title: 'Best Set',
+                          value: _bestSetData(workouts)['value']!,
+                          icon: Icons.emoji_events,
+                          color: AppTheme.vividPurple,
+                          subtitle: _bestSetData(workouts)['exercise'],
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildNerdStat('Vol. Medio', _avgVolume(workouts), Icons.fitness_center, AppTheme.cyan)),
+                      Expanded(
+                        child: _buildNerdStat(
+                          title: 'Vol. Medio',
+                          value: _avgVolume(workouts),
+                          icon: Icons.fitness_center,
+                          color: AppTheme.cyan,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildNerdStat('Ore Tot.', _totalTrainingTime(workouts), Icons.timer_outlined, AppTheme.legsAccent)),
+                      Expanded(
+                        child: _buildNerdStat(
+                          title: 'Ore Tot.',
+                          value: _totalTrainingTime(workouts),
+                          icon: Icons.timer_outlined,
+                          color: AppTheme.legsAccent,
+                        ),
+                      ),
                     ],
                   ).animate().fade().slideY(),
                   
@@ -629,7 +654,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildNerdStat(String title, String value, IconData icon, Color color) {
+  Widget _buildNerdStat({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    String? subtitle,
+  }) {
     // Estrai il primo numero dalla stringa per animarlo (es. "3500 kg" → 3500.0)
     final numMatch = RegExp(r'[\d]+(?:[.,]\d+)?').firstMatch(value);
     final numericPart = numMatch != null ? double.tryParse(numMatch.group(0)!.replaceAll(',', '.')) : null;
@@ -637,12 +668,27 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final suffix = numMatch != null ? value.substring(numMatch.end) : value;
 
     return AppTheme.glassContainer(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       borderColor: color.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: color, size: 22),
+              if (subtitle != null && subtitle.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: 12),
           numericPart != null
               ? TweenAnimationBuilder<double>(
@@ -650,27 +696,36 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   duration: const Duration(milliseconds: 1200),
                   curve: Curves.easeOut,
                   builder: (_, v, __) {
-                    final formatted = numericPart >= 100
+                    final formatted = (numericPart % 1 == 0)
                         ? v.toInt().toString()
                         : v.toStringAsFixed(1);
-                    return Text(
-                      '$prefix$formatted$suffix',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold, color: color),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '$prefix$formatted$suffix',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold, color: color),
+                      ),
                     );
                   },
                 )
-              : Text(
-                  value,
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold, color: color),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold, color: color),
+                  ),
                 ),
           const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
