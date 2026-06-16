@@ -1,5 +1,12 @@
 # Changelog — ForgeFit
 
+## [2.1.6] — 2026-06-16
+
+### Added
+- **Voice Coach Customization**: Modificata la voce neurale di default sul backend impostando la voce maschile italiana `it-IT-GiuseppeNeural` su richiesta dell'utente.
+- **TTS Pronunciation & Accents**: Ottimizzati i testi della sintesi vocale nel frontend inserendo gli accenti fonetici corretti (es. *ripòsati*) per migliorare la fluidità e la correttezza della pronuncia del coach.
+- **Edge TTS Stability**: Risolto l'errore di handshake WebSocket 403 (Sec-MS-GEC) aggiornando `edge-tts>=7.2.8` e corretto il nome della voce neurale italiana da `it-IT-ElisaNeural` a `it-IT-ElsaNeural` prima del passaggio a `it-IT-GiuseppeNeural`.
+
 ## [2.1.2] — 2026-06-16
 
 ### Added
