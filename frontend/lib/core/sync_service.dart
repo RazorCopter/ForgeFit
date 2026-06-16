@@ -6,6 +6,7 @@ import 'auth_service.dart';
 import '../models/completed_workout.dart';
 import '../models/biometric_record.dart';
 import '../models/user_profile.dart';
+import 'achievement_service.dart';
 
 class SyncService {
   static bool _isSyncing = false;
@@ -149,6 +150,21 @@ class SyncService {
         if (kDebugMode) debugPrint('✅ Pull UserProfile completato');
       } catch (e) {
         debugPrint('❌ Pull fallito per UserProfile: $e');
+      }
+
+      // Ricalcolo achievements post-sync
+      try {
+        final workouts = DatabaseService.getAllWorkouts();
+        final streak = DatabaseService.getCurrentStreak();
+        final hasBiometric = DatabaseService.getAllBiometricRecords().length >= 2;
+        await AchievementService.checkAll(
+          workouts,
+          hasBiometric: hasBiometric,
+          currentStreak: streak,
+        );
+        if (kDebugMode) debugPrint('✅ Ricalcolo Achievements post-sync completato');
+      } catch (e) {
+        debugPrint('❌ Errore ricalcolo Achievements post-sync: $e');
       }
     } finally {
       _isSyncing = false;

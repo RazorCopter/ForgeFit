@@ -273,28 +273,22 @@ def unlock_ai(
     data: schemas.UnlockAIRequest,
     current_user: models.User = Depends(get_current_user),
 ):
-    import hmac
-    import hashlib
     from datetime import datetime, timezone, timedelta
-    from auth import SECRET_KEY
 
     now = datetime.now(timezone.utc)
     iso_year, iso_week, _ = now.isocalendar()
-    message = f"{iso_year}-W{iso_week:02d}".encode()
-    expected_code = hmac.new(SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:8]
+    
+    # Supporta sia forza5 che forza05
+    valid_codes = [f"forza{iso_week}", f"forza{iso_week:02d}"]
+    code_entered = data.code.strip().lower()
 
-    if not hmac.compare_digest(data.code.strip().lower(), expected_code):
+    if code_entered not in valid_codes:
         logger.info(f"Codice AI non valido per utente {current_user.email} (settimana {iso_year}-W{iso_week:02d})")
         return schemas.UnlockAIResponse(valid=False)
 
-    days_until_sunday = 6 - now.weekday()
-    if days_until_sunday < 0:
-        days_until_sunday = 0
-    expires = (now + timedelta(days=days_until_sunday)).replace(
-        hour=23, minute=59, second=59, microsecond=0
-    )
+    expires = now + timedelta(days=180)
 
-    logger.info(f"Sblocco AI concesso a {current_user.email} fino a {expires.isoformat()}")
+    logger.info(f"Sblocco AI concesso a {current_user.email} fino a {expires.isoformat()} (180 giorni)")
     return schemas.UnlockAIResponse(valid=True, expires_at=expires.isoformat())
 
 
@@ -305,15 +299,11 @@ def unlock_ai(
 def get_ai_unlock_code(current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Accesso negato.")
-    import hmac as _hmac
-    import hashlib
     from datetime import datetime, timezone
-    from auth import SECRET_KEY
     now = datetime.now(timezone.utc)
     iso_year, iso_week, _ = now.isocalendar()
-    message = f"{iso_year}-W{iso_week:02d}".encode()
-    code = _hmac.new(SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:8]
-    return {"week": f"{iso_year}-W{iso_week:02d}", "code": code}
+    code = f"forza{iso_week}"
+    return {"code": code}
 
 
 @router.post(

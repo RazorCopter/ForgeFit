@@ -84,7 +84,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void _checkAILock() {
     final activationDate = DatabaseService.getAIActivationDate();
     if (activationDate != null) {
-      final expiration = activationDate.add(const Duration(days: 90));
+      final expiration = activationDate.add(const Duration(days: 180));
       if (DateTime.now().isBefore(expiration)) {
         setState(() {
           _isAILocked = false;
@@ -212,7 +212,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       // Controllo sblocco achievements
       final workouts = DatabaseService.getAllWorkouts();
       final streak = DatabaseService.getCurrentStreak();
-      final hasBiometric = DatabaseService.biometricBoxListenable().value.length >= 2;
+      final hasBiometric = DatabaseService.getAllBiometricRecords().length >= 2;
       final newAchievements = await AchievementService.checkAll(
         workouts,
         hasBiometric: hasBiometric,
