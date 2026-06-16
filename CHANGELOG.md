@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.13] — 2026-06-16
+
+### Fixed
+- **FitConsole ReferenceError Fix**: Risolto il ReferenceError per cui non era possibile accedere alla variabile `badge` prima della sua inizializzazione nel caricamento delle schede dal backend.
+
 ## [2.1.12] — 2026-06-16
 
 ### Added

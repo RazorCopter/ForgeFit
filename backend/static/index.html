@@ -3135,6 +3135,7 @@
 
           const gruppoSel = block.querySelector('.ex-gruppo');
           const exSel = block.querySelector('.ex-select');
+          const badge = block.querySelector('.ex-group-badge');
 
           let catalogEx = catalog.find(c => c.nome.toLowerCase() === (ex.nome || '').toLowerCase());
           if (!catalogEx && ex.nome) {
@@ -3166,7 +3167,6 @@
           }
 
           // 4. Aggiornamento Header Accordion (Badge e Titolo)
-          const badge = block.querySelector('.ex-group-badge');
           const titleText = block.querySelector('.ex-title-text');
           if (badge && gValue) badge.textContent = gValue;
           if (titleText && ex.nome) titleText.textContent = ex.nome;
