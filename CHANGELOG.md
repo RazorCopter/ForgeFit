@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.8] — 2026-06-16
+
+### Fixed
+- **Emergency Password Reset Rate Limiting**: Aggiunto rate limit di 3 richieste all'ora (`3/hour`) sull'endpoint `/api/auth/reset-password-emergency` per prevenire attacchi brute-force sulla master key.
+
 ## [2.1.7] — 2026-06-16
 
 ### Fixed

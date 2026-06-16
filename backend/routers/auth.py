@@ -321,7 +321,8 @@ def get_ai_unlock_code(current_user: models.User = Depends(get_current_user)):
     response_model=schemas.MessageResponse,
     summary="Resetta la password di un utente o del PT in emergenza (richiede Master Key)",
 )
-def reset_password_emergency(data: schemas.ResetPasswordEmergencyRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/hour")
+def reset_password_emergency(request: Request, data: schemas.ResetPasswordEmergencyRequest, db: Session = Depends(get_db)):
     """
     Consente di resettare la password di qualsiasi utente (incluso l'admin/PT)
     fornendo la chiave segreta EMERGENCY_MASTER_KEY configurata a livello server.
