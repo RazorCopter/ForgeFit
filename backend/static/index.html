@@ -3148,6 +3148,7 @@
           if (gruppoSel && gValue) {
             gruppoSel.value = gValue;
             if (exSel) exSel.innerHTML = getExerciseOptions(gValue);
+            updateBadgeColor(badge, gValue);
           }
 
           if (exSel) {
@@ -3469,6 +3470,7 @@
       const title = block.querySelector('.ex-title-text');
       const gruppoSel = block.querySelector('.ex-gruppo');
       const exSel = block.querySelector('.ex-select');
+      updateBadgeColor(badge, '');
 
       header.addEventListener('click', (e) => {
         if (e.target.closest('button')) return;
@@ -3479,6 +3481,7 @@
         const val = gruppoSel.value;
         badge.textContent = val || 'Gruppo';
         exSel.innerHTML = getExerciseOptions(val);
+        updateBadgeColor(badge, val);
       });
 
       exSel.addEventListener('change', () => {
@@ -3515,6 +3518,43 @@
         if (next && next.classList.contains('ex-block')) {
           parent.insertBefore(next, block);
         }
+      }
+    }
+
+    function updateBadgeColor(badge, group) {
+      if (!badge) return;
+      badge.style.background = '';
+      badge.style.color = '';
+      badge.style.border = '';
+      const g = (group || '').toLowerCase();
+      if (g === 'petto') {
+        badge.style.background = 'rgba(0, 229, 255, 0.12)';
+        badge.style.color = '#00e5ff';
+        badge.style.border = '1px solid rgba(0, 229, 255, 0.3)';
+      } else if (g === 'schiena') {
+        badge.style.background = 'rgba(187, 134, 252, 0.12)';
+        badge.style.color = '#bb86fc';
+        badge.style.border = '1px solid rgba(187, 134, 252, 0.3)';
+      } else if (g === 'gambe' || g === 'glutei') {
+        badge.style.background = 'rgba(0, 184, 212, 0.12)';
+        badge.style.color = '#00b8d4';
+        badge.style.border = '1px solid rgba(0, 184, 212, 0.3)';
+      } else if (g === 'spalle') {
+        badge.style.background = 'rgba(255, 109, 0, 0.12)';
+        badge.style.color = '#ff6d00';
+        badge.style.border = '1px solid rgba(255, 109, 0, 0.3)';
+      } else if (g === 'braccia') {
+        badge.style.background = 'rgba(255, 64, 129, 0.12)';
+        badge.style.color = '#ff4081';
+        badge.style.border = '1px solid rgba(255, 64, 129, 0.3)';
+      } else if (g === 'addome' || g === 'core') {
+        badge.style.background = 'rgba(0, 230, 118, 0.12)';
+        badge.style.color = '#00e676';
+        badge.style.border = '1px solid rgba(0, 230, 118, 0.3)';
+      } else {
+        badge.style.background = 'rgba(180, 0, 255, 0.12)';
+        badge.style.color = '#b400ff';
+        badge.style.border = '1px solid rgba(180, 0, 255, 0.3)';
       }
     }
 

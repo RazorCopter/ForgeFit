@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.12] — 2026-06-16
+
+### Added
+- **Dynamic Muscle Group Badges (FitConsole)**: Allineati i colori dei badge dei gruppi muscolari nel builder di FitConsole a quelli ufficiali usati nell'app client Flutter (Petto -> Ciano, Schiena -> Viola chiaro, Gambe/Glutei -> Ciano profondo, Spalle -> Arancione, Braccia -> Rosa, Addome/Core -> Verde, Altri -> Viola).
+
 ## [2.1.11] — 2026-06-16
 
 ### Fixed
