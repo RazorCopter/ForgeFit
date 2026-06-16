@@ -1,5 +1,11 @@
 # Changelog — ForgeFit
 
+## [2.1.1] — 2026-06-16
+
+### Added
+- **Edge TTS Integration**: Integrata la sintesi vocale neurale cloud di Microsoft Edge (voce `it-IT-ElisaNeural`) con caching locale automatico dell'audio MP3 e fallback offline su `flutter_tts` locale.
+- **Refactoring Deprecazioni**: Risolti oltre 130 avvisi di deprecazione di `withOpacity` convertendoli in `withValues(alpha: ...)`.
+
 ## [2.1.0] — 2026-06-16
 
 ### Added
