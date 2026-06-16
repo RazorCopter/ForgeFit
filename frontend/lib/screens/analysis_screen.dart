@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
@@ -37,7 +38,23 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   UserProfile? _profile;
 
   @override
+  void initState() {
+    super.initState();
+    _initData();
+    DatabaseService.userProfileBoxListenable().addListener(_onProfileChanged);
+  }
+
+  void _onProfileChanged() {
+    if (mounted) {
+      setState(() {
+        _profile = DatabaseService.getUserProfile();
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    DatabaseService.userProfileBoxListenable().removeListener(_onProfileChanged);
     _goalController.dispose();
     _weightController.dispose();
     _fianchiController.dispose();
@@ -50,12 +67,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     _polsoController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initData();
   }
 
   Future<void> _initData() async {
@@ -129,17 +140,21 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void _loadLatestBiometrics() {
-    final record = DatabaseService.getLatestBiometricRecord();
-    if (record != null) {
-      _weightController.text = record.weight.toString();
-      _fianchiController.text = record.hips.toString();
-      _polpaccioController.text = record.calf?.toString() ?? '';
-      _chestController.text = record.chest.toString();
-      _bicepsController.text = record.biceps.toString();
-      _vitaController.text = record.waist?.toString() ?? '';
-      _cosciaController.text = record.thigh?.toString() ?? '';
-      _colloController.text = record.neck?.toString() ?? '';
-      _polsoController.text = record.wrist?.toString() ?? '';
+    try {
+      final record = DatabaseService.getLatestBiometricRecord();
+      if (record != null) {
+        _weightController.text = record.weight.toString();
+        _fianchiController.text = record.hips.toString();
+        _polpaccioController.text = record.calf?.toString() ?? '';
+        _chestController.text = record.chest.toString();
+        _bicepsController.text = record.biceps.toString();
+        _vitaController.text = record.waist?.toString() ?? '';
+        _cosciaController.text = record.thigh?.toString() ?? '';
+        _colloController.text = record.neck?.toString() ?? '';
+        _polsoController.text = record.wrist?.toString() ?? '';
+      }
+    } catch (e) {
+      debugPrint('Error loading latest biometrics: $e');
     }
   }
 

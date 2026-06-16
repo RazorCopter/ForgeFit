@@ -45,6 +45,7 @@ class DatabaseService {
 
   static ValueListenable<Box<CompletedWorkout>> workoutBoxListenable() => _workoutBox.listenable();
   static ValueListenable<Box<BiometricRecord>> biometricBoxListenable() => _biometricBox.listenable();
+  static ValueListenable<Box<UserProfile>> userProfileBoxListenable() => _userProfileBox.listenable();
 
   // --- TRAINING PLAN CACHE ---
 

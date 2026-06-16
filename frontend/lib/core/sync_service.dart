@@ -138,11 +138,11 @@ class SyncService {
           height: (userData['height'] as num?)?.toDouble() ?? 0.0,
           sesso: userData['gender'] ?? '',
           bmi: (userData['bmi'] as num?)?.toDouble(),
-          bmr: userData['bmr'] as int?,
+          bmr: (userData['bmr'] as num?)?.toInt(),
           whr: (userData['whr'] as num?)?.toDouble(),
           acquaLitri: (userData['acqua_litri'] as num?)?.toDouble(),
-          proteineMin: userData['proteine_min'] as int?,
-          proteineMax: userData['proteine_max'] as int?,
+          proteineMin: (userData['proteine_min'] as num?)?.toInt(),
+          proteineMax: (userData['proteine_max'] as num?)?.toInt(),
           bodyFatPerc: (userData['body_fat_perc'] as num?)?.toDouble(),
         );
         await DatabaseService.saveUserProfile(newProfile);

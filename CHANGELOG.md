@@ -1,5 +1,11 @@
 # Changelog — ForgeFit
 
+## [2.1.7] — 2026-06-16
+
+### Fixed
+- **AI Performance Tab Loading**: Risolto il caricamento infinito dello spinner sotto "Performance Analysis" nel tab AI del frontend. Aggiunto un listener reattivo su Hive per aggiornare automaticamente il profilo utente all'avvenuta sincronizzazione e blindata l'inizializzazione con try-catch.
+- **Safe Profile Casts**: Risolti possibili errori di casting a runtime durante il parsing dal backend dei campi numerici `bmr`, `proteine_min` e `proteine_max` (gestendo sia int che double).
+
 ## [2.1.6] — 2026-06-16
 
 ### Added
