@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.1.9] — 2026-06-16
+
+### Added
+- **Docker Compose Environment**: Esposta la variabile d'ambiente `EMERGENCY_MASTER_KEY` nel `docker-compose.yml` del backend per consentire la configurazione centralizzata tramite le variabili di ambiente dello Stack di Portainer.
+
 ## [2.1.8] — 2026-06-16
 
 ### Fixed

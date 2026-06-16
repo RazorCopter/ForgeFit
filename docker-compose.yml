@@ -15,6 +15,7 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - GOOGLE_API_KEY=${GEMINI_API_KEY}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8083}
+      - EMERGENCY_MASTER_KEY=${EMERGENCY_MASTER_KEY}
     networks:
       - forgefit-net
 
