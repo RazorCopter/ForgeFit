@@ -128,7 +128,7 @@ async def get_edge_tts(text: str, current_user: models.User = Depends(get_curren
     if not text.strip():
         raise HTTPException(status_code=400, detail="Il testo non può essere vuoto.")
     try:
-        communicate = edge_tts.Communicate(text, "it-IT-ElisaNeural")
+        communicate = edge_tts.Communicate(text, "it-IT-ElsaNeural")
         async def audio_generator():
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
