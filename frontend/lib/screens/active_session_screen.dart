@@ -184,7 +184,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
       } else {
         Future.delayed(const Duration(milliseconds: 2500), () {
           if (mounted && _isResting) {
-            VoiceService.speak("Ora riposati per $restSec secondi.");
+            VoiceService.speak("Ora ripòsati per $restSec secondi.");
           }
         });
       }

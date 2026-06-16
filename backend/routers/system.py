@@ -8,6 +8,7 @@ import models
 import schemas
 from database import engine, get_db
 from auth import get_current_user
+from version import APP_VERSION
 import ai_service
 import logging
 
@@ -137,3 +138,8 @@ async def get_edge_tts(text: str, current_user: models.User = Depends(get_curren
     except Exception as e:
         logger.error(f"Errore generazione Edge TTS: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Errore TTS: {str(e)}")
+
+
+@router.get("/version", summary="Ottieni la versione corrente dell'applicazione")
+def get_version():
+    return {"version": APP_VERSION}

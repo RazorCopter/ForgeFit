@@ -864,6 +864,27 @@
       cursor: grabbing;
     }
 
+    .btn-ex-delete {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .btn-ex-delete:hover {
+      background: rgba(255, 64, 129, 0.1);
+      border-color: rgba(255, 64, 129, 0.4);
+      color: #ff4081;
+      box-shadow: 0 0 8px rgba(255, 64, 129, 0.25);
+    }
+
     .ex-selects {
       display: grid;
       grid-template-columns: 1fr 2fr auto;
@@ -2144,7 +2165,7 @@
     </div>
   </div>
 
-  <footer>FITNESS MANAGER API &mdash; PT DASHBOARD &mdash; <span>Version 1.0.0</span></footer>
+  <footer>FITNESS MANAGER API &mdash; PT DASHBOARD &mdash; <span id="app-version">Version 1.0.0</span></footer>
 
   <script>
 
@@ -2204,6 +2225,7 @@
 
       // Verifica se il sistema è configurato
       try {
+        loadVersion();
         const rSetup = await fetch(getServerUrl() + '/api/auth/setup-status');
         const setupData = await rSetup.json();
         if (setupData && setupData.is_configured === false) {
@@ -3479,7 +3501,12 @@
           <span class="ex-title-text">Seleziona esercizio...</span>
           <div class="ex-chevron">▼</div>
           <div class="ex-controls" style="display:flex; gap:6px; align-items:center; margin-right: 0.25rem" onclick="event.stopPropagation();">
-            <button class="btn btn-danger btn-sm" style="padding:0; width:26px; height:26px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="this.closest('.ex-block').remove();" title="Elimina esercizio">✕</button>
+            <button class="btn-ex-delete" onclick="this.closest('.ex-block').remove();" title="Elimina esercizio">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="ex-body">
@@ -3604,6 +3631,20 @@
           return closest;
         }
       }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    async function loadVersion() {
+      try {
+        const r = await fetch(getServerUrl() + '/api/system/version');
+        if (r.ok) {
+          const data = await r.json();
+          if (data && data.version) {
+            document.getElementById('app-version').textContent = 'Version ' + data.version;
+          }
+        }
+      } catch (e) {
+        console.error("Errore caricamento versione:", e);
+      }
     }
 
     function updateBadgeColor(badge, group) {
