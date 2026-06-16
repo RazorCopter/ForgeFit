@@ -34,8 +34,8 @@ class VoiceService {
       await _flutterTts.setSpeechRate(0.5);
       await _flutterTts.setPitch(1.0);
       await _flutterTts.setVolume(1.0);
-      await _flutterTts.setSharedInstance(true);
       if (!kIsWeb) {
+        await _flutterTts.setSharedInstance(true);
         await _flutterTts.setEngine("com.google.android.tts");
       }
       _isTtsInitialized = true;
@@ -53,7 +53,8 @@ class VoiceService {
   }
 
   /// Pronuncia un testo in italiano. Tenta la chiamata cloud Edge TTS,
-  /// salva in cache locale e in caso di errore/offline effettua il fallback su Local TTS.
+  /// salva in cache locale (su mobile) o riproduce via byte in memoria (su web),
+  /// e in caso di errore/offline effettua il fallback su Local TTS.
   static Future<void> speak(String text) async {
     final isEnabled = DatabaseService.getVoiceCoachEnabled();
     if (!isEnabled) {
@@ -64,6 +65,25 @@ class VoiceService {
     if (text.trim().isEmpty) return;
 
     try {
+      // Se siamo su Web, non possiamo usare il filesystem locale per la cache.
+      // Eseguiamo il download dei byte in memoria e la riproduzione tramite BytesSource.
+      if (kIsWeb) {
+        debugPrint('🎙️ [VoiceService] Web Mode: Scaricamento audio Edge TTS...');
+        final headers = await AuthService.authHeaders();
+        final encodedText = Uri.encodeComponent(text);
+        final url = Uri.parse('${ApiConfig.baseUrl}/api/system/tts?text=$encodedText');
+
+        final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 4));
+        if (response.statusCode == 200) {
+          await stop();
+          await _audioPlayer.play(BytesSource(response.bodyBytes));
+          return;
+        } else {
+          throw Exception('Web TTS fallito con status ${response.statusCode}');
+        }
+      }
+
+      // Su dispositivi mobile (Android/iOS), usiamo la cache su filesystem
       final filename = _getSafeFilename(text);
       final tempDir = await getTemporaryDirectory();
       final file = File('${tempDir.path}/$filename');
