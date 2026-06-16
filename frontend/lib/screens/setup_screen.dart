@@ -378,7 +378,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                   Switch(
                     value: DatabaseService.getSoundEnabled(),
-                    activeColor: AppTheme.cyan,
+                    activeThumbColor: AppTheme.cyan,
                     activeTrackColor: AppTheme.cyan.withOpacity(0.3),
                     inactiveThumbColor: AppTheme.textSecondary,
                     inactiveTrackColor: Colors.black26,
@@ -426,7 +426,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                   Switch(
                     value: DatabaseService.getVoiceCoachEnabled(),
-                    activeColor: AppTheme.vividPurple,
+                    activeThumbColor: AppTheme.vividPurple,
                     activeTrackColor: AppTheme.vividPurple.withOpacity(0.3),
                     inactiveThumbColor: AppTheme.textSecondary,
                     inactiveTrackColor: Colors.black26,
