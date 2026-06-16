@@ -1,7 +1,7 @@
 name: forgefit
 description: "Your AI-powered personal trainer."
 publish_to: 'none'
-version: 2.0.4+47
+version: 2.1.0+48
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -35,6 +35,7 @@ dependencies:
   youtube_player_iframe: ^6.0.2
   lottie: ^3.1.0
   health: ^12.2.0
+  flutter_tts: ^3.8.5
 
 dev_dependencies:
   flutter_test:

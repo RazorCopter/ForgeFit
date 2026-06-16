@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 import '../core/sound_service.dart';
+import '../core/voice_service.dart';
+import '../data/database_service.dart';
 
 class NextSetInfo {
   final int setNumber;
@@ -47,6 +49,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
   Timer? _timer;
   bool _countdownFinished = false;
   late bool _soundEnabled;
+  bool _voiceEnabled = true;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
 
@@ -57,6 +60,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
     super.initState();
     _remainingSeconds = widget.durationSeconds;
     _soundEnabled = widget.soundEnabled;
+    _voiceEnabled = DatabaseService.getVoiceCoachEnabled();
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -73,6 +77,18 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
         setState(() {
           _remainingSeconds--;
         });
+
+        // Coach vocale avvisa a 5 secondi dal termine del riposo
+        if (_remainingSeconds == 5) {
+          final next = widget.nextSet;
+          if (next != null) {
+            final kgStr = next.kg > 0 ? "con ${next.kg == next.kg.roundToDouble() ? next.kg.toInt() : next.kg} chili" : "";
+            VoiceService.speak("Preparati, mancano 5 secondi alla serie ${next.setNumber} $kgStr");
+          } else {
+            VoiceService.speak("Preparati, mancano 5 secondi alla prossima serie");
+          }
+        }
+
         if (_remainingSeconds <= _glowThreshold && _remainingSeconds > 0) {
           if (!_pulseController.isAnimating) {
             _pulseController.repeat(reverse: true);
@@ -83,6 +99,7 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
         _pulseController.stop();
         HapticFeedback.heavyImpact();
         if (_soundEnabled) SoundService.playBeep();
+        VoiceService.speak("Tempo scaduto! Riprendi l'allenamento.");
         setState(() {
           _countdownFinished = true;
         });
@@ -122,23 +139,49 @@ class _RestTimerWidgetState extends State<RestTimerWidget>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Campanella suono toggle
+            // Controlli audio (Coach vocale + beep)
             Align(
               alignment: Alignment.centerRight,
-              child: Tooltip(
-                message: _soundEnabled ? 'Disattiva beep' : 'Attiva beep',
-                child: IconButton(
-                  onPressed: () {
-                    final next = !_soundEnabled;
-                    setState(() => _soundEnabled = next);
-                    widget.onSoundToggle(next);
-                  },
-                  icon: Icon(
-                    _soundEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
-                    color: _soundEnabled ? widget.accentColor : AppTheme.textSecondary,
-                    size: 28,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: _voiceEnabled ? 'Disattiva Coach Vocale' : 'Attiva Coach Vocale',
+                    child: IconButton(
+                      onPressed: () {
+                        final next = !_voiceEnabled;
+                        setState(() => _voiceEnabled = next);
+                        DatabaseService.setVoiceCoachEnabled(next);
+                        if (next) {
+                          VoiceService.speak("Coach vocale attivo");
+                        } else {
+                          VoiceService.stop();
+                        }
+                      },
+                      icon: Icon(
+                        _voiceEnabled ? Icons.headset : Icons.headset_off,
+                        color: _voiceEnabled ? widget.accentColor : AppTheme.textSecondary,
+                        size: 28,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: _soundEnabled ? 'Disattiva beep' : 'Attiva beep',
+                    child: IconButton(
+                      onPressed: () {
+                        final next = !_soundEnabled;
+                        setState(() => _soundEnabled = next);
+                        widget.onSoundToggle(next);
+                      },
+                      icon: Icon(
+                        _soundEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
+                        color: _soundEnabled ? widget.accentColor : AppTheme.textSecondary,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 

@@ -314,3 +314,58 @@ def get_ai_unlock_code(current_user: models.User = Depends(get_current_user)):
     message = f"{iso_year}-W{iso_week:02d}".encode()
     code = _hmac.new(SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:8]
     return {"week": f"{iso_year}-W{iso_week:02d}", "code": code}
+
+
+@router.post(
+    "/reset-password-emergency",
+    response_model=schemas.MessageResponse,
+    summary="Resetta la password di un utente o del PT in emergenza (richiede Master Key)",
+)
+def reset_password_emergency(data: schemas.ResetPasswordEmergencyRequest, db: Session = Depends(get_db)):
+    """
+    Consente di resettare la password di qualsiasi utente (incluso l'admin/PT)
+    fornendo la chiave segreta EMERGENCY_MASTER_KEY configurata a livello server.
+    """
+    import os
+    master_key = os.getenv("EMERGENCY_MASTER_KEY")
+    if not master_key or not master_key.strip():
+        logger.error("EMERGENCY_MASTER_KEY non configurata sul server!")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Funzionalità di emergenza non abilitata o non configurata lato server.",
+        )
+
+    import hmac
+    if not hmac.compare_digest(data.master_key.strip(), master_key.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Chiave master non valida.",
+        )
+
+    # 1. Verifica se l'email è quella dell'admin
+    admin_config = config_manager.get_admin_config()
+    if admin_config and admin_config.get("username") == data.email:
+        new_hash = auth_utils.hash_password(data.new_password)
+        success = config_manager.save_admin_config(
+            pt_name=admin_config["pt_name"],
+            username=admin_config["username"],
+            hashed_password=new_hash,
+        )
+        if not success:
+            raise HTTPException(status_code=500, detail="Errore durante il salvataggio della config PT.")
+        logger.info(f"Password AMMINISTRATORE (PT) resettata con successo via Master Key per: {data.email}")
+        return {"message": "Password amministratore resettata con successo."}
+
+    # 2. Altrimenti verifica gli utenti nel DB
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Utente '{data.email}' non trovato.",
+        )
+
+    user.hashed_password = auth_utils.hash_password(data.new_password)
+    db.commit()
+    logger.info(f"Password UTENTE resettata con successo via Master Key per: {data.email}")
+    return {"message": f"Password per l'utente '{data.email}' resettata con successo."}
+

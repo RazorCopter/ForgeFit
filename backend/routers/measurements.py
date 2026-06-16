@@ -90,3 +90,37 @@ def update_measurement(
     db.refresh(meas)
     logger.info(f"Misurazione ID {measurement_id} aggiornata.")
     return meas
+
+
+@router.post("", response_model=schemas.MeasurementResponse, status_code=status.HTTP_201_CREATED, summary="Salva una nuova misurazione biometrica")
+def create_measurement(
+    data: schemas.MeasurementCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Salva una nuova misurazione biometrica nel database per l'utente loggato.
+    Supporta la data retroattiva passata tramite 'created_at' (per la sync offline).
+    """
+    new_meas = models.Measurement(
+        user_id=current_user.id,
+        weight=data.weight,
+        chest=data.chest,
+        waist=data.waist,
+        hips=data.hips,
+        biceps=data.biceps,
+        thigh=data.thigh,
+        calf=data.calf,
+        neck=data.neck,
+        wrist=data.wrist,
+        goal=data.goal,
+    )
+    if data.created_at:
+        new_meas.created_at = data.created_at
+
+    db.add(new_meas)
+    db.commit()
+    db.refresh(new_meas)
+    logger.info(f"Nuova misurazione salvata per l'utente {current_user.email} (ID: {new_meas.id})")
+    return new_meas
+

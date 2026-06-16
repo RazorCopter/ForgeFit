@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:file_saver/file_saver.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import '../core/theme.dart';
 import '../core/app_version.dart';
 import '../core/api_service.dart';
 import '../core/auth_service.dart';
-import '../core/achievement_service.dart';
 import '../data/database_service.dart';
 import '../core/sync_service.dart';
 import '../services/plan_service.dart';
@@ -336,6 +329,119 @@ class _SetupScreenState extends State<SetupScreen> {
 
 
 
+            // ── Sezione Preferenze ─────────────────────────────────────────
+            const SizedBox(height: 24),
+            const Text(
+              'Preferenze App',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ).animate().fade(delay: 170.ms).slideY(),
+            const SizedBox(height: 8),
+            const Text(
+              'Configura i feedback sonori e l\'assistenza vocale del coach.',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ).animate().fade(delay: 190.ms).slideY(),
+            const SizedBox(height: 16),
+
+            // Switch Suoni di recupero
+            AppTheme.glassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              borderColor: AppTheme.cyan.withOpacity(0.3),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cyan.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.volume_up, color: AppTheme.cyan, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Suoni di Recupero',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        Text(
+                          'Riproduce un beep al termine del riposo',
+                          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: DatabaseService.getSoundEnabled(),
+                    activeColor: AppTheme.cyan,
+                    activeTrackColor: AppTheme.cyan.withOpacity(0.3),
+                    inactiveThumbColor: AppTheme.textSecondary,
+                    inactiveTrackColor: Colors.black26,
+                    onChanged: (val) {
+                      setState(() {
+                        DatabaseService.setSoundEnabled(val);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ).animate().fade(delay: 210.ms).slideX(),
+
+            const SizedBox(height: 12),
+
+            // Switch Coach Vocale AI
+            AppTheme.glassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              borderColor: AppTheme.vividPurple.withOpacity(0.3),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.vividPurple.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.record_voice_over, color: AppTheme.vividPurple, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Coach Vocale AI',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        Text(
+                          'Fornisce indicazioni e incitamento vocale',
+                          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: DatabaseService.getVoiceCoachEnabled(),
+                    activeColor: AppTheme.vividPurple,
+                    activeTrackColor: AppTheme.vividPurple.withOpacity(0.3),
+                    inactiveThumbColor: AppTheme.textSecondary,
+                    inactiveTrackColor: Colors.black26,
+                    onChanged: (val) {
+                      setState(() {
+                        DatabaseService.setVoiceCoachEnabled(val);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ).animate().fade(delay: 230.ms).slideX(),
+
+            const SizedBox(height: 24),
+
             // ── Sezione Sicurezza ─────────────────────────────────────────
             const Text(
               'Sicurezza Account',
@@ -344,7 +450,7 @@ class _SetupScreenState extends State<SetupScreen> {
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
               ),
-            ).animate().fade(delay: 200.ms).slideY(),
+            ).animate().fade(delay: 250.ms).slideY(),
             const SizedBox(height: 8),
             const Text(
               'Gestisci la tua password e la sessione di accesso.',

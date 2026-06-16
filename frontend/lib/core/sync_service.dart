@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../data/database_service.dart';
 import 'api_service.dart';
@@ -52,6 +51,7 @@ class SyncService {
             'neck': record.neck,
             'wrist': record.wrist,
             'goal': 'Sync automatico',
+            'created_at': record.date.toIso8601String(),
           });
           record.isSynced = true;
           await DatabaseService.saveBiometricRecord(record);

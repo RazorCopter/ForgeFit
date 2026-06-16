@@ -248,6 +248,7 @@ class MeasurementCreate(BaseModel):
     neck: Optional[float] = Field(None, validation_alias=AliasChoices("neck", "collo"))
     wrist: Optional[float] = Field(None, validation_alias=AliasChoices("wrist", "polso"))
     goal: Optional[str] = None
+    created_at: Optional[datetime] = None
 
 
 class MeasurementResponse(MeasurementCreate):
@@ -384,3 +385,11 @@ class UnlockAIResponse(BaseModel):
     """Schema di risposta per lo sblocco AI."""
     valid: bool
     expires_at: Optional[str] = Field(None, description="ISO8601 — data di scadenza del codice")
+
+
+class ResetPasswordEmergencyRequest(BaseModel):
+    """Schema per la richiesta di reset password d'emergenza (tramite master_key)."""
+    email: EmailStr
+    master_key: str
+    new_password: str = Field(..., min_length=6)
+

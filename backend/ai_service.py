@@ -85,8 +85,8 @@ def get_ai_config(db: Session) -> Tuple[str, str, str]:
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
     deepseek_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
     
-    # Fallback sicuro: gemini-2.5-flash
-    ai_model = model_setting.value if model_setting and model_setting.value else "gemini-2.5-flash"
+    # Fallback sicuro: gemini-1.5-flash
+    ai_model = model_setting.value if model_setting and model_setting.value else "gemini-1.5-flash"
     api_key_override = key_setting.value if key_setting and key_setting.value else None
     deepseek_api_key_override = deepseek_setting.value if deepseek_setting and deepseek_setting.value else None
     
@@ -119,9 +119,9 @@ def get_model(db: Session, model_override: Optional[str] = None) -> UnifiedAIMod
             return UnifiedAIModel(provider="gemini", model_name=selected_model, api_key=api_key)
         except Exception as e:
             logger.error(f"Errore durante l'inizializzazione del modello {selected_model}: {e}")
-            if selected_model != "gemini-2.5-flash":
-                logger.warning("Tentativo di fallback su gemini-2.5-flash")
-                return UnifiedAIModel(provider="gemini", model_name="gemini-2.5-flash", api_key=api_key)
+            if selected_model != "gemini-1.5-flash":
+                logger.warning("Tentativo di fallback su gemini-1.5-flash")
+                return UnifiedAIModel(provider="gemini", model_name="gemini-1.5-flash", api_key=api_key)
             raise
 
 def generate_athlete_analysis_prompt(user: models.User, db: Session) -> str:

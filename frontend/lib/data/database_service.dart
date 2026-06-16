@@ -97,6 +97,13 @@ class DatabaseService {
   static Future<void> setSoundEnabled(bool value) =>
       _settingsBox.put('rest_sound_enabled', value);
 
+  // --- VOICE COACH SETTINGS ---
+  static bool getVoiceCoachEnabled() =>
+      _settingsBox.get('voice_coach_enabled', defaultValue: true) as bool;
+
+  static Future<void> setVoiceCoachEnabled(bool value) =>
+      _settingsBox.put('voice_coach_enabled', value);
+
   // --- ACTIVE SESSION ---
   static Future<void> saveActiveSession(String dayId, DateTime startTime, int elapsedSeconds, List<CompletedExercise> completed, Set<int> completedIndexes) async {
     final data = {

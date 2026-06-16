@@ -182,6 +182,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         'neck': record.neck,
         'wrist': record.wrist,
         'goal': _goalController.text.trim(),
+        'created_at': record.date.toIso8601String(),
       });
       
       record.isSynced = true;

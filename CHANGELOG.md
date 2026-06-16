@@ -1,5 +1,17 @@
 # Changelog — ForgeFit
 
+## [2.1.0] — 2026-06-16
+
+### Added
+- **Cyber Body Map**: Nuova schermata interattiva con heatmap muscolare neon procedurale (CustomPainter) fronte/retro. Calcola il volume degli ultimi 30 giorni per distretto muscolare e mostra suggerimenti e statistiche in overlay glassmorphism.
+- **AI Voice Coach**: Sintesi vocale (`flutter_tts`) in lingua italiana con supporto al ducking dell'audio di sottofondo (Spotify, ecc.) su cuffie e altoparlanti. Include interruttore rapido nella toolbar del workout e nelle impostazioni generali.
+- **Emergency Password Reset**: Endpoint di emergenza protetto `/api/auth/reset-password-emergency` per recuperare password tramite master key definita in `.env`.
+- **POST /api/measurements**: Nuovo endpoint nel backend per consentire la corretta persistenza delle misurazioni biometriche nel cloud.
+
+### Fixed
+- **Offline Biometrics Sync**: Risolto il disallineamento temporale inviando il timestamp originale `created_at` dal frontend per evitare record duplicati e grafici incongruenti.
+- **Gemini Model Whitelist**: Allineamento del fallback AI stabili sul backend a `gemini-1.5-flash`.
+
 ## [2.0.4] — 2026-06-16
 
 ### Changed

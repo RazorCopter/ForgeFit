@@ -9,6 +9,7 @@ import '../core/api_service.dart';
 import '../core/auth_service.dart';
 import '../core/theme.dart';
 import '../widgets/rest_timer_widget.dart';
+import '../core/voice_service.dart';
 
 // MET per allenamento con pesi (intensità moderata, ACSM)
 const double _kMET = 5.0;
@@ -50,6 +51,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   bool _isResting = false;
   int _restSeconds = 0;
   bool _soundEnabled = true;
+  bool _voiceEnabled = true;
   
   late final DateTime _startTime;
   CompletedExercise? _historyCache;
@@ -64,6 +66,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     _startTime = DateTime.now();
     _activeSetIndex = widget.initialSetIndex;
     _soundEnabled = DatabaseService.getSoundEnabled();
+    _voiceEnabled = DatabaseService.getVoiceCoachEnabled();
 
     _historyCache = DatabaseService.getLastExerciseHistory(widget.exercise.name);
     _currentPR = DatabaseService.getPersonalRecord(widget.exercise.name);
@@ -91,6 +94,12 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     });
 
     _startStopwatch();
+
+    // Benvenuto vocale del coach a inizio esercizio
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final setsCount = widget.exercise.sets.length;
+      VoiceService.speak("Cominciamo ${widget.exercise.name}. Esegui $setsCount serie.");
+    });
   }
 
   @override
@@ -152,6 +161,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     if (isNewPR) {
       _currentPR = kgVal;
       _showPRCelebration(kgVal);
+      VoiceService.speak("Nuovo record personale! Complimenti!");
     }
 
     setState(() {
@@ -165,9 +175,19 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     final isLastSet = si == widget.exercise.sets.length - 1;
 
     if (isLastSet) {
+      VoiceService.speak("Esercizio completato! Ottimo lavoro.");
       _showNerdStats();
     } else {
       final restSec = widget.exercise.sets[si].targetRestSeconds;
+      if (!isNewPR) {
+        VoiceService.speak("Ottimo! Ora riposati per $restSec secondi.");
+      } else {
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (mounted && _isResting) {
+            VoiceService.speak("Ora riposati per $restSec secondi.");
+          }
+        });
+      }
       setState(() {
         _isResting = true;
         _restSeconds = restSec;
@@ -438,6 +458,25 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
           appBar: AppBar(
             title: Text(widget.exercise.name),
             backgroundColor: Colors.transparent,
+            actions: [
+              IconButton(
+                tooltip: _voiceEnabled ? 'Disattiva Coach Vocale' : 'Attiva Coach Vocale',
+                icon: Icon(
+                  _voiceEnabled ? Icons.headset : Icons.headset_off,
+                  color: _voiceEnabled ? widget.accentColor : AppTheme.textSecondary,
+                ),
+                onPressed: () {
+                  final next = !_voiceEnabled;
+                  setState(() => _voiceEnabled = next);
+                  DatabaseService.setVoiceCoachEnabled(next);
+                  if (next) {
+                    VoiceService.speak("Coach vocale attivo");
+                  } else {
+                    VoiceService.stop();
+                  }
+                },
+              ),
+            ],
           ),
           body: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),

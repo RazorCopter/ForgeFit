@@ -6,6 +6,7 @@ import '../core/theme.dart';
 import '../models/completed_workout.dart';
 import '../data/database_service.dart';
 import '../core/api_service.dart';
+import 'body_map_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -231,6 +232,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           title: const Text('Nerd Analytics', style: TextStyle(color: AppTheme.textPrimary)),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            IconButton(
+              tooltip: 'Mappa Muscolare Neon',
+              icon: const Icon(Icons.accessibility_new, color: AppTheme.cyan),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BodyMapScreen()),
+                );
+              },
+            ),
+          ],
         ),
         body: ValueListenableBuilder(
           valueListenable: DatabaseService.workoutBoxListenable(),
@@ -276,12 +289,64 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Expanded(child: _buildNerdStat('Ore Tot.', _totalTrainingTime(workouts), Icons.timer_outlined, AppTheme.legsAccent)),
                     ],
                   ).animate().fade().slideY(),
-              const SizedBox(height: 32),
-              
-              const Text(
-                'Tonnellaggio Totale',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-              ).animate().fade(delay: 200.ms),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Mappa Muscolare Neon Promo Card
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BodyMapScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: AppTheme.glassContainer(
+                      padding: const EdgeInsets.all(20),
+                      borderColor: AppTheme.cyan.withOpacity(0.5),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cyan.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.accessibility_new, color: AppTheme.cyan, size: 32),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Mappa Muscolare Cyber-Neon',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.cyan,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Visualizza l\'heatmap 3D dell\'intensità dei tuoi allenamenti negli ultimi 30 giorni.',
+                                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                        ],
+                      ),
+                    ),
+                  ).animate().fade(delay: 100.ms).slideX(),
+                  
+                  const SizedBox(height: 32),
+                  
+                  const Text(
+                    'Tonnellaggio Totale',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                  ).animate().fade(delay: 200.ms),
               const SizedBox(height: 16),
               
               AppTheme.glassContainer(
