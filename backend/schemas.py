@@ -305,6 +305,50 @@ class AIAnalyzeResponse(BaseModel):
     """Schema di risposta per l'analisi AI generica."""
     text: str
 
+
+class BiometricEntryAI(BaseModel):
+    """Una singola misurazione biometrica per l'analisi AI."""
+    date: str
+    weight: Optional[float] = None
+    hips: Optional[float] = None
+    chest: Optional[float] = None
+    biceps: Optional[float] = None
+    waist: Optional[float] = None
+    thigh: Optional[float] = None
+    calf: Optional[float] = None
+
+
+class SetEntryAI(BaseModel):
+    """Una singola serie di un esercizio."""
+    weight: float
+    reps: int
+
+
+class ExerciseEntryAI(BaseModel):
+    """Un esercizio completato con le sue serie."""
+    name: str
+    sets: list[SetEntryAI]
+
+
+class WorkoutEntryAI(BaseModel):
+    """Un allenamento completato."""
+    date: str
+    title: str
+    exercises: list[ExerciseEntryAI]
+
+
+class AIPerformanceRequest(BaseModel):
+    """
+    Schema strutturato per la richiesta di analisi performance.
+    I dati arrivano come array JSON — nessun limite di lunghezza sul testo.
+    """
+    goal: str = Field(..., min_length=1, max_length=500)
+    age: int = Field(..., ge=1, le=120)
+    height: float = Field(..., gt=0)
+    biometrics: list[BiometricEntryAI] = Field(default_factory=list)
+    workouts: list[WorkoutEntryAI] = Field(default_factory=list, description="Max 8 settimane di storico")
+    model_name: Optional[str] = Field(default=None)
+
 class WorkoutLogCreate(BaseModel):
     """Schema per il salvataggio di un allenamento (POST /api/workouts/save)."""
     user_id: int

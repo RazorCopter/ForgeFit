@@ -348,6 +348,41 @@ class DatabaseService {
   static List<BiometricRecord> getAllBiometricRecords() =>
       _biometricBox.values.toList();
 
+  static List<Map<String, dynamic>> getBiometricHistoryForAIJson() {
+    if (_biometricBox.isEmpty) return [];
+    final records = _biometricBox.values.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return records.map((r) {
+      final m = <String, dynamic>{
+        'date': '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}',
+        'weight': r.weight,
+        'hips': r.hips,
+        'chest': r.chest,
+        'biceps': r.biceps,
+      };
+      if (r.waist  != null) m['waist']  = r.waist;
+      if (r.thigh  != null) m['thigh']  = r.thigh;
+      if (r.calf   != null) m['calf']   = r.calf;
+      return m;
+    }).toList();
+  }
+
+  static List<Map<String, dynamic>> getWorkoutHistoryForAIJson(int weeks) {
+    final now = DateTime.now();
+    final recentWorkouts = _workoutBox.values
+        .where((w) => now.difference(w.date).inDays <= (weeks * 7))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    return recentWorkouts.map((w) => {
+      'date': '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}/${w.date.year}',
+      'title': w.title,
+      'exercises': w.exercises.map((ex) => {
+        'name': ex.name,
+        'sets': ex.sets.map((s) => {'weight': s.weight, 'reps': s.reps}).toList(),
+      }).toList(),
+    }).toList();
+  }
+
   static String getBiometricHistoryForAI() {
     if (_biometricBox.isEmpty) return 'Nessun dato biometrico registrato.';
     final records = _biometricBox.values.toList()

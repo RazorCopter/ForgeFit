@@ -182,6 +182,29 @@ def ai_analyze_passthrough(
         raise HTTPException(status_code=500, detail=str(e))
 
 from typing import Optional
+
+
+@router.post(
+    "/analyze-performance",
+    response_model=schemas.AIAnalyzeResponse,
+    summary="Analisi performance strutturata — dati JSON, prompt generato lato backend",
+)
+def analyze_performance(
+    data: schemas.AIPerformanceRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    try:
+        model = ai_service.get_model(db, model_override=data.model_name)
+        prompt = ai_service.build_performance_prompt(data)
+        response = model.generate_content(prompt)
+        logger.info(f"Performance report generato per utente ID {current_user.id}")
+        return schemas.AIAnalyzeResponse(text=response.text)
+    except Exception as e:
+        logger.error(f"Errore analyze_performance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Errore durante l'analisi AI: {str(e)}")
+
+
 @router.post(
     "/analysis/generate",
     summary="Genera un report di analisi dei progressi tramite AI",

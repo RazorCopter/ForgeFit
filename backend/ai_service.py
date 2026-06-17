@@ -135,6 +135,53 @@ def get_model(db: Session, model_override: Optional[str] = None) -> UnifiedAIMod
                 return UnifiedAIModel(provider="gemini", model_name="gemini-1.5-flash", api_key=api_key)
             raise
 
+def build_performance_prompt(data) -> str:
+    """
+    Costruisce il prompt di analisi performance a partire dai dati strutturati
+    inviati dal client. Nessun limite di lunghezza — il testo viene generato
+    qui sul backend e passato direttamente al modello AI senza transitare
+    nello schema AIAnalyzeRequest.
+    """
+    lines = [
+        "Sei un Personal Trainer esperto. Analizza i dati dell'atleta e fornisci un feedback sintetico.",
+        "",
+        f"PROFILO: Età {data.age} anni, Altezza {data.height} cm, Obiettivo: {data.goal}",
+        "",
+    ]
+
+    if data.biometrics:
+        lines.append("STORICO BIOMETRICO (dal più vecchio al più recente):")
+        for b in data.biometrics:
+            parts = [f"DATA: {b.date}"]
+            if b.weight is not None: parts.append(f"Peso {b.weight}kg")
+            if b.hips   is not None: parts.append(f"Fianchi {b.hips}cm")
+            if b.chest  is not None: parts.append(f"Petto {b.chest}cm")
+            if b.biceps is not None: parts.append(f"Bicipite {b.biceps}cm")
+            if b.waist  is not None: parts.append(f"Vita {b.waist}cm")
+            if b.thigh  is not None: parts.append(f"Coscia {b.thigh}cm")
+            if b.calf   is not None: parts.append(f"Polpaccio {b.calf}cm")
+            lines.append("- " + " | ".join(parts))
+        lines.append("")
+
+    if data.workouts:
+        lines.append("STORICO ALLENAMENTI (dal più vecchio al più recente):")
+        for w in data.workouts:
+            lines.append(f"• {w.date} — {w.title}")
+            for ex in w.exercises:
+                sets_str = ", ".join(f"{s.weight}kg×{s.reps}" for s in ex.sets)
+                lines.append(f"    {ex.name}: {sets_str}")
+        lines.append("")
+
+    lines += [
+        "In base ai dati sopra, rispondi in italiano con max 150 parole:",
+        "1. Trend fisiologico (progresso, stallo o regressione).",
+        "2. Andamento dei carichi di allenamento.",
+        "3. Un consiglio pratico per le prossime 2 settimane.",
+    ]
+
+    return "\n".join(lines)
+
+
 def generate_athlete_analysis_prompt(user: models.User, db: Session) -> str:
     """
     Genera un prompt dettagliato per l'AI includendo i dati biometrici attuali

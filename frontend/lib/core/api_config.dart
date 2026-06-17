@@ -34,6 +34,9 @@ class ApiConfig {
   /// POST  /api/ai/analyze-passthrough → passthrough generico per analisi AI
   static const String aiAnalyze = '$baseUrl/api/ai/analyze-passthrough';
 
+  /// POST  /api/ai/analyze-performance → analisi performance strutturata (JSON, no limite testo)
+  static const String analyzePerformance = '$baseUrl/api/ai/analyze-performance';
+
   /// PUT   /api/auth/change-password → cambio password utente loggato
   static const String changePassword = '$baseUrl/api/auth/change-password';
 

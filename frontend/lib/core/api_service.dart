@@ -432,6 +432,36 @@ class ApiService {
   // POST /api/ai/analyze [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
 
+  /// Analisi performance strutturata: invia i dati biometrici e di allenamento
+  /// come JSON al backend, che costruisce il prompt internamente.
+  /// Nessun limite di lunghezza — scala con qualsiasi quantità di dati storici.
+  static Future<String> analyzePerformance({
+    required String goal,
+    required int age,
+    required double height,
+    required List<Map<String, dynamic>> biometrics,
+    required List<Map<String, dynamic>> workouts,
+  }) async {
+    try {
+      final body = jsonEncode({
+        'goal': goal,
+        'age': age,
+        'height': height,
+        'biometrics': biometrics,
+        'workouts': workouts,
+      });
+      final result = await _authenticatedRequest(
+        (h) => http.post(Uri.parse(ApiConfig.analyzePerformance), headers: h, body: body)
+            .timeout(const Duration(seconds: 60)),
+      );
+      return (result as Map<String, dynamic>)['text'] as String? ?? '';
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Errore durante l\'analisi performance AI: $e');
+    }
+  }
+
   /// Metodo passthrough generico per inviare un prompt e un contesto al backend.
   static Future<Map<String, dynamic>> analyzeWithAI({
     required String prompt,
