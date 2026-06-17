@@ -1,5 +1,79 @@
 # Changelog — ForgeFit
 
+## [2.2.0] — 2026-06-17
+
+### Changed
+- **Piano di Remediation completo (63/66 finding, 95%)**: applicazione sistematica di tutte le fasi del piano di audit automatico su frontend Flutter e backend FastAPI.
+
+### Security
+- **SEC-001**: fix autorizzazione admin (`id != 1` → `role != 'admin'`)
+- **SEC-002**: restore DB con magic bytes + integrity check + atomic swap
+- **SEC-003**: rimosso `allow_origin_regex=".*"` che bypassava la CORS whitelist
+- **SEC-004**: `age` e `last_name` letti da config admin invece di hardcoded
+
+### Fixed (Backend)
+- **BUG-001/004**: URL AI corretto + chiave risposta `text`
+- **BUG-002**: validator Pydantic v2 (`@model_validator(mode='before')`)
+- **BUG-003**: biometrici opzionali inviati solo se non-null
+- **BUG-005**: default model `gemini-2.0-flash`
+- **BUG-007**: `_saveProgress` invia biometrici solo se non-null
+- **CQ-004**: `except:` nudo → `except Exception` in `routers/ai.py`
+- **CQ-008**: evita mutazione parametro `prompt` in `ai_service.py`
+- **CQ-009**: rimossa funzione `_formatDate` inutilizzata
+- **CQ-012/013**: type hint `-> str` e `dict[str, any]` aggiunti
+- **INFRA-002**: docstring token expiry allineata alla durata reale (14 giorni)
+
+### Performance (Backend)
+- **PERF-001**: N+1 → subquery `MAX(created_at) GROUP BY user_id`
+- **PERF-002**: TTL cache 5s su config + path assoluto (fix INFRA-001)
+- **PERF-003**: batch query AI config + cache in-memoria con invalidate
+- **PERF-004**: `index=True` su FK + `CREATE INDEX IF NOT EXISTS` nel lifespan
+- **PERF-005**: cache `ExerciseCatalog` in-memoria con invalidate
+- **PERF-010**: connection pool SQLAlchemy (`pool_size=5`, `max_overflow=10`, `pool_pre_ping`)
+- **PERF-014**: `get_plan_history` con `limit=20` di default
+
+### Fixed (Frontend)
+- **UX-001/002**: bottom padding adattivo alla tastiera (login e form biometrico)
+- **UX-004**: spinner inline durante generazione AI report
+- **UX-008**: return value di `PlanService.syncPlan` non più ignorato silenziosamente
+- **UX-009**: divider + padding extra prima del pulsante elimina
+- **UX-012**: splash delay 5000ms → 1500ms
+- **UX-013**: double-pop popup achievement eliminato
+- **UX-014**: toggle visibilità password nel dialog cambio password
+- **UX-016**: `toolbarHeight` ripristinato a `kToolbarHeight`
+- **UX-017**: validazione sesso prima del submit registrazione
+- **UX-018**: layout dialog fine sessione — "TERMINA" in alto, "CONTINUA" in basso
+- **UX-019**: haptic feedback su nav bar, completamento esercizio e fine workout
+- **UX-021**: `LayoutBuilder` + `_AdvancedMetricTile` — elimina `MediaQuery.size.width` hardcoded
+- **UX-022**: nascosta "Salta" sull'ultima slide onboarding
+- **UX-023**: `_expanded = false` default in `_MeasurementGuideState`
+- **UX-024**: icona cloud sync inline con `Icon(Icons.cloud_sync)`
+- **UX-025**: emoji `⚠️` → `Icon(Icons.warning_amber_rounded)` nei dialog reset
+- **UX-026**: default selection charts spostata in `initState`
+- **UX-027**: rimosso riferimento commerciale `'di Gemini'` → `'dell\'intelligenza artificiale'`
+- **UX-028**: `Semantics(label, button: true)` sul pulsante +3% peso
+- **UX-030**: `GestureDetector`+SnackBar → `Tooltip` nativo Flutter
+- **CQ-001/002**: `_RetryWithNewToken` exception rimosso; sostituito con `_tryRefreshOn401() → bool`
+- **CQ-005**: mutex `Completer<void>?` in `sync_service.dart` — sync concorrente serializzata
+- **CQ-006**: aggiunto `getUserIdSync()` sincrono in `AuthService`
+- **CQ-010**: classe `_BodyMapZones` con costanti anatomiche per ogni zona tap
+- **CQ-011**: magic marker `0xFEED` + schema version byte nel `UserProfileAdapter`
+
+### Performance (Frontend)
+- **PERF-006**: `ValueListenableBuilder` — solo testo timer si ricostruisce ogni secondo
+- **PERF-007**: `IndexedStack` lazy con `_screenCache` — tab costruite alla prima visita
+- **PERF-012**: cache `_getWorkoutsByDay` invalidata solo se `allWorkouts` cambia
+- **PERF-013**: push workout + biometric in `Future.wait` parallelo
+- **PERF-015**: `_OfflineBanner` riceve `pendingCount` dal parent — Hive non scansionato nel build
+- **PERF-016**: `getCurrentStreak` con cache O(1) invalidata per `box.length` e `todayStr`
+- **PERF-017**: fast-path skip in `_loadOverloadSuggestion` con `DatabaseService.getUserId()` sincrono
+- **PERF-018**: cache LRU in-memory (30 entry) per TTS web
+- **PERF-019**: `CachedNetworkImage` + `memCacheWidth: 480` per thumbnail YouTube
+- **PERF-022**: early return in `AchievementService.checkAll` se tutti gli achievement già sbloccati
+
+### Dependencies
+- Aggiunta dipendenza `cached_network_image: ^3.3.1`
+
 ## [2.1.13] — 2026-06-16
 
 ### Fixed
