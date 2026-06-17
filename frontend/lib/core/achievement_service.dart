@@ -219,17 +219,32 @@ class AchievementService {
     double legsVolume = 0;
     double chestVolume = 0;
     double backVolume = 0;
-    bool hasSaturday = false;
-    bool hasSunday = false;
+
+    // weekend_warrior: controlla stesso weekend ISO (anno + numero settimana)
+    final weekendDates = <String>{};
+    bool weekendSameWeek = false;
+
+    bool hasEarlyBird = false;
+    bool hasNightOwl = false;
 
     for (final w in sorted) {
       totalSeconds += w.durationSeconds;
-      
-      if (w.date.weekday == DateTime.saturday) hasSaturday = true;
-      if (w.date.weekday == DateTime.sunday) hasSunday = true;
 
-      check('early_bird', w.date.hour < 7);
-      check('night_owl', w.date.hour >= 22);
+      if (!hasEarlyBird && w.date.hour < 7)  hasEarlyBird = true;
+      if (!hasNightOwl  && w.date.hour >= 22) hasNightOwl  = true;
+
+      if (w.date.weekday == DateTime.saturday || w.date.weekday == DateTime.sunday) {
+        // chiave univoca per settimana ISO: "anno-settimana"
+        final weekKey = '${w.date.year}-${_isoWeek(w.date)}';
+        weekendDates.add('$weekKey-${w.date.weekday}');
+        if (!weekendSameWeek) {
+          final satKey = '$weekKey-${DateTime.saturday}';
+          final sunKey = '$weekKey-${DateTime.sunday}';
+          if (weekendDates.contains(satKey) && weekendDates.contains(sunKey)) {
+            weekendSameWeek = true;
+          }
+        }
+      }
 
       int workoutReps = 0;
       double workoutVolume = 0;
@@ -281,17 +296,28 @@ class AchievementService {
     check('streak_30', currentStreak >= 30);
     check('total_50', workouts.length >= 50);
     check('volume_100k', totalVolume >= 100000);
-    check('biometric', hasBiometric);
+    check('biometric', hasBiometric);         // hasBiometric = records >= 1
     check('pr_hunter', prAlreadyUnlocked || prs >= 10);
     check('marathon', totalSeconds >= 50 * 3600);
-    check('weekend_warrior', hasSaturday && hasSunday);
+    check('weekend_warrior', weekendSameWeek);
     check('legs_50k', legsVolume >= 50000);
     check('chest_50k', chestVolume >= 50000);
     check('back_50k', backVolume >= 50000);
+    check('early_bird', hasEarlyBird);
+    check('night_owl', hasNightOwl);
 
     if (newlyUnlocked.isNotEmpty) {
       await _saveUnlocked(unlocked);
     }
     return newlyUnlocked;
+  }
+
+  // Numero settimana ISO 8601 (settimana 1 = quella con il primo giovedì dell'anno).
+  static int _isoWeek(DateTime d) {
+    final thursday = d.add(Duration(days: 4 - (d.weekday == 7 ? 0 : d.weekday)));
+    final firstThursday = DateTime(thursday.year, 1, 1).add(
+      Duration(days: (4 - (DateTime(thursday.year, 1, 1).weekday == 7 ? 0 : DateTime(thursday.year, 1, 1).weekday)) % 7),
+    );
+    return ((thursday.difference(firstThursday).inDays) ~/ 7) + 1;
   }
 }

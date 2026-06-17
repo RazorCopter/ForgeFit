@@ -1,5 +1,12 @@
 # Changelog — ForgeFit
 
+## [2.2.4] — 2026-06-18
+
+### Fixed
+- **Achievement "Data Nerd"**: il badge scattava alla seconda misurazione biometrica invece che alla prima. Soglia corretta da `>= 2` a `>= 1` in tutti e tre i punti di trigger (`analysis_screen`, `workout_summary_screen`, `sync_service`).
+- **Achievement "Guerriero del Weekend"**: la condizione controllava se esistesse almeno un sabato e una domenica nell'intero storico (anche in settimane diverse). Ora verifica che sabato e domenica appartengano alla stessa settimana ISO 8601.
+- **Achievement "Early Bird" / "Creatura della Notte"**: i check venivano eseguiti N volte nel loop (una per ogni workout). Spostati fuori dal loop con flag booleano — stessa semantica, nessuna regressione.
+
 ## [2.2.1] — 2026-06-17
 
 ### Fixed

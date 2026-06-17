@@ -212,7 +212,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       // Controllo sblocco achievements
       final workouts = DatabaseService.getAllWorkouts();
       final streak = DatabaseService.getCurrentStreak();
-      final hasBiometric = DatabaseService.getAllBiometricRecords().length >= 2;
+      final hasBiometric = DatabaseService.getAllBiometricRecords().isNotEmpty;
       final newAchievements = await AchievementService.checkAll(
         workouts,
         hasBiometric: hasBiometric,
