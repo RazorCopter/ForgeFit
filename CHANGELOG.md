@@ -1,5 +1,10 @@
 # Changelog — ForgeFit
 
+## [2.2.1] — 2026-06-17
+
+### Fixed
+- **AI Performance Report**: risolto errore 422 `string_too_long` che bloccava l'analisi AI dopo la raccolta di molti dati storici. Il frontend ora invia i dati biometrici e di allenamento come array JSON strutturato invece di un unico testo; il backend costruisce il prompt internamente, senza limiti di lunghezza. Nuovo endpoint `POST /api/ai/analyze-performance` con schema `AIPerformanceRequest`.
+
 ## [2.2.0] — 2026-06-17
 
 ### Changed
