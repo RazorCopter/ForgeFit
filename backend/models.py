@@ -118,7 +118,7 @@ class Measurement(Base):
     __tablename__ = "measurements"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     weight = Column(Float, nullable=True)
     chest = Column(Float, nullable=True)
@@ -144,7 +144,7 @@ class WorkoutPlan(Base):
     __tablename__ = "workout_plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     plan_json = Column(Text, nullable=False)
 
     # Numero versione progressivo per utente (1, 2, 3 …)
@@ -200,9 +200,9 @@ class WorkoutLog(Base):
     __tablename__ = "workout_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     title = Column(String, nullable=True)
-    date = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     duration_seconds = Column(Integer, nullable=True)
     
     # Campo JSON per memorizzare l'intero payload dell'allenamento

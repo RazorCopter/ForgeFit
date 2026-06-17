@@ -18,7 +18,6 @@ class SetupScreen extends StatefulWidget {
 
 class _SetupScreenState extends State<SetupScreen> {
   bool _isSyncing = false;
-  bool _isLoading = false;
 
   final String _frontendVersion = kAppVersion;
 
@@ -42,7 +41,7 @@ class _SetupScreenState extends State<SetupScreen> {
     setState(() => _isSyncing = true);
     try {
       await SyncService.syncAllPendingData();
-      final days = await PlanService.syncPlan(userId);
+      await PlanService.syncPlan(userId);
       _showSnackBar('Sincronizzazione completata con successo!', Colors.green.shade700);
     } on ApiException catch (e) {
       _showSnackBar('Errore dal server: ${e.message}', Colors.red.shade700);
@@ -98,9 +97,15 @@ class _SetupScreenState extends State<SetupScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceVariant,
-        title: const Text('Reset App e Dati?', style: TextStyle(color: Colors.white)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text('Reset App e Dati?', style: TextStyle(color: Colors.white)),
+          ],
+        ),
         content: const Text(
-          '⚠️ TUTTI i dati salvati sul dispositivo verranno eliminati (storico, preferenze, cache). Verrai disconnesso. Questa operazione è irreversibile.',
+          'TUTTI i dati salvati sul dispositivo verranno eliminati (storico, preferenze, cache). Verrai disconnesso. Questa operazione è irreversibile.',
           style: TextStyle(color: Colors.redAccent),
         ),
         actions: [
@@ -228,20 +233,42 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
-  Widget _buildDialogField(String label, TextEditingController ctrl, bool obscure, {String? Function(String?)? validator}) {
-    return TextFormField(
-      controller: ctrl,
-      obscureText: obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-        filled: true,
-        fillColor: Colors.black26,
-        isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-      ),
-      validator: validator ?? (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
+  Widget _buildDialogField(String label, TextEditingController ctrl, bool isPassword, {String? Function(String?)? validator}) {
+    if (!isPassword) {
+      return TextFormField(
+        controller: ctrl,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          filled: true, fillColor: Colors.black26, isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        ),
+        validator: validator ?? (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
+      );
+    }
+    return StatefulBuilder(
+      builder: (_, setFieldState) {
+        var hidden = true;
+        return StatefulBuilder(
+          builder: (_, setState2) => TextFormField(
+            controller: ctrl,
+            obscureText: hidden,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              filled: true, fillColor: Colors.black26, isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              suffixIcon: IconButton(
+                icon: Icon(hidden ? Icons.visibility_off : Icons.visibility, size: 18, color: AppTheme.textSecondary),
+                onPressed: () => setState2(() => hidden = !hidden),
+              ),
+            ),
+            validator: validator ?? (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
+          ),
+        );
+      },
     );
   }
 
@@ -573,8 +600,5 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 }
-
-String _formatDate(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
 // (End of SetupScreen)

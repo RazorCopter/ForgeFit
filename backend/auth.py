@@ -61,7 +61,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def create_access_token(subject: str) -> str:
-    """Genera un access JWT con scadenza 7 giorni."""
+    """Genera un access JWT con scadenza 14 giorni."""
     expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     payload = {"sub": subject, "exp": expire, "type": "access"}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -93,7 +93,7 @@ def decode_refresh_token(token: str) -> str:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token non valido.")
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, any]:
     """
     Decodifica e verifica il JWT.
     Solleva HTTPException 401 se il token è scaduto, non valido,
@@ -154,8 +154,8 @@ def get_current_user(
             id=0,
             email=admin_config["username"],
             first_name=admin_config["pt_name"],
-            last_name="PT",
-            age=30,  # Età placeholder per l'admin
+            last_name=admin_config.get("last_name", "PT"),
+            age=admin_config.get("age", 30),
             role="admin",
             hashed_password=admin_config["hashed_password"]
         )

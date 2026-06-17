@@ -7,8 +7,7 @@ import logging
 import google.generativeai as genai
 import openai
 from sqlalchemy.orm import Session
-from datetime import datetime
-from typing import Optional, Tuple, Generator
+from typing import Optional, Tuple
 import models
 
 logger = logging.getLogger(__name__)
@@ -50,9 +49,8 @@ class UnifiedAIModel:
                 if generation_config and hasattr(generation_config, 'response_mime_type'):
                     if generation_config.response_mime_type == "application/json":
                         response_format = {"type": "json_object"}
-                        # DeepSeek requires "json" to be in the prompt if using json_object
                         if "json" not in prompt.lower():
-                            prompt += "\nOutput in JSON format."
+                            kwargs["messages"] = [{"role": "user", "content": prompt + "\nOutput in JSON format."}]
                 kwargs["response_format"] = response_format
             
             response = self.client.chat.completions.create(**kwargs)
@@ -76,23 +74,36 @@ class UnifiedAIModel:
                         self.text = text
                 return ResponseMock(response.choices[0].message.content)
 
+_AI_CONFIG_CACHE: dict | None = None
+_AI_CONFIG_KEYS = frozenset({"ai_model", "ai_api_key_override", "deepseek_api_key_override"})
+
+def invalidate_ai_config_cache() -> None:
+    global _AI_CONFIG_CACHE
+    _AI_CONFIG_CACHE = None
+
 def get_ai_config(db: Session) -> Tuple[str, str, str]:
     """
-    Recupera le configurazioni AI salvate nel DB, oppure usa i fallback di sistema.
+    Recupera le configurazioni AI dal DB con cache in-memoria.
     Restituisce (api_key, model_name, deepseek_api_key).
+    Chiama invalidate_ai_config_cache() dopo ogni PUT /api/system/settings.
     """
-    model_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_model").first()
-    key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
-    deepseek_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
-    
-    # Fallback sicuro: gemini-1.5-flash
-    ai_model = model_setting.value if model_setting and model_setting.value else "gemini-1.5-flash"
-    api_key_override = key_setting.value if key_setting and key_setting.value else None
-    deepseek_api_key_override = deepseek_setting.value if deepseek_setting and deepseek_setting.value else None
-    
+    global _AI_CONFIG_CACHE
+    if _AI_CONFIG_CACHE is None:
+        rows = (
+            db.query(models.SystemSettings)
+            .filter(models.SystemSettings.key.in_(_AI_CONFIG_KEYS))
+            .all()
+        )
+        _AI_CONFIG_CACHE = {row.key: row.value for row in rows}
+
+    cfg = _AI_CONFIG_CACHE
+    ai_model = cfg.get("ai_model") or "gemini-1.5-flash"
+    api_key_override = cfg.get("ai_api_key_override") or None
+    deepseek_api_key_override = cfg.get("deepseek_api_key_override") or None
+
     api_key = api_key_override or os.getenv("GOOGLE_API_KEY")
     deepseek_api_key = deepseek_api_key_override or os.getenv("DEEPSEEK_API_KEY")
-    
+
     return api_key, ai_model, deepseek_api_key
 
 def get_model(db: Session, model_override: Optional[str] = None) -> UnifiedAIModel:

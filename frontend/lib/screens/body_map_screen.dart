@@ -354,64 +354,77 @@ class _BodyMapScreenState extends State<BodyMapScreen> with SingleTickerProvider
     final x = pos.dx / w * 100;
     final y = pos.dy / h * 100;
 
-    // Definiamo delle regioni di tap semplici approssimate in percentuale (0-100)
-    // per intercettare i distretti muscolari sulla silhouette centrata.
-    // La silhouette è disegnata centrata orizzontalmente nel CustomPainter (offset X ~ 25..75%).
-
     String? tapped;
     if (_showFront) {
-      // ANTERIORE
-      if (y >= 15 && y <= 35 && x >= 30 && x <= 70) {
-        // Spalle o Petto
-        if (y < 23) {
-          if (x < 43 || x > 57) {
-            tapped = 'Spalle';
-          } else {
-            tapped = 'Petto'; // zona sterno/collo basso
-          }
-        } else {
-          if (x >= 38 && x <= 62) {
-            tapped = 'Petto';
-          } else {
-            tapped = 'Braccia'; // Bicipiti/Spalla esterna
-          }
-        }
-      } else if (y > 35 && y <= 50 && x >= 38 && x <= 62) {
-        tapped = 'Core'; // Addome
-      } else if (y > 35 && y <= 55 && (x < 38 || x > 62) && x >= 28 && x <= 72) {
-        tapped = 'Braccia'; // Avambracci / mani
-      } else if (y > 50 && y <= 80 && x >= 32 && x <= 68) {
-        tapped = 'Gambe'; // Quadricipiti
-      }
+      tapped = _BodyMapZones.frontZone(x, y);
     } else {
-      // POSTERIORE
-      if (y >= 15 && y <= 35 && x >= 30 && x <= 70) {
-        // Spalle o Schiena
-        if (y < 23) {
-          if (x < 42 || x > 58) {
-            tapped = 'Spalle';
-          } else {
-            tapped = 'Schiena'; // Trapezio alto
-          }
-        } else {
-          if (x >= 40 && x <= 60) {
-            tapped = 'Schiena'; // Dorsali
-          } else {
-            tapped = 'Braccia'; // Tricipiti
-          }
-        }
-      } else if (y > 35 && y <= 50 && (x < 38 || x > 62) && x >= 28 && x <= 72) {
-        tapped = 'Braccia'; // Avambracci
-      } else if (y > 50 && y <= 62 && x >= 35 && x <= 65) {
-        tapped = 'Glutei';
-      } else if (y > 62 && y <= 90 && x >= 30 && x <= 70) {
-        tapped = 'Gambe'; // Femorali / Polpacci
-      }
+      tapped = _BodyMapZones.backZone(x, y);
     }
 
     setState(() {
       _selectedMuscle = tapped;
     });
+  }
+}
+
+/// Named tap zones for the body map silhouette.
+/// Coordinates are expressed as percentages (0–100) of the widget dimensions.
+/// Silhouette is horizontally centered at ~27.5–72.5% of width.
+abstract final class _BodyMapZones {
+  // ── Anterior bounds ────────────────────────────────────────────────────────
+  static const double _frontUpperTop    = 15;
+  static const double _frontUpperBottom = 35;
+  static const double _frontShoulderDiv = 23; // y threshold: shoulders vs chest
+  static const double _frontShoulderX   = 43; // inner shoulder x edge (each side)
+  static const double _frontChestInner  = 38;
+  static const double _frontChestOuter  = 62;
+  static const double _frontCoreTop     = 35;
+  static const double _frontCoreBottom  = 50;
+  static const double _frontArmTop      = 35;
+  static const double _frontArmBottom   = 55;
+  static const double _frontLegTop      = 50;
+  static const double _frontLegBottom   = 80;
+  static const double _bodyLeft         = 28;
+  static const double _bodyRight        = 72;
+
+  // ── Posterior bounds ───────────────────────────────────────────────────────
+  static const double _backShoulderDiv  = 23;
+  static const double _backShoulderX    = 42;
+  static const double _backLatsInner    = 40;
+  static const double _backLatsOuter    = 60;
+  static const double _backArmTop       = 35;
+  static const double _backArmBottom    = 50;
+  static const double _backGluteTop     = 50;
+  static const double _backGluteBottom  = 62;
+  static const double _backLegTop       = 62;
+  static const double _backLegBottom    = 90;
+
+  static String? frontZone(double x, double y) {
+    if (y >= _frontUpperTop && y <= _frontUpperBottom && x >= 30 && x <= 70) {
+      if (y < _frontShoulderDiv) {
+        return (x < _frontShoulderX || x > (100 - _frontShoulderX)) ? 'Spalle' : 'Petto';
+      } else {
+        return (x >= _frontChestInner && x <= _frontChestOuter) ? 'Petto' : 'Braccia';
+      }
+    }
+    if (y > _frontCoreTop && y <= _frontCoreBottom && x >= _frontChestInner && x <= _frontChestOuter) return 'Core';
+    if (y > _frontArmTop && y <= _frontArmBottom && (x < _frontChestInner || x > _frontChestOuter) && x >= _bodyLeft && x <= _bodyRight) return 'Braccia';
+    if (y > _frontLegTop && y <= _frontLegBottom && x >= 32 && x <= 68) return 'Gambe';
+    return null;
+  }
+
+  static String? backZone(double x, double y) {
+    if (y >= 15 && y <= 35 && x >= 30 && x <= 70) {
+      if (y < _backShoulderDiv) {
+        return (x < _backShoulderX || x > (100 - _backShoulderX)) ? 'Spalle' : 'Schiena';
+      } else {
+        return (x >= _backLatsInner && x <= _backLatsOuter) ? 'Schiena' : 'Braccia';
+      }
+    }
+    if (y > _backArmTop && y <= _backArmBottom && (x < 38 || x > 62) && x >= _bodyLeft && x <= _bodyRight) return 'Braccia';
+    if (y > _backGluteTop && y <= _backGluteBottom && x >= 35 && x <= 65) return 'Glutei';
+    if (y > _backLegTop && y <= _backLegBottom && x >= 30 && x <= 70) return 'Gambe';
+    return null;
   }
 }
 

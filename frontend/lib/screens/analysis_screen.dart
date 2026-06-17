@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
 import '../data/database_service.dart';
-import '../core/sync_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
 import 'biometric_trends_screen.dart';
@@ -177,36 +176,37 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         hips: double.tryParse(_fianchiController.text) ?? 0.0,
         biceps: double.tryParse(_bicepsController.text) ?? 0.0,
         chest: double.tryParse(_chestController.text) ?? 0.0,
-        waist: double.tryParse(_vitaController.text) ?? 0.0,
-        thigh: double.tryParse(_cosciaController.text) ?? 0.0,
-        calf: double.tryParse(_polpaccioController.text) ?? 0.0,
-        neck: double.tryParse(_colloController.text) ?? 0.0,
-        wrist: double.tryParse(_polsoController.text) ?? 0.0,
+        waist: double.tryParse(_vitaController.text),
+        thigh: double.tryParse(_cosciaController.text),
+        calf: double.tryParse(_polpaccioController.text),
+        neck: double.tryParse(_colloController.text),
+        wrist: double.tryParse(_polsoController.text),
       );
 
       // Salva locale (Hive)
       await DatabaseService.saveBiometricRecord(record);
 
-      // Invia al backend (usa chiavi inglesi come da schema MeasurementCreate)
-      await ApiService.postMeasurements({
-        'weight': record.weight,
-        'hips': record.hips,
-        'calf': record.calf,
-        'chest': record.chest,
-        'biceps': record.biceps,
-        'waist': record.waist,
-        'thigh': record.thigh,
-        'neck': record.neck,
-        'wrist': record.wrist,
+      // Invia al backend: omette i campi null (usa chiavi inglesi come da schema MeasurementCreate)
+      final measurePayload = <String, dynamic>{
         'goal': _goalController.text.trim(),
         'created_at': record.date.toIso8601String(),
-      });
+      };
+      measurePayload['weight'] = record.weight;
+      measurePayload['hips'] = record.hips;
+      measurePayload['biceps'] = record.biceps;
+      measurePayload['chest'] = record.chest;
+      if (record.calf != null) measurePayload['calf'] = record.calf;
+      if (record.waist != null) measurePayload['waist'] = record.waist;
+      if (record.thigh != null) measurePayload['thigh'] = record.thigh;
+      if (record.neck != null) measurePayload['neck'] = record.neck;
+      if (record.wrist != null) measurePayload['wrist'] = record.wrist;
+      await ApiService.postMeasurements(measurePayload);
       
       record.isSynced = true;
       await DatabaseService.saveBiometricRecord(record);
-      
-      // Ricarica per ottenere le nuove metriche calcolate dal backend
-      await SyncService.syncAllPendingData();
+
+      // Aggiorna solo il profilo dal backend per le metriche calcolate (BMI, BMR…)
+      // senza triggerare una full sync che scarica tutta la history
       await _initData();
 
       // Controllo sblocco achievements
@@ -289,7 +289,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
       );
 
       setState(() {
-        _aiResponse = response['analysis'] ?? response['response'] ?? 'Nessuna risposta dal modello.';
+        _aiResponse = response['text'] ?? 'Nessuna risposta dal modello.';
       });
     } catch (e) {
       debugPrint('DEBUG AI ERROR: $e');
@@ -314,7 +314,10 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
           elevation: 0,
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.only(
+            left: 16, right: 16, top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -528,7 +531,7 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
           ),
           const SizedBox(height: 8),
           const Text(
-            "Inserisci la password di attivazione fornita dall'amministratore per sbloccare i report avanzati di Gemini.",
+            "Inserisci la password di attivazione fornita dall'amministratore per sbloccare i report avanzati dell'intelligenza artificiale.",
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.textSecondary),
           ),
@@ -583,21 +586,24 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
           ),
         ),
         const SizedBox(height: 24),
-        _isLoading
-            ? const CircularProgressIndicator(color: AppTheme.cyan)
-            : ElevatedButton.icon(
-                onPressed: _generateAIReport,
-                icon: const Icon(Icons.auto_awesome),
-                label: const Text('Genera Report Performance AI'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.vividPurple.withValues(alpha: 0.2),
-                  foregroundColor: AppTheme.vividPurple,
-                  side: const BorderSide(color: AppTheme.vividPurple, width: 1.5),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
+        ElevatedButton.icon(
+          onPressed: _isLoading ? null : _generateAIReport,
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.vividPurple),
+                )
+              : const Icon(Icons.auto_awesome),
+          label: Text(_isLoading ? 'Generazione in corso... (fino a 45s)' : 'Genera Report Performance AI'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.vividPurple.withValues(alpha: 0.2),
+            foregroundColor: AppTheme.vividPurple,
+            side: const BorderSide(color: AppTheme.vividPurple, width: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+        ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
         
         if (_aiResponse != null) ...[
           const SizedBox(height: 24),
@@ -635,22 +641,13 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
   }
 
   Widget _buildAdvancedMetric(String label, String value) {
-    return Container(
-      width: (MediaQuery.of(context).size.width - 64) / 2,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.black26,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : (MediaQuery.of(context).size.width - 64) / 2;
+        return _AdvancedMetricTile(label: label, value: value, width: tileWidth);
+      },
     );
   }
 
@@ -663,14 +660,8 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
             Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             if (tooltip != null) ...[
               const SizedBox(width: 4),
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(tooltip),
-                    backgroundColor: AppTheme.surfaceVariant,
-                    behavior: SnackBarBehavior.floating,
-                  ));
-                },
+              Tooltip(
+                message: tooltip,
                 child: const Icon(Icons.info_outline, color: AppTheme.cyan, size: 14),
               ),
             ],
@@ -695,6 +686,34 @@ Fornisci un feedback sintetico e diretto (max 120 parole) in italiano.
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AdvancedMetricTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final double width;
+  const _AdvancedMetricTile({required this.label, required this.value, required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 }

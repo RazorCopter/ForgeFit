@@ -341,6 +341,18 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.warning(f"Migrazione colonna 'title': {e}")
 
+    # Crea indici sulle FK se non esistono (idempotente: IF NOT EXISTS)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_measurements_user_id ON measurements(user_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_workout_plans_user_id ON workout_plans(user_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_workout_logs_user_id  ON workout_logs(user_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_workout_logs_date     ON workout_logs(date)"))
+            conn.commit()
+            logger.info("Indici FK verificati/creati.")
+    except Exception as e:
+        logger.warning(f"Creazione indici FK: {e}")
+
     seed_catalog()
     if not config_manager.is_admin_configured():
         logger.warning("ATTENZIONE: Personal Trainer non configurato. Effettuare il setup iniziale dalla dashboard.")
@@ -388,7 +400,6 @@ logger.info(f"CORS Allowed Origins: {allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

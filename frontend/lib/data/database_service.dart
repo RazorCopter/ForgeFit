@@ -446,9 +446,25 @@ class DatabaseService {
     }).length;
   }
 
+  // Cache streak: ricalcolata solo quando il box cambia o il giorno cambia
+  static int? _cachedStreak;
+  static int _streakBoxLen = -1;
+  static String _streakDay = '';
+
   /// Calcola il numero di giorni consecutivi con almeno un allenamento fino a oggi.
   static int getCurrentStreak() {
     if (_workoutBox.isEmpty) return 0;
+
+    final todayStr = () {
+      final now = DateTime.now();
+      return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    }();
+
+    if (_cachedStreak != null &&
+        _streakBoxLen == _workoutBox.length &&
+        _streakDay == todayStr) {
+      return _cachedStreak!;
+    }
 
     final Set<String> daysWithWorkout = _workoutBox.values
         .map((w) => '${w.date.year}-${w.date.month.toString().padLeft(2, '0')}-${w.date.day.toString().padLeft(2, '0')}')
@@ -456,20 +472,21 @@ class DatabaseService {
 
     int streak = 0;
     final today = DateTime.now();
-
     for (int i = 0; i <= 365; i++) {
       final d = today.subtract(Duration(days: i));
       final key = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
       if (daysWithWorkout.contains(key)) {
         streak++;
       } else if (i == 0) {
-        // Oggi senza allenamento non interrompe la streak
         continue;
       } else {
         break;
       }
     }
+
+    _cachedStreak = streak;
+    _streakBoxLen = _workoutBox.length;
+    _streakDay = todayStr;
     return streak;
   }
 

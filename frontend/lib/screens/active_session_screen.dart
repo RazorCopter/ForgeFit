@@ -46,8 +46,8 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   late int _activeSetIndex;
 
   Timer? _stopwatchTimer;
-  int _stopwatchSeconds = 0;
-  
+  final _stopwatchNotifier = ValueNotifier<int>(0);
+
   bool _isResting = false;
   int _restSeconds = 0;
   bool _soundEnabled = true;
@@ -105,6 +105,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   @override
   void dispose() {
     _stopwatchTimer?.cancel();
+    _stopwatchNotifier.dispose();
     for (final ctrlMap in _controllers) {
       ctrlMap['kg']!.dispose();
       ctrlMap['reps']!.dispose();
@@ -112,13 +113,16 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     super.dispose();
   }
 
-  String get _swFormatted {
-    final m = _stopwatchSeconds ~/ 60;
-    final s = _stopwatchSeconds % 60;
+  static String _formatSeconds(int sec) {
+    final m = sec ~/ 60;
+    final s = sec % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   Future<void> _loadOverloadSuggestion() async {
+    // Fast-path: skip network call entirely when userId is not available locally
+    final localId = DatabaseService.getUserId();
+    if (localId == null) return;
     try {
       final userId = await AuthService.getUserId();
       if (userId == null) return;
@@ -138,9 +142,9 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
 
   void _startStopwatch() {
     _stopwatchTimer?.cancel();
-    _stopwatchSeconds = 0;
+    _stopwatchNotifier.value = 0;
     _stopwatchTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _stopwatchSeconds++);
+      _stopwatchNotifier.value++;
     });
   }
 
@@ -169,7 +173,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
         ..isDone = true
         ..kg = kgVal
         ..reps = repsVal
-        ..timeUnderTension = _stopwatchSeconds;
+        ..timeUnderTension = _stopwatchNotifier.value;
     });
 
     final isLastSet = si == widget.exercise.sets.length - 1;
@@ -264,7 +268,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                       ),
                     );
                     if (confirm == true && context.mounted) {
-                      Navigator.pop(context); // chiudi dialog principale
+                      Navigator.pop(context);
                       Navigator.pop(context, {'action': 'finish', 'data': completedExercise});
                     }
                   },
@@ -296,7 +300,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // chiudi dialog
+                      Navigator.pop(context);
                       Navigator.pop(context, {'action': 'continue', 'data': completedExercise});
                     },
                     style: ElevatedButton.styleFrom(
@@ -617,12 +621,15 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                 children: [
                   Icon(Icons.timer_outlined, size: 36, color: widget.accentColor.withValues(alpha: 0.7)),
                   const SizedBox(height: 8),
-                  Text(
-                    _swFormatted,
-                    style: TextStyle(
-                      fontSize: 80, fontWeight: FontWeight.w900, color: widget.accentColor, height: 1.0,
-                      shadows: [Shadow(color: widget.accentColor.withValues(alpha: 0.4), blurRadius: 20)],
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  ValueListenableBuilder<int>(
+                    valueListenable: _stopwatchNotifier,
+                    builder: (_, secs, __) => Text(
+                      _formatSeconds(secs),
+                      style: TextStyle(
+                        fontSize: 80, fontWeight: FontWeight.w900, color: widget.accentColor, height: 1.0,
+                        shadows: [Shadow(color: widget.accentColor.withValues(alpha: 0.4), blurRadius: 20)],
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -669,7 +676,10 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
   }
 
   Widget _buildPlusThreeBtn(int si, double lastKg) {
-    return GestureDetector(
+    return Semantics(
+      label: 'Aumenta peso del 3% rispetto all\'ultima sessione',
+      button: true,
+      child: GestureDetector(
       onTap: () {
         setState(() {
           final newKg = (lastKg * 1.03 * 2).round() / 2;
@@ -681,6 +691,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
         decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8), border: Border.all(color: widget.accentColor.withValues(alpha: 0.4))),
         child: Text('+3%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: widget.accentColor)),
       ),
+    ),
     );
   }
 }

@@ -9,58 +9,68 @@ import '../models/user_profile.dart';
 import 'achievement_service.dart';
 
 class SyncService {
-  static bool _isSyncing = false;
+  // Completer usato come mutex: se non-null c'è già una sync in corso
+  static Completer<void>? _syncCompleter;
   static final ValueNotifier<String?> backendVersionNotifier = ValueNotifier(null);
 
   static Future<void> syncAllPendingData() async {
-    if (_isSyncing) return;
-    
-    _isSyncing = true;
+    // Se c'è già una sync attiva, aspetta che finisca invece di abortire silenziosamente
+    if (_syncCompleter != null) {
+      return _syncCompleter!.future;
+    }
+    _syncCompleter = Completer<void>();
+
     try {
       final userId = await AuthService.getUserId();
-      if (userId == null) return; // Non autenticato
+      if (userId == null) return;
 
       // ==========================================
-      // FASE 1: PUSH (Upload dati locali pendenti)
+      // FASE 1: PUSH parallelo (workout + biometrics simultanei)
       // ==========================================
-
-      // 1A. Sincronizza Workouts
       final pendingWorkouts = DatabaseService.getUnsyncedWorkouts();
-      for (final workout in pendingWorkouts) {
-        try {
-          final backendId = await ApiService.saveWorkout(workout);
-          await DatabaseService.updateWorkoutId(workout.id, backendId);
-          await DatabaseService.markWorkoutSynced(backendId);
-          if (kDebugMode) debugPrint('✅ Push Workout $backendId completato');
-        } catch (e) {
-          debugPrint('❌ Push fallito per Workout ${workout.id}: $e');
-        }
-      }
+      final pendingBiometrics =
+          DatabaseService.getAllBiometricRecords().where((r) => !r.isSynced).toList();
 
-      // 1B. Sincronizza Biometric Records
-      final pendingBiometrics = DatabaseService.getAllBiometricRecords().where((r) => !r.isSynced).toList();
-      for (final record in pendingBiometrics) {
-        try {
-          await ApiService.postMeasurements({
-            'weight': record.weight,
-            'hips': record.hips,
-            'calf': record.calf,
-            'chest': record.chest,
-            'biceps': record.biceps,
-            'waist': record.waist,
-            'thigh': record.thigh,
-            'neck': record.neck,
-            'wrist': record.wrist,
-            'goal': 'Sync automatico',
-            'created_at': record.date.toIso8601String(),
-          });
-          record.isSynced = true;
-          await DatabaseService.saveBiometricRecord(record);
-          if (kDebugMode) debugPrint('✅ Push BiometricRecord completato per data ${record.date}');
-        } catch (e) {
-          debugPrint('❌ Push fallito per BiometricRecord in data ${record.date}: $e');
-        }
-      }
+      await Future.wait([
+        // 1A. Workout push — sequenziale internamente (ordine ID importante)
+        Future(() async {
+          for (final workout in pendingWorkouts) {
+            try {
+              final backendId = await ApiService.saveWorkout(workout);
+              await DatabaseService.updateWorkoutId(workout.id, backendId);
+              await DatabaseService.markWorkoutSynced(backendId);
+              if (kDebugMode) debugPrint('✅ Push Workout $backendId completato');
+            } catch (e) {
+              debugPrint('❌ Push fallito per Workout ${workout.id}: $e');
+            }
+          }
+        }),
+        // 1B. Biometrics push — indipendente dai workout, eseguito in parallelo
+        Future(() async {
+          for (final record in pendingBiometrics) {
+            try {
+              await ApiService.postMeasurements({
+                'weight': record.weight,
+                'hips': record.hips,
+                'calf': record.calf,
+                'chest': record.chest,
+                'biceps': record.biceps,
+                'waist': record.waist,
+                'thigh': record.thigh,
+                'neck': record.neck,
+                'wrist': record.wrist,
+                'goal': 'Sync automatico',
+                'created_at': record.date.toIso8601String(),
+              });
+              record.isSynced = true;
+              await DatabaseService.saveBiometricRecord(record);
+              if (kDebugMode) debugPrint('✅ Push BiometricRecord completato per data ${record.date}');
+            } catch (e) {
+              debugPrint('❌ Push fallito per BiometricRecord in data ${record.date}: $e');
+            }
+          }
+        }),
+      ]);
 
       // ==========================================
       // FASE 2: PULL (Download storico remoto)
@@ -167,7 +177,9 @@ class SyncService {
         debugPrint('❌ Errore ricalcolo Achievements post-sync: $e');
       }
     } finally {
-      _isSyncing = false;
+      final c = _syncCompleter;
+      _syncCompleter = null;
+      c?.complete();
     }
   }
 }

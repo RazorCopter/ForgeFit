@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import csv
 import io
 import models
@@ -30,13 +31,35 @@ def list_users(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Accesso negato: solo il Personal Trainer può vedere la lista utenti.")
     users = db.query(models.User).offset(skip).limit(limit).all()
+    if not users:
+        return []
+
+    user_ids = [u.id for u in users]
+
+    # Subquery: max created_at per user_id — una sola query invece di N
+    subq = (
+        db.query(
+            models.Measurement.user_id,
+            func.max(models.Measurement.created_at).label("max_date"),
+        )
+        .filter(models.Measurement.user_id.in_(user_ids))
+        .group_by(models.Measurement.user_id)
+        .subquery()
+    )
+    latest_measurements = (
+        db.query(models.Measurement)
+        .join(
+            subq,
+            (models.Measurement.user_id == subq.c.user_id)
+            & (models.Measurement.created_at == subq.c.max_date),
+        )
+        .all()
+    )
+    latest_by_user = {m.user_id: m for m in latest_measurements}
 
     result = []
     for user in users:
-        latest = db.query(models.Measurement).filter(
-            models.Measurement.user_id == user.id
-        ).order_by(models.Measurement.created_at.desc()).first()
-
+        latest = latest_by_user.get(user.id)
         response = schemas.UserResponse.model_validate(user)
         if latest:
             response.weight = latest.weight if latest.weight is not None else response.weight

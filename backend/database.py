@@ -18,7 +18,10 @@ os.makedirs("data", exist_ok=True)
 # perché di default SQLite permette una sola connessione per thread.
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args={"check_same_thread": False},
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
 )
 
 # SessionLocal è la factory per le sessioni di database.

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
@@ -33,15 +32,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return AppTheme.cyan;
   }
 
+  // Cache: ricalcolata solo quando il box Hive notifica un cambiamento
+  Map<DateTime, List<CompletedWorkout>>? _workoutsByDayCache;
+  List<CompletedWorkout>? _lastWorkoutList;
+
   Map<DateTime, List<CompletedWorkout>> _getWorkoutsByDay(List<CompletedWorkout> allWorkouts) {
-    Map<DateTime, List<CompletedWorkout>> map = {};
-    for (var w in allWorkouts) {
-      final date = DateTime(w.date.year, w.date.month, w.date.day);
-      if (map[date] == null) {
-        map[date] = [];
-      }
-      map[date]!.add(w);
+    if (identical(allWorkouts, _lastWorkoutList) && _workoutsByDayCache != null) {
+      return _workoutsByDayCache!;
     }
+    final Map<DateTime, List<CompletedWorkout>> map = {};
+    for (final w in allWorkouts) {
+      final date = DateTime(w.date.year, w.date.month, w.date.day);
+      (map[date] ??= []).add(w);
+    }
+    _lastWorkoutList = allWorkouts;
+    _workoutsByDayCache = map;
     return map;
   }
 
@@ -267,15 +272,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ],
                                         ),
                                       );
-                                    }).toList(),
-                                    const SizedBox(height: 12),
+                                    }),
+                                    const SizedBox(height: 20),
+                                    const Divider(color: Colors.white12, height: 1),
+                                    const SizedBox(height: 8),
                                     TextButton.icon(
                                       onPressed: () => _deleteWorkout(w),
-                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                      label: const Text('Elimina Allenamento', style: TextStyle(color: Colors.redAccent)),
+                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                                      label: const Text('Elimina Allenamento', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
                                       style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+                                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                        backgroundColor: Colors.redAccent.withValues(alpha: 0.08),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                       ),
                                     ),
                                   ],

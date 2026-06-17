@@ -6,24 +6,15 @@
 /// ============================================================
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
 import 'auth_service.dart';
 import '../data/database_service.dart';
 
-/// Callback globale per il logout forzato su 401.
-/// Viene impostata da main.dart con il navigatorKey.
-/// Questo evita dipendenze circolari tra ApiService e il widget tree.
+/// Callback for forced logout on 401. Set from main.dart with the navigatorKey.
+/// Kept as a top-level typedef for backward compatibility with main.dart assignment.
 typedef UnauthorizedCallback = void Function();
 UnauthorizedCallback? onUnauthorized;
-
-/// Segnale interno usato da [ApiService._checkUnauthorizedAsync] per indicare
-/// che l'access token è stato rinnovato e la richiesta va ritentata.
-class _RetryWithNewToken implements Exception {
-  final String newToken;
-  const _RetryWithNewToken(this.newToken);
-}
 
 /// Eccezione personalizzata lanciata quando il server risponde
 /// con uno status code diverso da 2xx.
@@ -187,9 +178,8 @@ class ApiService {
   ) async {
     var headers = await AuthService.authHeaders();
     var response = await requestFn(headers);
-    try {
-      await _checkUnauthorizedAsync(response);
-    } on _RetryWithNewToken catch (_) {
+    final tokenRefreshed = await _tryRefreshOn401(response);
+    if (tokenRefreshed) {
       headers = await AuthService.authHeaders();
       response = await requestFn(headers);
       await _checkUnauthorized(response);
@@ -465,11 +455,10 @@ class ApiService {
   // Helper: controlla 401 — tenta refresh, poi logout se fallisce
   // ------------------------------------------------------------------
 
-  /// Se il server risponde 401, prova a rinnovare l'access token via refresh token.
-  /// Se il refresh riesce, salva il nuovo token e lancia [_RetryWithNewToken].
-  /// Se fallisce, fa logout e chiama [onUnauthorized].
-  static Future<void> _checkUnauthorizedAsync(http.Response response) async {
-    if (response.statusCode != 401) return;
+  /// Returns true if the token was refreshed (caller should retry the request).
+  /// Returns false if 401 was not detected. Performs logout if refresh fails.
+  static Future<bool> _tryRefreshOn401(http.Response response) async {
+    if (response.statusCode != 401) return false;
 
     final refreshToken = await AuthService.getRefreshToken();
     if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -485,12 +474,11 @@ class ApiService {
           final newToken = body['access_token'] as String?;
           if (newToken != null) {
             await AuthService.saveToken(newToken);
-            throw _RetryWithNewToken(newToken);
+            return true;
           }
         }
-      } catch (e) {
-        if (e is _RetryWithNewToken) rethrow;
-        // Refresh fallito — cadere nel logout sotto
+      } catch (_) {
+        // Refresh fallito — fall through to logout
       }
     }
 
@@ -502,7 +490,6 @@ class ApiService {
     );
   }
 
-  /// Versione asincrona mantenuta per retrocompatibilità dove non serve retry.
   static Future<void> _checkUnauthorized(http.Response response) async {
     if (response.statusCode == 401) {
       await AuthService.logout();

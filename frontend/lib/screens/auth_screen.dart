@@ -10,7 +10,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
-import '../core/auth_service.dart';
 import '../data/database_service.dart';
 import '../models/user_profile.dart';
 import '../models/biometric_record.dart';
@@ -351,6 +350,10 @@ class _RegisterFormState extends State<_RegisterForm> {
       _showSnackBar('Seleziona la data di nascita', Colors.orange);
       return;
     }
+    if (_sesso == null) {
+      _showSnackBar('Seleziona il sesso', Colors.orange);
+      return;
+    }
     if (_passwordCtrl.text != _confirmCtrl.text) {
       _showSnackBar('Le password non coincidono', Colors.orange);
       return;
@@ -358,24 +361,31 @@ class _RegisterFormState extends State<_RegisterForm> {
 
     setState(() => _loading = true);
     try {
-      final payload = {
+      // Campi obbligatori sempre presenti
+      final payload = <String, dynamic>{
         'email':    _emailCtrl.text.trim(),
         'password': _passwordCtrl.text,
         'nome':     _nomeCtrl.text.trim(),
         'cognome':  _cognomeCtrl.text.trim(),
         'eta':      _age(_selectedDate!),
         'sesso':    _sesso,
-        'peso':     double.tryParse(_pesoCtrl.text)     ?? 0.0,
-        'altezza':  double.tryParse(_altezzaCtrl.text)  ?? 0.0,
-        'bicipite': double.tryParse(_bicipiteCtrl.text) ?? 0.0,
-        'petto':    double.tryParse(_pettoCtrl.text)    ?? 0.0,
-        'vita':     double.tryParse(_vitaCtrl.text)     ?? 0.0,
-        'coscia':   double.tryParse(_cosciaCtrl.text)   ?? 0.0,
-        'fianchi':  double.tryParse(_fianchiCtrl.text)  ?? 0.0,
-        'polpaccio': double.tryParse(_polpaccioCtrl.text) ?? 0.0,
-        'collo':    double.tryParse(_colloCtrl.text)    ?? 0.0,
-        'polso':    double.tryParse(_polsoCtrl.text)    ?? 0.0,
       };
+      // Campi biometrici opzionali: omessi se vuoti (evita errore gt=0 sul backend)
+      final _optBio = {
+        'peso':      double.tryParse(_pesoCtrl.text),
+        'altezza':   double.tryParse(_altezzaCtrl.text),
+        'bicipite':  double.tryParse(_bicipiteCtrl.text),
+        'petto':     double.tryParse(_pettoCtrl.text),
+        'vita':      double.tryParse(_vitaCtrl.text),
+        'coscia':    double.tryParse(_cosciaCtrl.text),
+        'fianchi':   double.tryParse(_fianchiCtrl.text),
+        'polpaccio': double.tryParse(_polpaccioCtrl.text),
+        'collo':     double.tryParse(_colloCtrl.text),
+        'polso':     double.tryParse(_polsoCtrl.text),
+      };
+      for (final e in _optBio.entries) {
+        if (e.value != null) payload[e.key] = e.value;
+      }
 
       await ApiService.register(payload);
 
@@ -423,8 +433,9 @@ class _RegisterFormState extends State<_RegisterForm> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(28, 0, 28, 40),
+      padding: EdgeInsets.fromLTRB(28, 0, 28, bottomInset + 40),
       child: Form(
         key: _formKey,
         child: Column(
@@ -663,15 +674,12 @@ class _RegisterFormState extends State<_RegisterForm> {
               ),
             ),
             if (tooltip != null)
-              IconButton(
-                icon: const Icon(Icons.info_outline, color: AppTheme.cyan, size: 18),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(tooltip),
-                    backgroundColor: AppTheme.surfaceVariant,
-                    behavior: SnackBarBehavior.floating,
-                  ));
-                },
+              Tooltip(
+                message: tooltip,
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.info_outline, color: AppTheme.cyan, size: 18),
+                ),
               ),
           ],
         ),
@@ -726,7 +734,7 @@ class _MeasurementGuide extends StatefulWidget {
 
 class _MeasurementGuideState extends State<_MeasurementGuide>
     with SingleTickerProviderStateMixin {
-  bool _expanded = true;
+  bool _expanded = false;
   late final AnimationController _rotateCtrl;
 
   @override

@@ -124,6 +124,7 @@ class AchievementService {
     int currentStreak = 0,
   }) async {
     final unlocked = _loadUnlocked();
+    if (unlocked.length >= all.length) return const [];
     final now = DateTime.now();
     final newlyUnlocked = <Achievement>[];
 

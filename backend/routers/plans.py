@@ -14,6 +14,20 @@ router = APIRouter(
     tags=["Schede"]
 )
 
+_catalog_cache: dict | None = None
+
+def _get_catalog_dict(db) -> dict:
+    global _catalog_cache
+    if _catalog_cache is not None:
+        return _catalog_cache
+    rows = db.query(models.ExerciseCatalog).all()
+    _catalog_cache = {row.nome: row.video_url for row in rows if row.video_url}
+    return _catalog_cache
+
+def invalidate_catalog_cache() -> None:
+    global _catalog_cache
+    _catalog_cache = None
+
 @router.post(
     "/{user_id}",
     response_model=schemas.WorkoutPlanResponse,
@@ -81,7 +95,7 @@ def get_plan(user_id: int, db: Session = Depends(get_db),
 
     plan_data = json.loads(plan.plan_json)
     
-    catalog_map = {ex.nome: ex.video_url for ex in db.query(models.ExerciseCatalog).all()}
+    catalog_map = _get_catalog_dict(db)
     
     if "giorni" in plan_data:
         for giorno in plan_data["giorni"]:
@@ -106,6 +120,7 @@ def get_plan(user_id: int, db: Session = Depends(get_db),
 )
 def get_plan_history(
     user_id: int,
+    limit: int = 20,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
@@ -113,7 +128,7 @@ def get_plan_history(
         raise HTTPException(status_code=403, detail="Accesso negato.")
     plans = db.query(models.WorkoutPlan).filter(
         models.WorkoutPlan.user_id == user_id
-    ).order_by(models.WorkoutPlan.version.desc()).all()
+    ).order_by(models.WorkoutPlan.version.desc()).limit(limit).all()
 
     return [
         schemas.WorkoutPlanHistoryItem(

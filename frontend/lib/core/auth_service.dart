@@ -76,6 +76,10 @@ class AuthService {
     return raw != null ? int.tryParse(raw) : null;
   }
 
+  /// Synchronous userId lookup backed by DatabaseService (Hive, already open).
+  /// Use this in hot paths where await is undesirable.
+  static int? getUserIdSync() => DatabaseService.getUserId();
+
   static bool _isTokenExpired(String token) {
     try {
       final parts = token.split('.');

@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          toolbarHeight: 10, // Minimal height: il banner è nel body
+          toolbarHeight: kToolbarHeight,
           actions: [
             // ── Pulsante Sincronizza Scheda ──────────────────────
             // Visibile solo quando la chiamata non è già in corso
@@ -668,15 +668,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 12),
 
-            const Text(
-              'Premi l\'icona  ☁↓  in alto a destra\n'
-              'per scaricare la scheda dal tuo trainer.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 14,
-                height: 1.6,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Text(
+                  'Premi l\'icona ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
+                ),
+                Icon(Icons.cloud_sync, color: AppTheme.cyan, size: 16),
+                Text(
+                  ' in alto a destra\nper scaricare la scheda dal tuo trainer.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),

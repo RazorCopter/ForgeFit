@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'home_screen.dart';
 import 'history_screen.dart';
 import 'statistics_screen.dart';
@@ -45,17 +46,25 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const HistoryScreen(),
-    const StatisticsScreen(),
-    const AnalysisScreen(),
-    const AchievementsScreen(),
-    const SetupScreen(),
+  static const _screenBuilders = <Widget Function()>[
+    HomeScreen.new,
+    HistoryScreen.new,
+    StatisticsScreen.new,
+    AnalysisScreen.new,
+    AchievementsScreen.new,
+    SetupScreen.new,
   ];
+
+  final Map<int, Widget> _screenCache = {};
+
+  Widget _getScreen(int index) =>
+      _screenCache.putIfAbsent(index, () => _screenBuilders[index]());
 
   @override
   Widget build(BuildContext context) {
+    // Pre-build the current screen so IndexedStack always has it
+    _getScreen(_currentIndex);
+
     return AppTheme.buildBackground(
       child: ValueListenableBuilder<bool>(
         valueListenable: ConnectivityService.isOnline,
@@ -69,12 +78,17 @@ class _MainScreenState extends State<MainScreen> {
                   curve: Curves.easeInOut,
                   child: online
                       ? const SizedBox.shrink()
-                      : _OfflineBanner(),
+                      : _OfflineBanner(
+                          pendingCount: DatabaseService.getUnsyncedWorkouts().length,
+                        ),
                 ),
                 Expanded(
                   child: IndexedStack(
                     index: _currentIndex,
-                    children: _screens,
+                    children: List.generate(
+                      _screenBuilders.length,
+                      (i) => _screenCache[i] ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ],
@@ -197,7 +211,10 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
                       final selected = widget.currentIndex == i;
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => widget.onTap(i),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            widget.onTap(i);
+                          },
                           behavior: HitTestBehavior.opaque,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -244,9 +261,11 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
 }
 
 class _OfflineBanner extends StatelessWidget {
+  final int pendingCount;
+  const _OfflineBanner({required this.pendingCount});
+
   @override
   Widget build(BuildContext context) {
-    final pendingCount = DatabaseService.getUnsyncedWorkouts().length;
     return Container(
       width: double.infinity,
       color: const Color(0xFF1A1A2E),

@@ -7,9 +7,8 @@ import '../core/theme.dart';
 
 class AchievementPopup extends StatefulWidget {
   final Achievement achievement;
-  final VoidCallback? onDismiss;
 
-  const AchievementPopup({super.key, required this.achievement, this.onDismiss});
+  const AchievementPopup({super.key, required this.achievement});
 
   /// Mostra una sequenza di popup (uno per volta, auto-dismiss 4s).
   static Future<void> showSequence(
@@ -19,14 +18,13 @@ class AchievementPopup extends StatefulWidget {
     for (final a in achievements) {
       if (!context.mounted) return;
       final completer = Completer<void>();
+      // Il dialog completa il Completer alla chiusura (tap utente, auto-dismiss o barriera).
+      // Non usiamo onDismiss per completare: il .then è l'unico punto di completamento.
       showDialog(
         context: context,
         barrierDismissible: true,
         barrierColor: Colors.black54,
-        builder: (_) => AchievementPopup(
-          achievement: a,
-          onDismiss: () => completer.complete(),
-        ),
+        builder: (_) => AchievementPopup(achievement: a),
       ).then((_) {
         if (!completer.isCompleted) completer.complete();
       });
@@ -62,7 +60,6 @@ class _AchievementPopupState extends State<AchievementPopup> {
   void _dismiss() {
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pop();
-      widget.onDismiss?.call();
     }
   }
 

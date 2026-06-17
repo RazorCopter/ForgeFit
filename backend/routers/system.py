@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 import os
-import shutil
+import sqlite3
+import tempfile
 import edge_tts
+from pathlib import Path
 import models
 import schemas
 from database import engine, get_db
@@ -38,21 +40,43 @@ async def restore_database_backup(
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Permesso negato.")
-    
-    if not file.filename.endswith(".db"):
-        raise HTTPException(status_code=400, detail="Formato file non valido. Caricare un file .db")
 
+    content = await file.read()
+
+    # Verifica magic bytes SQLite: "SQLite format 3\x00"
+    SQLITE_MAGIC = b"SQLite format 3\x00"
+    if not content.startswith(SQLITE_MAGIC):
+        raise HTTPException(status_code=400, detail="File non valido: non è un database SQLite.")
+
+    # Scrivi su file temporaneo e verifica integrità prima di sovrascrivere
+    db_path = str(Path(__file__).parent.parent / "data" / "fitness.db")
+    tmp_path: str | None = None
     try:
+        fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(db_path), suffix=".tmp")
+        with os.fdopen(fd, "wb") as f:
+            f.write(content)
+
+        conn = sqlite3.connect(tmp_path)
+        try:
+            conn.execute("PRAGMA integrity_check")
+        finally:
+            conn.close()
+
+        # Swap atomico: sovrascrive il DB live solo se il file è integro
         engine.dispose()
-        db_path = "data/fitness.db"
-        with open(db_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
+        os.replace(tmp_path, db_path)
+        tmp_path = None
+
         logger.info(f"Database RIPRISTINATO con successo da {current_user.email}")
         return {"message": "Database ripristinato con successo. L'applicazione userà ora il nuovo snapshot."}
+    except sqlite3.DatabaseError as e:
+        raise HTTPException(status_code=400, detail=f"Database caricato corrotto: {e}")
     except Exception as e:
-        logger.error(f"Errore durante il ripristino del database: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Errore durante il ripristino: {str(e)}")
+        logger.error(f"Errore durante il ripristino del database: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore durante il ripristino: {e}")
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 @router.get("/models", response_model=list[schemas.AIModelResponse], summary="Ottieni modelli AI supportati (Whitelist)")
@@ -121,6 +145,7 @@ def update_system_settings(data: schemas.SystemSettingsUpdate, db: Session = Dep
             db.delete(deepseek_key_setting)
 
     db.commit()
+    ai_service.invalidate_ai_config_cache()
     return {"message": "Impostazioni aggiornate con successo."}
 
 

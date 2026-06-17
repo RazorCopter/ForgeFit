@@ -67,22 +67,33 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
   @override
   final int typeId = 3;
 
+  // Increment this when adding new fields. Old records without the version
+  // byte are treated as schema v0 (all try/catch paths remain in effect).
+  static const int _currentSchemaVersion = 1;
+
   @override
   UserProfile read(BinaryReader reader) {
-    // Il campo ID è stato aggiunto successivamente
+    // Schema version byte written since v1. Old records start with the id int.
+    // We detect v0 by attempting to read an int and checking if it equals 1 (version marker).
+    // Since old id values are either -1 or positive user IDs (never exactly 0xFEED),
+    // we use a dedicated sentinel: version 1+ records start with the magic value 0xFEED (65261).
     int? id;
     try {
-      final val = reader.readInt();
-      id = val == -1 ? null : val;
-    } catch (_) {
-      // Record vecchio stile senza ID
-    }
+      final firstInt = reader.readInt();
+      if (firstInt == 0xFEED) {
+        reader.readInt(); // schema version — reserved for future migrations
+        final rawId = reader.readInt();
+        id = rawId == -1 ? null : rawId;
+      } else {
+        // v0 record: firstInt IS the id
+        id = firstInt == -1 ? null : firstInt;
+      }
+    } catch (_) {}
 
     final name        = reader.readString();
     final dateOfBirth = DateTime.fromMillisecondsSinceEpoch(reader.readInt());
     final height      = reader.readDouble();
-    
-    // Retrocompatibile: i vecchi profili non hanno il campo sesso
+
     String? sesso;
     try {
       final s = reader.readString();
@@ -125,6 +136,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
+    // Magic marker + schema version for forward-compat detection on read
+    writer.writeInt(0xFEED);
+    writer.writeInt(_currentSchemaVersion);
     writer.writeInt(obj.id ?? -1);
     writer.writeString(obj.name);
     writer.writeInt(obj.dateOfBirth.millisecondsSinceEpoch);

@@ -62,7 +62,7 @@ def generate_ai_plan(
                 for e in g.get("esercizi", []):
                     storico_lista.append(f"{e.get('nome')} ({e.get('serie')}x{e.get('ripetizioni')})")
             storico_esercizi = "L'utente ha eseguito recentemente: " + ", ".join(storico_lista)
-        except:
+        except Exception:
             storico_esercizi = "Presente una scheda precedente ma con formato non leggibile."
     else:
         storico_esercizi = "Nessun allenamento precedente registrato. Crea una scheda di base per iniziare il percorso."

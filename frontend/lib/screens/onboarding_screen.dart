@@ -70,17 +70,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // Skip
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _complete,
-                  child: Text(
-                    'Salta',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              // Skip (nascosto sull'ultima slide — il CTA "INIZIA ORA" la sostituisce)
+              if (!isLast)
+                Align(
+                  alignment: Alignment.topRight,
+                  child: TextButton(
+                    onPressed: _complete,
+                    child: const Text(
+                      'Salta',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    ),
                   ),
-                ),
-              ),
+                )
+              else
+                const SizedBox(height: 40),
 
               // Slides
               Expanded(

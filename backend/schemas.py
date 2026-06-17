@@ -286,13 +286,16 @@ class AIAnalyzeRequest(BaseModel):
     """Schema per la validazione della richiesta di analisi AI generica (Passthrough)."""
     prompt_text: str = Field(..., max_length=2000, description="Il testo del prompt da inviare all'AI (max 2000 caratteri)")
     context_data: dict = Field(default_factory=dict, description="Dati di contesto opzionali per l'analisi")
-    model_name: Optional[str] = Field(default="gemini-3.5-flash", description="Il modello AI da utilizzare")
+    model_name: Optional[str] = Field(default="gemini-2.0-flash", description="Il modello AI da utilizzare")
 
+    from pydantic import model_validator
+
+    @model_validator(mode='before')
     @classmethod
-    def model_validator_context(cls, values):
+    def validate_context_keys(cls, values):
         ctx = values.get("context_data", {})
-        filtered = {k: v for k, v in ctx.items() if k in _ALLOWED_CONTEXT_KEYS}
-        values["context_data"] = filtered
+        if ctx:
+            values["context_data"] = {k: v for k, v in ctx.items() if k in _ALLOWED_CONTEXT_KEYS}
         return values
 
     class Config:

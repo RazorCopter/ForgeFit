@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:uuid/uuid.dart';
 import '../models/training_data.dart';
 import '../models/completed_workout.dart';
@@ -93,6 +94,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
     );
 
     if (result != null && result is Map<String, dynamic>) {
+      HapticFeedback.mediumImpact();
       final CompletedExercise completed = result['data'];
       _completedExercises.add(completed);
       _completedIndexes.add(index);
@@ -123,6 +125,8 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
       Navigator.pop(context);
       return;
     }
+
+    HapticFeedback.heavyImpact();
 
     // Mostra il loading spinner
     showDialog(
@@ -199,18 +203,29 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                 'Hai esercizi completati. Cosa vuoi fare?',
                 style: TextStyle(color: AppTheme.textSecondary),
               ),
+              actionsAlignment: MainAxisAlignment.center,
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 'continue'),
-                  child: const Text('Resta qui', style: TextStyle(color: AppTheme.cyan)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 'suspend'),
-                  child: const Text('Sospendi per dopo', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 'abandon'),
-                  child: const Text('Annulla allenamento', style: TextStyle(color: Colors.redAccent)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, 'continue'),
+                      child: const Text('Resta qui', style: TextStyle(color: AppTheme.cyan)),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, 'suspend'),
+                      child: const Text('Sospendi per dopo', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, 'abandon'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: const BorderSide(color: Colors.redAccent),
+                      ),
+                      child: const Text('Annulla allenamento'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -393,13 +408,6 @@ class _ExpandableExerciseCard extends StatefulWidget {
 }
 
 class _ExpandableExerciseCardState extends State<_ExpandableExerciseCard> {
-  Future<void> _launchUrl(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint('Could not launch $urlString');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -560,7 +568,7 @@ class _MuscleChip extends StatelessWidget {
 class _YoutubeThumbnailWidget extends StatefulWidget {
   final String videoUrl;
 
-  const _YoutubeThumbnailWidget({Key? key, required this.videoUrl}) : super(key: key);
+  const _YoutubeThumbnailWidget({required this.videoUrl});
 
   @override
   State<_YoutubeThumbnailWidget> createState() => _YoutubeThumbnailWidgetState();
@@ -631,12 +639,17 @@ class _YoutubeThumbnailWidgetState extends State<_YoutubeThumbnailWidget> {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.network(
-                'https://img.youtube.com/vi/$_videoId/hqdefault.jpg',
+              child: CachedNetworkImage(
+                imageUrl: 'https://img.youtube.com/vi/$_videoId/hqdefault.jpg',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                memCacheWidth: 480,
+                errorWidget: (context, url, error) => Container(
                   color: Colors.black12,
                   child: const Icon(Icons.video_library, color: Colors.white54, size: 48),
+                ),
+                placeholder: (context, url) => Container(
+                  color: Colors.black12,
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24)),
                 ),
               ),
             ),

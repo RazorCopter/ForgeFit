@@ -28,11 +28,11 @@ class ApiConfig {
   /// POST  /api/plans/generate-ai → genera scheda tramite AI
   static const String generateAIPlan = '$baseUrl/api/plans/generate-ai';
 
-  /// POST  /api/analysis/generate → genera report analisi performance tramite AI
-  static const String generateAnalysis = '$baseUrl/api/analysis/generate';
+  /// POST  /api/ai/analysis/generate → genera report analisi performance tramite AI
+  static const String generateAnalysis = '$baseUrl/api/ai/analysis/generate';
 
-  /// POST  /api/ai/analyze → passthrough generico per analisi AI
-  static const String aiAnalyze = '$baseUrl/api/ai/analyze';
+  /// POST  /api/ai/analyze-passthrough → passthrough generico per analisi AI
+  static const String aiAnalyze = '$baseUrl/api/ai/analyze-passthrough';
 
   /// PUT   /api/auth/change-password → cambio password utente loggato
   static const String changePassword = '$baseUrl/api/auth/change-password';

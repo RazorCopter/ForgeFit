@@ -8,8 +8,7 @@ router = APIRouter()
 
 @router.get("/backup")
 def export_database_backup(current_user: models.User = Depends(get_current_user)):
-    # Consentiamo il download solo se l'utente è l'amministratore (id = 1)
-    if current_user.id != 1:
+    if current_user.role != 'admin':
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
         
     file_path = "data/fitness.db"

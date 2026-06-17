@@ -19,6 +19,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    // Pre-select first exercise once workouts are available via box listener
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final box = DatabaseService.workoutBoxListenable().value;
+      final workouts = box.values.toList().cast<CompletedWorkout>();
+      final names = _getAllExerciseNames(workouts);
+      if (names.isNotEmpty && _selectedExercise == null && mounted) {
+        setState(() => _selectedExercise = names.first);
+      }
+    });
   }
 
   Map<String, String> _bestSetData(List<CompletedWorkout> workouts) {
@@ -277,6 +286,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
             final muscleVolumes = _getMuscleGroupVolumes(workouts);
             final volumeLabels = _getVolumeLabels(workouts);
+            final bestSet = _bestSetData(workouts);
+            final avgVol = _avgVolume(workouts);
+            final totalTime = _totalTrainingTime(workouts);
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -288,17 +300,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Expanded(
                         child: _buildNerdStat(
                           title: 'Best Set',
-                          value: _bestSetData(workouts)['value']!,
+                          value: bestSet['value']!,
                           icon: Icons.emoji_events,
                           color: AppTheme.vividPurple,
-                          subtitle: _bestSetData(workouts)['exercise'],
+                          subtitle: bestSet['exercise'],
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildNerdStat(
                           title: 'Vol. Medio',
-                          value: _avgVolume(workouts),
+                          value: avgVol,
                           icon: Icons.fitness_center,
                           color: AppTheme.cyan,
                         ),
@@ -307,7 +319,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Expanded(
                         child: _buildNerdStat(
                           title: 'Ore Tot.',
-                          value: _totalTrainingTime(workouts),
+                          value: totalTime,
                           icon: Icons.timer_outlined,
                           color: AppTheme.legsAccent,
                         ),
@@ -550,9 +562,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       style: TextStyle(color: AppTheme.textSecondary));
                 }
                 if (_selectedExercise == null || !exerciseNames.contains(_selectedExercise)) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() => _selectedExercise = exerciseNames.first);
-                  });
+                  _selectedExercise = exerciseNames.first;
                 }
 
                 return Column(

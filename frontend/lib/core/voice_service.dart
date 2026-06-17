@@ -21,6 +21,13 @@ class VoiceService {
   static bool _isTtsInitialized = false;
   static bool _isInitialized = false;
 
+  // In-memory TTS cache for web (hash → audio bytes). Bounded to 30 entries.
+  static final Map<int, Uint8List> _webCache = {};
+  static const int _webCacheMax = 30;
+
+  // LRU eviction: track insertion order for web cache
+  static final List<int> _webCacheKeys = [];
+
   /// Inizializza il motore TTS con impostazioni di fallback.
   static Future<void> init() async {
     if (_isInitialized) return;
@@ -65,9 +72,16 @@ class VoiceService {
     if (text.trim().isEmpty) return;
 
     try {
-      // Se siamo su Web, non possiamo usare il filesystem locale per la cache.
-      // Eseguiamo il download dei byte in memoria e la riproduzione tramite BytesSource.
+      // Web: use in-memory cache (no filesystem access available).
       if (kIsWeb) {
+        final cacheKey = text.hashCode;
+        if (_webCache.containsKey(cacheKey)) {
+          debugPrint('🎙️ [VoiceService] Web Mode: cache hit per hashCode $cacheKey');
+          await stop();
+          await _audioPlayer.play(BytesSource(_webCache[cacheKey]!));
+          return;
+        }
+
         debugPrint('🎙️ [VoiceService] Web Mode: Scaricamento audio Edge TTS...');
         final headers = await AuthService.authHeaders();
         final encodedText = Uri.encodeComponent(text);
@@ -75,6 +89,14 @@ class VoiceService {
 
         final response = await http.get(url, headers: headers).timeout(const Duration(seconds: 4));
         if (response.statusCode == 200) {
+          // Store in cache with LRU eviction
+          if (_webCacheKeys.length >= _webCacheMax) {
+            final evicted = _webCacheKeys.removeAt(0);
+            _webCache.remove(evicted);
+          }
+          _webCache[cacheKey] = response.bodyBytes;
+          _webCacheKeys.add(cacheKey);
+
           await stop();
           await _audioPlayer.play(BytesSource(response.bodyBytes));
           return;

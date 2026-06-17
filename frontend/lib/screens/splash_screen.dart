@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme.dart';
 import '../core/auth_service.dart';
 import 'main_screen.dart';
 import 'auth_screen.dart';
@@ -63,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // 2. Procedi con il controllo auth e il delay minimo
-    final minimumDelay = Future.delayed(const Duration(milliseconds: 5000));
+    final minimumDelay = Future.delayed(const Duration(milliseconds: 1500));
     final checkAuth = AuthService.isLoggedIn().then((loggedIn) async {
       if (loggedIn) {
         // Sincronizzazione di sicurezza: se AuthService ha l'email ma DatabaseService no, la ripristiniamo.
