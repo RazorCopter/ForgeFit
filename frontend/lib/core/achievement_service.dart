@@ -296,7 +296,7 @@ class AchievementService {
     check('streak_30', currentStreak >= 30);
     check('total_50', workouts.length >= 50);
     check('volume_100k', totalVolume >= 100000);
-    check('biometric', hasBiometric);         // hasBiometric = records >= 1
+    check('biometric', hasBiometric);         // hasBiometric = records >= 2 (la prima è quella di registrazione)
     check('pr_hunter', prAlreadyUnlocked || prs >= 10);
     check('marathon', totalSeconds >= 50 * 3600);
     check('weekend_warrior', weekendSameWeek);

@@ -166,7 +166,7 @@ class SyncService {
       try {
         final workouts = DatabaseService.getAllWorkouts();
         final streak = DatabaseService.getCurrentStreak();
-        final hasBiometric = DatabaseService.getAllBiometricRecords().isNotEmpty;
+        final hasBiometric = DatabaseService.getAllBiometricRecords().length >= 2;
         await AchievementService.checkAll(
           workouts,
           hasBiometric: hasBiometric,
