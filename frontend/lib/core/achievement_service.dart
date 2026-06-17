@@ -86,6 +86,76 @@ class AchievementService {
       icon: Icons.timer_rounded,
       color: Color(0xFF7C4DFF),
     ),
+    Achievement(
+      id: 'early_bird',
+      name: 'Early Bird',
+      description: 'Allenamento iniziato prima delle 7:00',
+      icon: Icons.wb_sunny_rounded,
+      color: Color(0xFFFF9800),
+    ),
+    Achievement(
+      id: 'night_owl',
+      name: 'Creatura della Notte',
+      description: 'Allenamento iniziato dopo le 22:00',
+      icon: Icons.nights_stay_rounded,
+      color: Color(0xFF00B0FF),
+    ),
+    Achievement(
+      id: 'weekend_warrior',
+      name: 'Guerriero del Weekend',
+      description: 'Allenamento sia Sabato che Domenica',
+      icon: Icons.shield_rounded,
+      color: Color(0xFFFFC107),
+    ),
+    Achievement(
+      id: 'legs_50k',
+      name: 'Gambe d\'Acciaio',
+      description: '50.000 kg di volume per le Gambe',
+      icon: Icons.directions_run_rounded,
+      color: Color(0xFFF44336),
+    ),
+    Achievement(
+      id: 'chest_50k',
+      name: 'Petto di Bronzo',
+      description: '50.000 kg di volume per il Petto',
+      icon: Icons.fitness_center_rounded,
+      color: Color(0xFF00E5FF),
+    ),
+    Achievement(
+      id: 'back_50k',
+      name: 'Schiena a V',
+      description: '50.000 kg di volume per il Dorso',
+      icon: Icons.accessibility_new_rounded,
+      color: Color(0xFF00E676),
+    ),
+    Achievement(
+      id: 'spartan_300',
+      name: 'Spartano (300)',
+      description: '300 ripetizioni in un singolo allenamento',
+      icon: Icons.sports_martial_arts_rounded,
+      color: Color(0xFFBCAAA4),
+    ),
+    Achievement(
+      id: 'tut_master',
+      name: 'Maestro del Tempo',
+      description: '20 minuti di TUT in un allenamento',
+      icon: Icons.hourglass_bottom_rounded,
+      color: Color(0xFF9C27B0),
+    ),
+    Achievement(
+      id: 'beast_mode',
+      name: 'Bestia da Soma',
+      description: '10.000 kg sollevati in un allenamento',
+      icon: Icons.pets_rounded,
+      color: Color(0xFFD50000),
+    ),
+    Achievement(
+      id: 'versatile',
+      name: 'Versatile',
+      description: 'Allenati 4 gruppi muscolari diversi',
+      icon: Icons.category_rounded,
+      color: Color(0xFFFFEB3B),
+    ),
   ];
 
   static Box get _settingsBox => Hive.box('settings');
@@ -146,11 +216,45 @@ class AchievementService {
     int prs = 0;
     final prAlreadyUnlocked = unlocked.containsKey('pr_hunter');
 
+    double legsVolume = 0;
+    double chestVolume = 0;
+    double backVolume = 0;
+    bool hasSaturday = false;
+    bool hasSunday = false;
+
     for (final w in sorted) {
       totalSeconds += w.durationSeconds;
+      
+      if (w.date.weekday == DateTime.saturday) hasSaturday = true;
+      if (w.date.weekday == DateTime.sunday) hasSunday = true;
+
+      check('early_bird', w.date.hour < 7);
+      check('night_owl', w.date.hour >= 22);
+
+      int workoutReps = 0;
+      double workoutVolume = 0;
+      int workoutTUT = 0;
+      Set<String> muscleGroups = {};
+
       for (final ex in w.exercises) {
+        if (ex.gruppoMuscolare != null && ex.gruppoMuscolare!.isNotEmpty) {
+          muscleGroups.add(ex.gruppoMuscolare!);
+        }
+
         for (final s in ex.sets) {
-          totalVolume += s.weight * s.reps;
+          final setVolume = s.weight * s.reps;
+          totalVolume += setVolume;
+          workoutVolume += setVolume;
+          workoutReps += s.reps;
+          workoutTUT += s.timeUnderTension;
+
+          if (ex.gruppoMuscolare?.toLowerCase() == 'gambe') {
+            legsVolume += setVolume;
+          } else if (ex.gruppoMuscolare?.toLowerCase() == 'petto') {
+            chestVolume += setVolume;
+          } else if (ex.gruppoMuscolare?.toLowerCase() == 'dorso') {
+            backVolume += setVolume;
+          }
         }
         // PR counting — skip once threshold reached and achievement already persisted
         if (!prAlreadyUnlocked && prs < 10) {
@@ -165,6 +269,11 @@ class AchievementService {
           }
         }
       }
+      
+      check('spartan_300', workoutReps >= 300);
+      check('tut_master', workoutTUT >= 1200);
+      check('beast_mode', workoutVolume >= 10000);
+      check('versatile', muscleGroups.length >= 4);
     }
 
     check('first_workout', workouts.isNotEmpty);
@@ -175,6 +284,10 @@ class AchievementService {
     check('biometric', hasBiometric);
     check('pr_hunter', prAlreadyUnlocked || prs >= 10);
     check('marathon', totalSeconds >= 50 * 3600);
+    check('weekend_warrior', hasSaturday && hasSunday);
+    check('legs_50k', legsVolume >= 50000);
+    check('chest_50k', chestVolume >= 50000);
+    check('back_50k', backVolume >= 50000);
 
     if (newlyUnlocked.isNotEmpty) {
       await _saveUnlocked(unlocked);
