@@ -21,11 +21,12 @@ router = APIRouter(
 
 @router.post(
     "/register",
-    response_model=schemas.UserResponse,
+    response_model=schemas.TokenResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Registra un account con password",
 )
-def auth_register(data: schemas.AuthRegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def auth_register(request: Request, data: schemas.AuthRegisterRequest, db: Session = Depends(get_db)):
     """
     Crea un nuovo account con email e password (per il Personal Trainer).
     La password viene hashata con bcrypt prima del salvataggio.
@@ -76,8 +77,18 @@ def auth_register(data: schemas.AuthRegisterRequest, db: Session = Depends(get_d
         db.add(initial_meas)
         db.commit()
 
+    access_token = auth_utils.create_access_token(subject=new_user.email)
+    refresh_token = auth_utils.create_refresh_token(subject=new_user.email)
+
     logger.info(f"Nuovo account creato da app: {new_user.email} (ID: {new_user.id})")
-    return new_user
+    return schemas.TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        role=new_user.role,
+        user_id=new_user.id,
+        version=APP_VERSION,
+        user=schemas.UserResponse.model_validate(new_user),
+    )
 
 
 @router.post(

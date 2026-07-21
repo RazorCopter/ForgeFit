@@ -35,7 +35,8 @@ class ApiConfig {
   static const String aiAnalyze = '$baseUrl/api/ai/analyze-passthrough';
 
   /// POST  /api/ai/analyze-performance → analisi performance strutturata (JSON, no limite testo)
-  static const String analyzePerformance = '$baseUrl/api/ai/analyze-performance';
+  static const String analyzePerformance =
+      '$baseUrl/api/ai/analyze-performance';
 
   /// PUT   /api/auth/change-password → cambio password utente loggato
   static const String changePassword = '$baseUrl/api/auth/change-password';
@@ -56,13 +57,16 @@ class ApiConfig {
   static const String refreshToken = '$baseUrl/api/auth/refresh';
 
   /// GET   /api/workouts/suggestions/{user_id} → suggerimenti progressive overload
-  static String overloadSuggestions(int userId) => '$baseUrl/api/workouts/suggestions/$userId';
+  static String overloadSuggestions(int userId) =>
+      '$baseUrl/api/workouts/suggestions/$userId';
 
   /// GET   /api/workouts/history/{user_id} → storico allenamenti
-  static String workoutHistory(int userId) => '$baseUrl/api/workouts/history/$userId';
+  static String workoutHistory(int userId, {int skip = 0, int limit = 100}) =>
+      '$baseUrl/api/workouts/history/$userId?skip=$skip&limit=$limit';
 
   /// GET   /api/measurements/history/{user_id} → storico misure biometriche
-  static String measurementHistory(int userId) => '$baseUrl/api/measurements/history/$userId';
+  static String measurementHistory(int userId) =>
+      '$baseUrl/api/measurements/history/$userId';
 
   /// DELETE /api/workouts/{log_id} → elimina allenamento dal server
   static String deleteWorkout(int logId) => '$baseUrl/api/workouts/$logId';

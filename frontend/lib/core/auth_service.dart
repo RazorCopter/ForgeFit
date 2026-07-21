@@ -13,10 +13,10 @@ import '../data/database_service.dart';
 class AuthService {
   AuthService._();
 
-  static const String _keyToken        = 'jwt_token';
+  static const String _keyToken = 'jwt_token';
   static const String _keyRefreshToken = 'jwt_refresh_token';
-  static const String _keyEmail        = 'auth_email';
-  static const String _keyUserId       = 'auth_user_id';
+  static const String _keyEmail = 'auth_email';
+  static const String _keyUserId = 'auth_user_id';
 
   /// Nome del box Hive da usare per i dati di autenticazione.
   /// Riutilizza il box `settings` già aperto da [DatabaseService.openBox].
@@ -50,23 +50,18 @@ class AuthService {
     }
   }
 
-  static Future<void> saveToken(String token) =>
-      _write(_keyToken, token);
+  static Future<void> saveToken(String token) => _write(_keyToken, token);
 
-  static Future<String?> getToken() =>
-      _read(_keyToken);
+  static Future<String?> getToken() => _read(_keyToken);
 
   static Future<void> saveRefreshToken(String token) =>
       _write(_keyRefreshToken, token);
 
-  static Future<String?> getRefreshToken() =>
-      _read(_keyRefreshToken);
+  static Future<String?> getRefreshToken() => _read(_keyRefreshToken);
 
-  static Future<void> saveEmail(String email) =>
-      _write(_keyEmail, email);
+  static Future<void> saveEmail(String email) => _write(_keyEmail, email);
 
-  static Future<String?> getEmail() =>
-      _read(_keyEmail);
+  static Future<String?> getEmail() => _read(_keyEmail);
 
   static Future<void> saveUserId(int userId) =>
       _write(_keyUserId, userId.toString());
@@ -84,7 +79,8 @@ class AuthService {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return true;
-      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final payload =
+          utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
       final data = jsonDecode(payload) as Map<String, dynamic>;
       final exp = data['exp'] as int?;
       if (exp == null) return false;
@@ -104,20 +100,27 @@ class AuthService {
     return true;
   }
 
-  static Future<void> logout() async {
+  /// Rimuove soltanto le credenziali di sessione per impostazione predefinita.
+  ///
+  /// I dati applicativi possono includere allenamenti non ancora sincronizzati:
+  /// una scadenza JWT o un errore 401 non deve mai cancellarli. La rimozione
+  /// completa resta disponibile solo per il reset esplicito e confermato.
+  static Future<void> logout({bool clearLocalData = false}) async {
     await _delete(_keyToken);
     await _delete(_keyRefreshToken);
     await _delete(_keyEmail);
     await _delete(_keyUserId);
 
-    // Cancella anche tutti i dati applicativi su Hive
-    await DatabaseService.clearAllData();
+    if (clearLocalData) {
+      await DatabaseService.clearAllData();
+    }
   }
 
   static Future<Map<String, String>> authHeaders() async {
     final token = await getToken();
     if (kDebugMode) {
-      debugPrint('🔑 [AuthService] authHeaders() -> Token: ${token != null ? "presente" : "assente"}');
+      debugPrint(
+          '🔑 [AuthService] authHeaders() -> Token: ${token != null ? "presente" : "assente"}');
     }
     return {
       'Content-Type': 'application/json; charset=UTF-8',

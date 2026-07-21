@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 import json
 import models
@@ -57,8 +57,8 @@ def save_workout(
 )
 def get_workout_history(
     user_id: int,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -74,7 +74,10 @@ def get_workout_history(
 
     logs = db.query(models.WorkoutLog).filter(
         models.WorkoutLog.user_id == user_id
-    ).order_by(models.WorkoutLog.date.asc()).offset(skip).limit(limit).all()
+    ).order_by(
+        models.WorkoutLog.date.asc(),
+        models.WorkoutLog.id.asc(),
+    ).offset(skip).limit(limit).all()
 
     return [schemas.WorkoutLogResponse.from_orm_log(log) for log in logs]
 

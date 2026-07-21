@@ -1814,7 +1814,7 @@
             <label for="planHistorySelect">Storico Schede</label>
             <div style="display:flex; gap:0.5rem">
               <select id="planHistorySelect" onchange="loadHistoricalPlan()" style="flex-grow:1; height:44px">
-                <option value="">� Corrente / Nessuna �</option>
+                <option value="">— Corrente / Nessuna —</option>
               </select>
               <button class="btn btn-danger" style="padding:0 12px; height:44px; display:flex; align-items:center; justify-content:center; background-color: var(--danger); border:none; color: white;" onclick="deleteSelectedHistoricalPlan()" title="Elimina scheda selezionata">
                 <i class="fas fa-trash"></i>
@@ -2417,10 +2417,8 @@
         const models = await rModels.json();
         
         const select = document.getElementById('aiModelSelect');
-        select.innerHTML = '<option value="">Seleziona un modello...</option>';
-        models.forEach(m => {
-          select.innerHTML += `<option value="${m.id}">${m.name}</option>`;
-        });
+        select.replaceChildren(new Option('Seleziona un modello...', ''));
+        models.forEach(m => select.add(new Option(String(m.name), String(m.id))));
 
         // Load Settings
         const rSet = await fetch(getServerUrl() + '/api/system/settings', { headers: getHeaders() });
@@ -2433,9 +2431,17 @@
         
         const settings = await rSet.json();
         if (settings.ai_model) select.value = settings.ai_model;
-        document.getElementById('aiKeyOverride').value = settings.ai_api_key_override || '';
-        if (document.getElementById('deepseekKeyOverride')) {
-            document.getElementById('deepseekKeyOverride').value = settings.deepseek_api_key_override || '';
+        const googleKeyInput = document.getElementById('aiKeyOverride');
+        googleKeyInput.value = '';
+        googleKeyInput.placeholder = settings.has_ai_api_key_override
+          ? 'Chiave configurata — lascia vuoto per mantenerla'
+          : 'Lascia vuoto per usare la chiave di sistema...';
+        const deepseekKeyInput = document.getElementById('deepseekKeyOverride');
+        if (deepseekKeyInput) {
+          deepseekKeyInput.value = '';
+          deepseekKeyInput.placeholder = settings.has_deepseek_api_key_override
+            ? 'Chiave configurata — lascia vuoto per mantenerla'
+            : 'Lascia vuoto per usare la chiave di sistema...';
         }
       } catch (e) {
         console.error("Settings Load Error:", e);
@@ -2448,11 +2454,13 @@
 
     async function saveSettings(e) {
       e.preventDefault();
-      const payload = {
-        ai_model: document.getElementById('aiModelSelect').value,
-        ai_api_key_override: document.getElementById('aiKeyOverride').value.trim(),
-        deepseek_api_key_override: document.getElementById('deepseekKeyOverride') ? document.getElementById('deepseekKeyOverride').value.trim() : ""
-      };
+      const payload = { ai_model: document.getElementById('aiModelSelect').value };
+      const googleKey = document.getElementById('aiKeyOverride').value.trim();
+      const deepseekInput = document.getElementById('deepseekKeyOverride');
+      const deepseekKey = deepseekInput ? deepseekInput.value.trim() : '';
+      // Un campo vuoto viene omesso: il backend mantiene il secret esistente.
+      if (googleKey) payload.ai_api_key_override = googleKey;
+      if (deepseekKey) payload.deepseek_api_key_override = deepseekKey;
 
       try {
         const r = await fetch(getServerUrl() + '/api/system/settings', {
@@ -2525,7 +2533,7 @@
     function showAlert(id, msg, ok) {
       const el = document.getElementById(id);
       el.className = 'alert show ' + (ok ? 'alert-ok' : 'alert-err');
-      el.innerHTML = (ok ? '✅ ' : '❌ ') + msg;
+      el.textContent = (ok ? '✅ ' : '❌ ') + String(msg ?? '');
       setTimeout(() => { el.className = 'alert'; }, 5000);
     }
 
@@ -2540,48 +2548,82 @@
         const avatarColors = ['#BB86FC','#00E5FF','#00B8D4','#FFB74D','#F06292','#81C784','#64B5F6','#FF8A65'];
         const avatarBg = (name) => avatarColors[(name.charCodeAt(0) || 0) % avatarColors.length];
         const initials = (f, l) => ((f?.[0] || '') + (l?.[0] || '')).toUpperCase() || '?';
-        tb.innerHTML = data.map(u => `
-      <tr>
-        <td style="padding: 1.2rem 1rem">
-          <div style="display:flex; align-items:center; gap:12px">
-            <div style="
-              width:40px; height:40px; border-radius:50%; flex-shrink:0;
-              background:${avatarBg(u.first_name || u.email)};
-              display:flex; align-items:center; justify-content:center;
-              font-weight:800; font-size:0.9rem; color:#0a0a0a;
-              box-shadow:0 0 10px ${avatarBg(u.first_name || u.email)}55;
-            ">${initials(u.first_name, u.last_name)}</div>
-            <div>
-              <div style="font-weight:700; color:var(--text); font-size:0.95rem">${u.first_name} ${u.last_name}</div>
-              <div style="font-size:0.75rem; color:var(--muted); margin-top:2px">ID: #${u.id}</div>
-            </div>
-          </div>
-        </td>
-        <td style="color:var(--cyan); font-weight:500">${u.email}</td>
-        <td style="font-size:0.82rem">
-          <div style="display:flex; gap:1rem; color:var(--muted)">
-            <span>Età: <b style="color:var(--text)">${u.age != null ? u.age : '—'}</b></span>
-            <span>Sesso: <b style="color:var(--text)">${u.gender || '—'}</b></span>
-            <span>Peso: <b style="color:var(--cyan)">${u.weight != null ? u.weight + 'kg' : '—'}</b></span>
-          </div>
-        </td>
-        <td style="padding-right:1.5rem">
-          <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end">
-            <button class="btn btn-edit" style="padding: 8px 12px; border-radius:8px" 
-                    onclick="openEditUserModal(${u.id}, \`${u.email}\`, \`${u.first_name.replace(/`/g, '')}\`, \`${u.last_name.replace(/`/g, '')}\`)" title="Modifica Dati">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-edit btn-progress" style="padding: 8px 16px; border-radius:8px; font-weight:600; display:flex; align-items:center; gap:6px" 
-                    onclick="showProgress(${u.id}, '${u.first_name} ${u.last_name}')">
-              <span>📈</span> Progressi
-            </button>
-            <button class="btn btn-danger" style="padding: 8px 12px; border-radius:8px" 
-                    onclick="deleteUser('${u.email}')">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`).join('');
+        tb.replaceChildren();
+        data.forEach(u => {
+          const firstName = String(u.first_name || '');
+          const lastName = String(u.last_name || '');
+          const email = String(u.email || '');
+          const fullName = `${firstName} ${lastName}`.trim();
+          const color = avatarBg(firstName || email);
+          const tr = document.createElement('tr');
+
+          const profileTd = document.createElement('td');
+          profileTd.style.padding = '1.2rem 1rem';
+          const profile = document.createElement('div');
+          profile.style.cssText = 'display:flex;align-items:center;gap:12px';
+          const avatar = document.createElement('div');
+          avatar.style.cssText = `width:40px;height:40px;border-radius:50%;flex-shrink:0;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;color:#0a0a0a;box-shadow:0 0 10px ${color}55`;
+          avatar.textContent = initials(firstName, lastName);
+          const identity = document.createElement('div');
+          const nameEl = document.createElement('div');
+          nameEl.style.cssText = 'font-weight:700;color:var(--text);font-size:0.95rem';
+          nameEl.textContent = fullName;
+          const idEl = document.createElement('div');
+          idEl.style.cssText = 'font-size:0.75rem;color:var(--muted);margin-top:2px';
+          idEl.textContent = `ID: #${Number(u.id)}`;
+          identity.append(nameEl, idEl);
+          profile.append(avatar, identity);
+          profileTd.appendChild(profile);
+
+          const emailTd = document.createElement('td');
+          emailTd.style.cssText = 'color:var(--cyan);font-weight:500';
+          emailTd.textContent = email;
+
+          const detailsTd = document.createElement('td');
+          detailsTd.style.fontSize = '0.82rem';
+          const details = document.createElement('div');
+          details.style.cssText = 'display:flex;gap:1rem;color:var(--muted)';
+          const addDetail = (label, value, colorValue = 'var(--text)') => {
+            const span = document.createElement('span');
+            span.append(document.createTextNode(`${label}: `));
+            const strong = document.createElement('b');
+            strong.style.color = colorValue;
+            strong.textContent = String(value);
+            span.appendChild(strong);
+            details.appendChild(span);
+          };
+          addDetail('Età', u.age ?? '—');
+          addDetail('Sesso', u.gender || '—');
+          addDetail('Peso', u.weight != null ? `${u.weight}kg` : '—', 'var(--cyan)');
+          detailsTd.appendChild(details);
+
+          const actionsTd = document.createElement('td');
+          actionsTd.style.paddingRight = '1.5rem';
+          const actions = document.createElement('div');
+          actions.style.cssText = 'display:flex;gap:12px;align-items:center;justify-content:flex-end';
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-edit';
+          editBtn.style.cssText = 'padding:8px 12px;border-radius:8px';
+          editBtn.title = 'Modifica Dati';
+          editBtn.innerHTML = '<i class="fas fa-edit" aria-hidden="true"></i>';
+          editBtn.addEventListener('click', () => openEditUserModal(Number(u.id), email, firstName, lastName));
+          const progressBtn = document.createElement('button');
+          progressBtn.className = 'btn btn-edit btn-progress';
+          progressBtn.style.cssText = 'padding:8px 16px;border-radius:8px;font-weight:600;display:flex;align-items:center;gap:6px';
+          progressBtn.textContent = '📈 Progressi';
+          progressBtn.addEventListener('click', () => showProgress(Number(u.id), fullName));
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-danger';
+          deleteBtn.style.cssText = 'padding:8px 12px;border-radius:8px';
+          deleteBtn.title = 'Elimina';
+          deleteBtn.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+          deleteBtn.addEventListener('click', () => deleteUser(email));
+          actions.append(editBtn, progressBtn, deleteBtn);
+          actionsTd.appendChild(actions);
+
+          tr.append(profileTd, emailTd, detailsTd, actionsTd);
+          tb.appendChild(tr);
+        });
       } catch (e) { showAlert('alertClienti', 'Errore rete: ' + e.message, false); }
     }
 
@@ -2608,10 +2650,15 @@
         password: document.getElementById('regPassword').value
       };
       try {
-        const r = await fetch(getServerUrl() + '/api/register', { method: 'POST', headers: getHeaders(true), body: JSON.stringify(body) });
+        const r = await fetch(getServerUrl() + '/api/auth/register', { method: 'POST', headers: getHeaders(true), body: JSON.stringify(body) });
         if (r.status === 401) { handleUnauthorized(); return; }
         const d = await r.json();
-        if (r.ok) { showAlert('alertRegister', '✅ Cliente registrato: ' + d.first_name + ' ' + d.last_name, true); document.getElementById('formRegister').reset(); loadUsers(); }
+        if (r.ok) {
+          const created = d.user || {};
+          showAlert('alertRegister', 'Cliente registrato: ' + (created.first_name || '') + ' ' + (created.last_name || ''), true);
+          document.getElementById('formRegister').reset();
+          loadUsers();
+        }
         else showAlert('alertRegister', 'Errore: ' + d.detail, false);
       } catch (err) { showAlert('alertRegister', 'Errore rete: ' + err.message, false); }
     }
@@ -2946,8 +2993,11 @@
         const data = await r.json();
         const sel = document.getElementById('builderUserId');
         const cur = sel.value;
-        sel.innerHTML = '<option value="">— Seleziona cliente —</option>' +
-          data.map(u => `<option value="${u.id}">${u.first_name || ''} ${u.last_name || ''} (${u.email})</option>`).join('');
+        sel.replaceChildren(new Option('— Seleziona cliente —', ''));
+        data.forEach(u => {
+          const label = `${u.first_name || ''} ${u.last_name || ''} (${u.email || ''})`.trim();
+          sel.add(new Option(label, String(Number(u.id))));
+        });
         if (cur) sel.value = cur;
       } catch (e) { }
     }

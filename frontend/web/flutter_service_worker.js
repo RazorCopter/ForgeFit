@@ -1,4 +1,4 @@
-const CACHE_NAME = 'forgefit-v1.2.0';
+const CACHE_NAME = 'forgefit-v2.3.0';
 
 // Lista dei file principali da mettere in cache. 
 // Aggiungiamo i file di bootstrap e index.html per permettere il caricamento offline base.
