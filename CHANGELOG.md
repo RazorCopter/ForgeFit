@@ -1,5 +1,33 @@
 # Changelog — ForgeFit
 
+## [2.3.0] — 2026-07-21
+
+### Added
+- **Preparazione serie**: ogni esercizio apre una preview con tutte le serie, carico, ripetizioni, recupero, note e storico prima di avviare il tempo effettivo.
+- **Countdown configurabile**: 5 secondi di default, selezionabile tra Off, 3, 5 e 10 secondi nelle impostazioni.
+- **Macchina a stati sessione**: preparazione, countdown, esecuzione, conferma, recupero e completamento sono transizioni esplicite e testate.
+- **Conferma a timer fermo**: `TERMINA SERIE` congela il tempo prima della modifica di peso e ripetizioni.
+
+### Security
+- Rimossi URL e credenziali Portainer dalla working tree; `get_logs.ps1` usa ora esclusivamente variabili d'ambiente.
+- Eliminata la stored XSS nella lista clienti e nel selettore del builder usando nodi DOM e `textContent` per i dati controllati dagli utenti.
+- Le API di configurazione non restituiscono più le chiavi AI al browser, ma soltanto lo stato configurato/non configurato.
+- Aggiunti security header HTTP e limiti di lunghezza ai campi di registrazione.
+- Aggiunto rate limit alla registrazione pubblica.
+
+### Fixed
+- La registrazione restituisce access token, refresh token e utente, rendendo valido l'auto-login dell'app.
+- Il frontend conserva anche il refresh token ricevuto dopo la registrazione.
+- Corretta la creazione clienti della dashboard, che usava l'endpoint inesistente `/api/register`.
+- Lo storico allenamenti viene scaricato in pagine stabili, evitando la cancellazione locale dei record successivi al centesimo.
+
+### Tests
+- Aggiunti test backend per registrazione, profilo autenticato, limiti password, paginazione oltre 200 record, segretezza delle chiavi AI e rendering sicuro della dashboard.
+- Aggiunti test Flutter per tutte le transizioni principali e invalide della sessione esercizio.
+
+### Operational notes
+- Prima della distribuzione devono ancora essere ruotate le credenziali precedentemente esposte e bonificata la cronologia Git; la semplice rimozione dalla working tree non le revoca.
+
 ## [2.2.4] — 2026-06-18
 
 ### Fixed

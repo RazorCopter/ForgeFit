@@ -177,9 +177,9 @@ class AuthRegisterRequest(BaseModel):
     La password viene ricevuta in chiaro e SUBITO hashata — mai salvata as-is.
     """
     email: EmailStr = Field(..., description="Email univoca dell'account")
-    password: str = Field(..., min_length=6, description="Password in chiaro (min 6 caratteri)")
-    first_name: str = Field(..., min_length=1, validation_alias="nome")
-    last_name: str = Field(..., min_length=1, validation_alias="cognome")
+    password: str = Field(..., min_length=8, max_length=128, description="Password in chiaro (8-128 caratteri)")
+    first_name: str = Field(..., min_length=1, max_length=80, validation_alias="nome")
+    last_name: str = Field(..., min_length=1, max_length=80, validation_alias="cognome")
     age: int = Field(..., ge=1, le=120, validation_alias="eta")
     gender: Optional[str] = Field(None, validation_alias="sesso")
     
@@ -408,9 +408,10 @@ class SetupStatusResponse(BaseModel):
 
 class SystemSettingsUpdate(BaseModel):
     """Schema per aggiornare le impostazioni di sistema."""
-    ai_model: str
-    ai_api_key_override: Optional[str] = None
-    deepseek_api_key_override: Optional[str] = None
+    ai_model: str = Field(..., min_length=1, max_length=100)
+    # None = mantieni il valore corrente; stringa vuota = rimuovi l'override.
+    ai_api_key_override: Optional[str] = Field(None, max_length=500)
+    deepseek_api_key_override: Optional[str] = Field(None, max_length=500)
 
 
 class AIModelResponse(BaseModel):

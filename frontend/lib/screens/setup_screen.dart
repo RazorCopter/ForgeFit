@@ -28,26 +28,27 @@ class _SetupScreenState extends State<SetupScreen> {
     // Usiamo il valore scaricato da SyncService.
   }
 
-
-
   /// Riscarica la scheda dal server e la salva in memoria.
   /// Utile quando il trainer aggiorna il piano dell'utente.
   Future<void> _syncScheda() async {
     final userId = DatabaseService.getUserId();
     if (userId == null) {
-      _showSnackBar('Nessun account. Effettua prima il login.', Colors.red.shade700);
+      _showSnackBar(
+          'Nessun account. Effettua prima il login.', Colors.red.shade700);
       return;
     }
     setState(() => _isSyncing = true);
     try {
       await SyncService.syncAllPendingData();
       await PlanService.syncPlan(userId);
-      _showSnackBar('Sincronizzazione completata con successo!', Colors.green.shade700);
+      _showSnackBar(
+          'Sincronizzazione completata con successo!', Colors.green.shade700);
     } on ApiException catch (e) {
       _showSnackBar('Errore dal server: ${e.message}', Colors.red.shade700);
     } catch (e) {
       if (e.toString().contains('no_plan')) {
-        _showSnackBar('Nessuna scheda disponibile. Contatta il trainer.', Colors.orange);
+        _showSnackBar(
+            'Nessuna scheda disponibile. Contatta il trainer.', Colors.orange);
       } else {
         _showSnackBar('Server non raggiungibile.', Colors.red.shade700);
       }
@@ -55,7 +56,6 @@ class _SetupScreenState extends State<SetupScreen> {
       if (mounted) setState(() => _isSyncing = false);
     }
   }
-
 
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
@@ -70,13 +70,13 @@ class _SetupScreenState extends State<SetupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla',
-                style: TextStyle(color: AppTheme.cyan)),
+            child:
+                const Text('Annulla', style: TextStyle(color: AppTheme.cyan)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Esci',
-                style: TextStyle(color: Colors.redAccent)),
+            child:
+                const Text('Esci', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -99,7 +99,8 @@ class _SetupScreenState extends State<SetupScreen> {
         backgroundColor: AppTheme.surfaceVariant,
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
+            Icon(Icons.warning_amber_rounded,
+                color: Colors.redAccent, size: 22),
             SizedBox(width: 8),
             Text('Reset App e Dati?', style: TextStyle(color: Colors.white)),
           ],
@@ -111,11 +112,14 @@ class _SetupScreenState extends State<SetupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla', style: TextStyle(color: AppTheme.textSecondary)),
+            child: const Text('Annulla',
+                style: TextStyle(color: AppTheme.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('RESET', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: const Text('RESET',
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -124,7 +128,7 @@ class _SetupScreenState extends State<SetupScreen> {
     if (confirm == true) {
       await AuthService.logout();
       await DatabaseService.clearAllData();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const AuthScreen()),
@@ -163,8 +167,10 @@ class _SetupScreenState extends State<SetupScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: AppTheme.surfaceVariant,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Cambia Password', style: TextStyle(color: AppTheme.cyan)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Cambia Password',
+              style: TextStyle(color: AppTheme.cyan)),
           content: Form(
             key: formKey,
             child: SingleChildScrollView(
@@ -173,15 +179,19 @@ class _SetupScreenState extends State<SetupScreen> {
                 children: [
                   const Text(
                     'Inserisci le credenziali per aggiornare la tua chiave di accesso.',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    style:
+                        TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 20),
                   _buildDialogField('Password attuale', oldCtrl, true),
                   const SizedBox(height: 12),
                   _buildDialogField('Nuova password', newCtrl, true),
                   const SizedBox(height: 12),
-                  _buildDialogField('Conferma nuova password', confirmCtrl, true, 
-                    validator: (v) => v != newCtrl.text ? 'Le password non coincidono' : null),
+                  _buildDialogField(
+                      'Conferma nuova password', confirmCtrl, true,
+                      validator: (v) => v != newCtrl.text
+                          ? 'Le password non coincidono'
+                          : null),
                 ],
               ),
             ),
@@ -189,43 +199,55 @@ class _SetupScreenState extends State<SetupScreen> {
           actions: [
             TextButton(
               onPressed: loading ? null : () => Navigator.pop(context),
-              child: const Text('Annulla', style: TextStyle(color: AppTheme.textSecondary)),
+              child: const Text('Annulla',
+                  style: TextStyle(color: AppTheme.textSecondary)),
             ),
             ElevatedButton(
-              onPressed: loading ? null : () async {
-                if (!formKey.currentState!.validate()) return;
-                setDialogState(() => loading = true);
-                try {
-                  await ApiService.changePassword(
-                    oldPassword: oldCtrl.text,
-                    newPassword: newCtrl.text,
-                  );
-                  if (mounted) {
-                    Navigator.pop(context);
-                    _showSnackBar('Password aggiornata con successo! Effettua nuovamente il login.', Colors.green.shade700);
-                    // Logout forzato per sicurezza
-                    await AuthService.logout();
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const AuthScreen()),
-                      (route) => false,
-                    );
-                  }
-                } on ApiException catch (e) {
-                  _showSnackBar(e.message, Colors.red.shade700);
-                } catch (e) {
-                  _showSnackBar('Errore di connessione.', Colors.red.shade700);
-                } finally {
-                  setDialogState(() => loading = false);
-                }
-              },
+              onPressed: loading
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      setDialogState(() => loading = true);
+                      try {
+                        await ApiService.changePassword(
+                          oldPassword: oldCtrl.text,
+                          newPassword: newCtrl.text,
+                        );
+                        if (mounted) {
+                          Navigator.pop(context);
+                          _showSnackBar(
+                              'Password aggiornata con successo! Effettua nuovamente il login.',
+                              Colors.green.shade700);
+                          // Logout forzato per sicurezza
+                          await AuthService.logout();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (_) => const AuthScreen()),
+                            (route) => false,
+                          );
+                        }
+                      } on ApiException catch (e) {
+                        _showSnackBar(e.message, Colors.red.shade700);
+                      } catch (e) {
+                        _showSnackBar(
+                            'Errore di connessione.', Colors.red.shade700);
+                      } finally {
+                        setDialogState(() => loading = false);
+                      }
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.cyan,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
-              child: loading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                : const Text('Aggiorna'),
+              child: loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black))
+                  : const Text('Aggiorna'),
             ),
           ],
         ),
@@ -233,18 +255,26 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
-  Widget _buildDialogField(String label, TextEditingController ctrl, bool isPassword, {String? Function(String?)? validator}) {
+  Widget _buildDialogField(
+      String label, TextEditingController ctrl, bool isPassword,
+      {String? Function(String?)? validator}) {
     if (!isPassword) {
       return TextFormField(
         controller: ctrl,
         style: const TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-          filled: true, fillColor: Colors.black26, isDense: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+          labelStyle:
+              const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          filled: true,
+          fillColor: Colors.black26,
+          isDense: true,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none),
         ),
-        validator: validator ?? (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
+        validator: validator ??
+            (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
       );
     }
     return StatefulBuilder(
@@ -257,15 +287,23 @@ class _SetupScreenState extends State<SetupScreen> {
             style: const TextStyle(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              filled: true, fillColor: Colors.black26, isDense: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              labelStyle:
+                  const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              filled: true,
+              fillColor: Colors.black26,
+              isDense: true,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none),
               suffixIcon: IconButton(
-                icon: Icon(hidden ? Icons.visibility_off : Icons.visibility, size: 18, color: AppTheme.textSecondary),
+                icon: Icon(hidden ? Icons.visibility_off : Icons.visibility,
+                    size: 18, color: AppTheme.textSecondary),
                 onPressed: () => setState2(() => hidden = !hidden),
               ),
             ),
-            validator: validator ?? (v) => (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
+            validator: validator ??
+                (v) =>
+                    (v == null || v.length < 6) ? 'Minimo 6 caratteri' : null,
           ),
         );
       },
@@ -278,7 +316,8 @@ class _SetupScreenState extends State<SetupScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Setup & Sicurezza', style: TextStyle(color: AppTheme.textPrimary)),
+          title: const Text('Setup & Sicurezza',
+              style: TextStyle(color: AppTheme.textPrimary)),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -322,10 +361,12 @@ class _SetupScreenState extends State<SetupScreen> {
                               height: 28,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.cyan),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.cyan),
                               ),
                             )
-                          : const Icon(Icons.cloud_sync, color: AppTheme.cyan, size: 28),
+                          : const Icon(Icons.cloud_sync,
+                              color: AppTheme.cyan, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -333,7 +374,9 @@ class _SetupScreenState extends State<SetupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isSyncing ? 'Sincronizzazione...' : 'Sincronizza Ora',
+                            _isSyncing
+                                ? 'Sincronizzazione...'
+                                : 'Sincronizza Ora',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -343,18 +386,18 @@ class _SetupScreenState extends State<SetupScreen> {
                           const SizedBox(height: 4),
                           const Text(
                             'Aggiorna esercizi e target dal server',
-                            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                            style: TextStyle(
+                                fontSize: 14, color: AppTheme.textSecondary),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                    const Icon(Icons.chevron_right,
+                        color: AppTheme.textSecondary),
                   ],
                 ),
               ),
             ).animate().fade(delay: 150.ms).slideX(),
-
-
 
             // ── Sezione Preferenze ─────────────────────────────────────────
             const SizedBox(height: 24),
@@ -385,7 +428,8 @@ class _SetupScreenState extends State<SetupScreen> {
                       color: AppTheme.cyan.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.volume_up, color: AppTheme.cyan, size: 24),
+                    child: const Icon(Icons.volume_up,
+                        color: AppTheme.cyan, size: 24),
                   ),
                   const SizedBox(width: 16),
                   const Expanded(
@@ -394,11 +438,15 @@ class _SetupScreenState extends State<SetupScreen> {
                       children: [
                         Text(
                           'Suoni di Recupero',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                         ),
                         Text(
                           'Riproduce un beep al termine del riposo',
-                          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -433,7 +481,8 @@ class _SetupScreenState extends State<SetupScreen> {
                       color: AppTheme.vividPurple.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.record_voice_over, color: AppTheme.vividPurple, size: 24),
+                    child: const Icon(Icons.record_voice_over,
+                        color: AppTheme.vividPurple, size: 24),
                   ),
                   const SizedBox(width: 16),
                   const Expanded(
@@ -442,11 +491,15 @@ class _SetupScreenState extends State<SetupScreen> {
                       children: [
                         Text(
                           'Coach Vocale AI',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                         ),
                         Text(
                           'Fornisce indicazioni e incitamento vocale',
-                          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -454,7 +507,8 @@ class _SetupScreenState extends State<SetupScreen> {
                   Switch(
                     value: DatabaseService.getVoiceCoachEnabled(),
                     activeThumbColor: AppTheme.vividPurple,
-                    activeTrackColor: AppTheme.vividPurple.withValues(alpha: 0.3),
+                    activeTrackColor:
+                        AppTheme.vividPurple.withValues(alpha: 0.3),
                     inactiveThumbColor: AppTheme.textSecondary,
                     inactiveTrackColor: Colors.black26,
                     onChanged: (val) {
@@ -466,6 +520,64 @@ class _SetupScreenState extends State<SetupScreen> {
                 ],
               ),
             ).animate().fade(delay: 230.ms).slideX(),
+
+            const SizedBox(height: 12),
+
+            AppTheme.glassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              borderColor: AppTheme.legsAccent.withValues(alpha: 0.3),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.legsAccent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.hourglass_top_rounded,
+                        color: AppTheme.legsAccent, size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Countdown Serie',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        Text(
+                          'Tempo per posizionarti prima del cronometro',
+                          style: TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  DropdownButton<int>(
+                    value: DatabaseService.getSetCountdownSeconds(),
+                    dropdownColor: AppTheme.surfaceVariant,
+                    underline: const SizedBox.shrink(),
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                    items: const [
+                      DropdownMenuItem(value: 0, child: Text('Off')),
+                      DropdownMenuItem(value: 3, child: Text('3 s')),
+                      DropdownMenuItem(value: 5, child: Text('5 s')),
+                      DropdownMenuItem(value: 10, child: Text('10 s')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(
+                          () => DatabaseService.setSetCountdownSeconds(value));
+                    },
+                  ),
+                ],
+              ),
+            ).animate().fade(delay: 240.ms).slideX(),
 
             const SizedBox(height: 24),
 
@@ -492,9 +604,8 @@ class _SetupScreenState extends State<SetupScreen> {
               color: AppTheme.vividPurple,
               onTap: _showChangePasswordDialog,
             ).animate().fade(delay: 300.ms).slideX(),
-            
+
             const SizedBox(height: 16),
-            
 
             _buildSetupCard(
               title: 'Esci dall\'Account',
@@ -503,7 +614,7 @@ class _SetupScreenState extends State<SetupScreen> {
               color: Colors.redAccent,
               onTap: _logout,
             ).animate().fade(delay: 400.ms).slideX(),
-            
+
             const SizedBox(height: 16),
 
             _buildSetupCard(
@@ -520,11 +631,13 @@ class _SetupScreenState extends State<SetupScreen> {
                 children: [
                   Text(
                     'ForgeFit',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 14),
                   ),
                   Text(
                     'Frontend v$_frontendVersion',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   ValueListenableBuilder<String?>(
@@ -532,7 +645,8 @@ class _SetupScreenState extends State<SetupScreen> {
                     builder: (context, version, _) {
                       return Text(
                         'Backend API v${version ?? "Caricamento..."}',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                        style: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 12),
                       );
                     },
                   ),

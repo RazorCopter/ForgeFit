@@ -372,6 +372,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    """Applica header difensivi alle API e alla dashboard statica."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
+
 # Collega il limiter (istanza condivisa da limiter.py) all'app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

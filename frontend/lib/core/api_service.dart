@@ -51,19 +51,17 @@ class ApiService {
     required String password,
   }) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse(ApiConfig.login),
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: {
-              'username': email,
-              'password': password,
-            },
-          )
-          .timeout(_timeout);
+      final response = await http.post(
+        Uri.parse(ApiConfig.login),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'username': email,
+          'password': password,
+        },
+      ).timeout(_timeout);
 
       final data = _handleResponse(response);
-      
+
       if (kDebugMode) {
         debugPrint('🔑 [ApiService] Login Response Body: $data');
       }
@@ -73,10 +71,11 @@ class ApiService {
       if (token != null) {
         await AuthService.saveToken(token);
         final refreshToken = data['refresh_token'] as String?;
-        if (refreshToken != null) await AuthService.saveRefreshToken(refreshToken);
+        if (refreshToken != null)
+          await AuthService.saveRefreshToken(refreshToken);
         await AuthService.saveEmail(email);
         await DatabaseService.saveUserEmail(email); // Sincronizza con Hive
-        
+
         // Estrazione ID utente ultra-robusta
         int? userId;
         try {
@@ -91,15 +90,19 @@ class ApiService {
 
         if (kDebugMode) {
           debugPrint('👤 [ApiService] Extracted userId: $userId');
-          debugPrint('🏷️ [ApiService] Backend Version: ${data['version'] ?? "Unknown (Old)"}');
+          debugPrint(
+              '🏷️ [ApiService] Backend Version: ${data['version'] ?? "Unknown (Old)"}');
         }
 
         if (userId != null) {
           await AuthService.saveUserId(userId);
           await DatabaseService.saveUserId(userId);
-          if (kDebugMode) debugPrint('✅ [ApiService] userId $userId saved to persistent storage.');
+          if (kDebugMode)
+            debugPrint(
+                '✅ [ApiService] userId $userId saved to persistent storage.');
         } else {
-          if (kDebugMode) debugPrint('⚠️ [ApiService] userId is NULL after extraction!');
+          if (kDebugMode)
+            debugPrint('⚠️ [ApiService] userId is NULL after extraction!');
         }
       }
       return data;
@@ -133,6 +136,10 @@ class ApiService {
       if (token != null) {
         final email = payload['email'] as String? ?? '';
         await AuthService.saveToken(token);
+        final refreshToken = data['refresh_token'] as String?;
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          await AuthService.saveRefreshToken(refreshToken);
+        }
         await AuthService.saveEmail(email);
         await DatabaseService.saveUserEmail(email); // Sincronizza con Hive
 
@@ -216,7 +223,9 @@ class ApiService {
       return result as Map<String, dynamic>;
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw const ApiException(statusCode: 404, message: 'Nessuna scheda trovata per questo utente.');
+        throw const ApiException(
+            statusCode: 404,
+            message: 'Nessuna scheda trovata per questo utente.');
       }
       rethrow;
     } catch (e) {
@@ -230,7 +239,8 @@ class ApiService {
   // ------------------------------------------------------------------
   static Future<String> saveWorkout(dynamic workout) async {
     final userId = await AuthService.getUserId();
-    if (userId == null) throw Exception("Utente non autenticato o ID mancante.");
+    if (userId == null)
+      throw Exception("Utente non autenticato o ID mancante.");
 
     final payload = {
       'user_id': userId,
@@ -244,7 +254,8 @@ class ApiService {
     try {
       final result = await _authenticatedRequest(
         (h) => http
-            .post(Uri.parse(ApiConfig.saveWorkout), headers: h, body: jsonEncode(payload))
+            .post(Uri.parse(ApiConfig.saveWorkout),
+                headers: h, body: jsonEncode(payload))
             .timeout(_timeout),
       );
       return result['id'].toString();
@@ -260,12 +271,25 @@ class ApiService {
   // GET /api/workouts/history/{user_id} [PROTETTO — richiede JWT]
   // ------------------------------------------------------------------
   static Future<List<dynamic>> getWorkoutHistory(int userId) async {
-    final url = ApiConfig.workoutHistory(userId);
+    const pageSize = 100;
+    final allWorkouts = <dynamic>[];
+    var skip = 0;
     try {
-      final result = await _authenticatedRequest(
-        (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
-      );
-      return result as List<dynamic>;
+      while (true) {
+        final url = ApiConfig.workoutHistory(
+          userId,
+          skip: skip,
+          limit: pageSize,
+        );
+        final result = await _authenticatedRequest(
+          (h) => http.get(Uri.parse(url), headers: h).timeout(_timeout),
+        );
+        final page = result as List<dynamic>;
+        allWorkouts.addAll(page);
+        if (page.length < pageSize) break;
+        skip += page.length;
+      }
+      return allWorkouts;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -300,9 +324,12 @@ class ApiService {
     required String newPassword,
   }) async {
     try {
-      final body = jsonEncode({'vecchia_password': oldPassword, 'nuova_password': newPassword});
+      final body = jsonEncode(
+          {'vecchia_password': oldPassword, 'nuova_password': newPassword});
       final result = await _authenticatedRequest(
-        (h) => http.put(Uri.parse(ApiConfig.changePassword), headers: h, body: body).timeout(_timeout),
+        (h) => http
+            .put(Uri.parse(ApiConfig.changePassword), headers: h, body: body)
+            .timeout(_timeout),
       );
       return result as Map<String, dynamic>;
     } on ApiException {
@@ -317,10 +344,14 @@ class ApiService {
   // ------------------------------------------------------------------
 
   /// Invia le misurazioni fisiologiche al backend per il tracking.
-  static Future<Map<String, dynamic>> postMeasurements(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> postMeasurements(
+      Map<String, dynamic> data) async {
     try {
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.measurements), headers: h, body: jsonEncode(data)).timeout(_timeout),
+        (h) => http
+            .post(Uri.parse(ApiConfig.measurements),
+                headers: h, body: jsonEncode(data))
+            .timeout(_timeout),
       );
       return result as Map<String, dynamic>;
     } on ApiException {
@@ -338,7 +369,8 @@ class ApiService {
   static Future<Map<String, dynamic>> getMe() async {
     try {
       final result = await _authenticatedRequest(
-        (h) => http.get(Uri.parse(ApiConfig.userMe), headers: h).timeout(_timeout),
+        (h) =>
+            http.get(Uri.parse(ApiConfig.userMe), headers: h).timeout(_timeout),
       );
       return result as Map<String, dynamic>;
     } on ApiException {
@@ -358,9 +390,11 @@ class ApiService {
     String? ptNotes,
   }) async {
     try {
-      final body = jsonEncode({'experience_level': experienceLevel, 'pt_notes': ptNotes ?? ''});
+      final body = jsonEncode(
+          {'experience_level': experienceLevel, 'pt_notes': ptNotes ?? ''});
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.generateAIPlan), headers: h, body: body)
+        (h) => http
+            .post(Uri.parse(ApiConfig.generateAIPlan), headers: h, body: body)
             .timeout(const Duration(seconds: 45)),
       );
       return result as Map<String, dynamic>;
@@ -379,7 +413,8 @@ class ApiService {
   static Future<Map<String, dynamic>> generateAnalysis() async {
     try {
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.generateAnalysis), headers: h)
+        (h) => http
+            .post(Uri.parse(ApiConfig.generateAnalysis), headers: h)
             .timeout(const Duration(seconds: 45)),
       );
       return result as Map<String, dynamic>;
@@ -399,7 +434,9 @@ class ApiService {
   static Future<Map<String, dynamic>> unlockAI({required String code}) async {
     try {
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.unlockAI), headers: h, body: jsonEncode({'code': code}))
+        (h) => http
+            .post(Uri.parse(ApiConfig.unlockAI),
+                headers: h, body: jsonEncode({'code': code}))
             .timeout(_timeout),
       );
       return result as Map<String, dynamic>;
@@ -418,7 +455,9 @@ class ApiService {
   static Future<Map<String, dynamic>> getOverloadSuggestions(int userId) async {
     try {
       final result = await _authenticatedRequest(
-        (h) => http.get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: h).timeout(_timeout),
+        (h) => http
+            .get(Uri.parse(ApiConfig.overloadSuggestions(userId)), headers: h)
+            .timeout(_timeout),
       );
       return result as Map<String, dynamic>;
     } on ApiException {
@@ -451,7 +490,9 @@ class ApiService {
         'workouts': workouts,
       });
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.analyzePerformance), headers: h, body: body)
+        (h) => http
+            .post(Uri.parse(ApiConfig.analyzePerformance),
+                headers: h, body: body)
             .timeout(const Duration(seconds: 60)),
       );
       return (result as Map<String, dynamic>)['text'] as String? ?? '';
@@ -468,9 +509,11 @@ class ApiService {
     Map<String, dynamic>? contextData,
   }) async {
     try {
-      final body = jsonEncode({'prompt_text': prompt, 'context_data': contextData ?? {}});
+      final body = jsonEncode(
+          {'prompt_text': prompt, 'context_data': contextData ?? {}});
       final result = await _authenticatedRequest(
-        (h) => http.post(Uri.parse(ApiConfig.aiAnalyze), headers: h, body: body)
+        (h) => http
+            .post(Uri.parse(ApiConfig.aiAnalyze), headers: h, body: body)
             .timeout(const Duration(seconds: 45)),
       );
       return result as Map<String, dynamic>;
@@ -493,14 +536,17 @@ class ApiService {
     final refreshToken = await AuthService.getRefreshToken();
     if (refreshToken != null && refreshToken.isNotEmpty) {
       try {
-        final refreshResponse = await http.post(
-          Uri.parse(ApiConfig.refreshToken),
-          headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({'refresh_token': refreshToken}),
-        ).timeout(_timeout);
+        final refreshResponse = await http
+            .post(
+              Uri.parse(ApiConfig.refreshToken),
+              headers: {'Content-Type': 'application/json; charset=UTF-8'},
+              body: jsonEncode({'refresh_token': refreshToken}),
+            )
+            .timeout(_timeout);
 
         if (refreshResponse.statusCode == 200) {
-          final body = jsonDecode(utf8.decode(refreshResponse.bodyBytes)) as Map<String, dynamic>;
+          final body = jsonDecode(utf8.decode(refreshResponse.bodyBytes))
+              as Map<String, dynamic>;
           final newToken = body['access_token'] as String?;
           if (newToken != null) {
             await AuthService.saveToken(newToken);
@@ -553,7 +599,8 @@ class ApiService {
       } catch (_) {
         if (body.isNotEmpty) errorMessage = body;
       }
-      throw ApiException(statusCode: response.statusCode, message: errorMessage);
+      throw ApiException(
+          statusCode: response.statusCode, message: errorMessage);
     }
   }
 

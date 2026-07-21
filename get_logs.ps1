@@ -1,6 +1,10 @@
-$PortainerURL = "https://docker.ghome.it"
-$Username     = "admin"
-$Password     = "gianvitobleve"
+$PortainerURL = $env:FORGEFIT_PORTAINER_URL
+$Username = $env:FORGEFIT_PORTAINER_USERNAME
+$Password = $env:FORGEFIT_PORTAINER_PASSWORD
+
+if (-not $PortainerURL -or -not $Username -or -not $Password) {
+    throw "Configura FORGEFIT_PORTAINER_URL, FORGEFIT_PORTAINER_USERNAME e FORGEFIT_PORTAINER_PASSWORD prima di eseguire lo script."
+}
 
 # 1. Login
 $authBody = @{ Username = $Username; Password = $Password } | ConvertTo-Json

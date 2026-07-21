@@ -99,14 +99,15 @@ def get_system_settings(db: Session = Depends(get_db), current_user: models.User
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Permesso negato.")
     
-    api_key, ai_model, deepseek_key = ai_service.get_ai_config(db)
+    _, ai_model, _ = ai_service.get_ai_config(db)
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
     deepseek_key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
     
     return {
         "ai_model": ai_model,
-        "ai_api_key_override": key_setting.value if key_setting else "",
-        "deepseek_api_key_override": deepseek_key_setting.value if deepseek_key_setting else ""
+        # I secret non devono mai essere restituiti al browser, neppure a un admin.
+        "has_ai_api_key_override": bool(key_setting and key_setting.value),
+        "has_deepseek_api_key_override": bool(deepseek_key_setting and deepseek_key_setting.value),
     }
 
 
@@ -123,25 +124,25 @@ def update_system_settings(data: schemas.SystemSettingsUpdate, db: Session = Dep
         model_setting.value = data.ai_model
         
     key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "ai_api_key_override").first()
-    if data.ai_api_key_override:
-        if not key_setting:
-            key_setting = models.SystemSettings(key="ai_api_key_override", value=data.ai_api_key_override)
-            db.add(key_setting)
-        else:
-            key_setting.value = data.ai_api_key_override
-    else:
-        if key_setting:
+    if data.ai_api_key_override is not None:
+        if data.ai_api_key_override:
+            if not key_setting:
+                key_setting = models.SystemSettings(key="ai_api_key_override", value=data.ai_api_key_override)
+                db.add(key_setting)
+            else:
+                key_setting.value = data.ai_api_key_override
+        elif key_setting:
             db.delete(key_setting)
             
     deepseek_key_setting = db.query(models.SystemSettings).filter(models.SystemSettings.key == "deepseek_api_key_override").first()
-    if data.deepseek_api_key_override:
-        if not deepseek_key_setting:
-            deepseek_key_setting = models.SystemSettings(key="deepseek_api_key_override", value=data.deepseek_api_key_override)
-            db.add(deepseek_key_setting)
-        else:
-            deepseek_key_setting.value = data.deepseek_api_key_override
-    else:
-        if deepseek_key_setting:
+    if data.deepseek_api_key_override is not None:
+        if data.deepseek_api_key_override:
+            if not deepseek_key_setting:
+                deepseek_key_setting = models.SystemSettings(key="deepseek_api_key_override", value=data.deepseek_api_key_override)
+                db.add(deepseek_key_setting)
+            else:
+                deepseek_key_setting.value = data.deepseek_api_key_override
+        elif deepseek_key_setting:
             db.delete(deepseek_key_setting)
 
     db.commit()

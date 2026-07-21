@@ -28,24 +28,33 @@ class DatabaseService {
       }
     }
 
-    await tryOpen(_workoutBoxName,     () => Hive.openBox<CompletedWorkout>(_workoutBoxName));
-    await tryOpen(_userProfileBoxName, () => Hive.openBox<UserProfile>(_userProfileBoxName));
-    await tryOpen(_biometricBoxName,   () => Hive.openBox<BiometricRecord>(_biometricBoxName));
-    await tryOpen(_settingsBoxName,    () => Hive.openBox(_settingsBoxName));
-    await tryOpen(_planBoxName,        () => Hive.openBox(_planBoxName));
+    await tryOpen(
+        _workoutBoxName, () => Hive.openBox<CompletedWorkout>(_workoutBoxName));
+    await tryOpen(_userProfileBoxName,
+        () => Hive.openBox<UserProfile>(_userProfileBoxName));
+    await tryOpen(_biometricBoxName,
+        () => Hive.openBox<BiometricRecord>(_biometricBoxName));
+    await tryOpen(_settingsBoxName, () => Hive.openBox(_settingsBoxName));
+    await tryOpen(_planBoxName, () => Hive.openBox(_planBoxName));
 
     return failedBoxes;
   }
 
-  static Box<CompletedWorkout> get _workoutBox => Hive.box<CompletedWorkout>(_workoutBoxName);
-  static Box<UserProfile> get _userProfileBox => Hive.box<UserProfile>(_userProfileBoxName);
-  static Box<BiometricRecord> get _biometricBox => Hive.box<BiometricRecord>(_biometricBoxName);
+  static Box<CompletedWorkout> get _workoutBox =>
+      Hive.box<CompletedWorkout>(_workoutBoxName);
+  static Box<UserProfile> get _userProfileBox =>
+      Hive.box<UserProfile>(_userProfileBoxName);
+  static Box<BiometricRecord> get _biometricBox =>
+      Hive.box<BiometricRecord>(_biometricBoxName);
   static Box get _settingsBox => Hive.box(_settingsBoxName);
   static Box get _planBox => Hive.box(_planBoxName);
 
-  static ValueListenable<Box<CompletedWorkout>> workoutBoxListenable() => _workoutBox.listenable();
-  static ValueListenable<Box<BiometricRecord>> biometricBoxListenable() => _biometricBox.listenable();
-  static ValueListenable<Box<UserProfile>> userProfileBoxListenable() => _userProfileBox.listenable();
+  static ValueListenable<Box<CompletedWorkout>> workoutBoxListenable() =>
+      _workoutBox.listenable();
+  static ValueListenable<Box<BiometricRecord>> biometricBoxListenable() =>
+      _biometricBox.listenable();
+  static ValueListenable<Box<UserProfile>> userProfileBoxListenable() =>
+      _userProfileBox.listenable();
 
   // --- TRAINING PLAN CACHE ---
 
@@ -105,8 +114,28 @@ class DatabaseService {
   static Future<void> setVoiceCoachEnabled(bool value) =>
       _settingsBox.put('voice_coach_enabled', value);
 
+  // --- SET COUNTDOWN SETTINGS ---
+  static int getSetCountdownSeconds() {
+    final raw = _settingsBox.get('set_countdown_seconds', defaultValue: 5);
+    final value = raw is int ? raw : int.tryParse(raw.toString()) ?? 5;
+    return const {0, 3, 5, 10}.contains(value) ? value : 5;
+  }
+
+  static Future<void> setSetCountdownSeconds(int value) {
+    if (!const {0, 3, 5, 10}.contains(value)) {
+      throw ArgumentError.value(
+          value, 'value', 'Valori consentiti: 0, 3, 5, 10');
+    }
+    return _settingsBox.put('set_countdown_seconds', value);
+  }
+
   // --- ACTIVE SESSION ---
-  static Future<void> saveActiveSession(String dayId, DateTime startTime, int elapsedSeconds, List<CompletedExercise> completed, Set<int> completedIndexes) async {
+  static Future<void> saveActiveSession(
+      String dayId,
+      DateTime startTime,
+      int elapsedSeconds,
+      List<CompletedExercise> completed,
+      Set<int> completedIndexes) async {
     final data = {
       'startTime': startTime.toIso8601String(),
       'elapsedSeconds': elapsedSeconds,
@@ -121,12 +150,16 @@ class DatabaseService {
     if (raw == null) return null;
     try {
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      final startTime = DateTime.tryParse(data['startTime'] as String? ?? '') ?? DateTime.now();
+      final startTime = DateTime.tryParse(data['startTime'] as String? ?? '') ??
+          DateTime.now();
       final elapsedSeconds = data['elapsedSeconds'] as int? ?? 0;
       final completed = (data['completed'] as List<dynamic>?)
-          ?.map((e) => CompletedExercise.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [];
-      final indexes = (data['indexes'] as List<dynamic>?)?.cast<int>().toSet() ?? {};
+              ?.map(
+                  (e) => CompletedExercise.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [];
+      final indexes =
+          (data['indexes'] as List<dynamic>?)?.cast<int>().toSet() ?? {};
       return {
         'startTime': startTime,
         'elapsedSeconds': elapsedSeconds,
@@ -175,7 +208,8 @@ class DatabaseService {
   /// Legge l'ID numerico dell'utente.
   static int? getUserId() {
     final rawValue = _settingsBox.get('user_id');
-    debugPrint('📦 [DatabaseService] getUserId() -> Raw Value in Hive: $rawValue (${rawValue?.runtimeType})');
+    debugPrint(
+        '📦 [DatabaseService] getUserId() -> Raw Value in Hive: $rawValue (${rawValue?.runtimeType})');
     return rawValue as int?;
   }
 
@@ -222,14 +256,16 @@ class DatabaseService {
   /// | `ripetizioni` (String)| `ExerciseSet.targetReps` (int parsed) + `Exercise.loadNote` |
   /// | `recupero_secondi`   | `ExerciseSet.targetRestSeconds` |
   /// | `note_esecuzione`    | `Exercise.externalNote`         |
-  static List<TrainingDay> parseTrainingDaysFromJson(Map<String, dynamic> planJson) {
+  static List<TrainingDay> parseTrainingDaysFromJson(
+      Map<String, dynamic> planJson) {
     final List<TrainingDay> days = [];
 
     // Estrae la lista dei giorni dalla chiave "giorni"
     final rawGiorni = planJson['giorni'] as List<dynamic>? ?? [];
 
     for (final dayMap in rawGiorni) {
-      if (dayMap is! Map<String, dynamic>) continue; // Salta elementi malformati
+      if (dayMap is! Map<String, dynamic>)
+        continue; // Salta elementi malformati
 
       // --- Parsing esercizi del giorno ---
       final rawEsercizi = dayMap['esercizi'] as List<dynamic>? ?? [];
@@ -248,19 +284,19 @@ class DatabaseService {
         final int targetReps = _parseRepsFromString(ripetizioniStr);
 
         // Accetta sia "recupero_secondi" (formato corretto) che "recupero" (legacy AI)
-        final int recupero = (exMap['recupero_secondi'] as int?)
-            ?? (exMap['recupero'] as int?)
-            ?? 90;
+        final int recupero = (exMap['recupero_secondi'] as int?) ??
+            (exMap['recupero'] as int?) ??
+            90;
 
         // Genera le [numSerie] serie partendo da 1
         final List<ExerciseSet> sets = List.generate(
           numSerie,
           (i) => ExerciseSet(
             number: i + 1,
-            targetReps: targetReps,        // primo numero estratto da ripetizioni
+            targetReps: targetReps, // primo numero estratto da ripetizioni
             minTargetReps: 0,
             targetRestSeconds: recupero,
-            weight: 0.0,                   // peso da inserire durante la sessione
+            weight: 0.0, // peso da inserire durante la sessione
             actualReps: 0,
             isCompleted: false,
           ),
@@ -268,29 +304,30 @@ class DatabaseService {
 
         exercises.add(Exercise(
           // ID generato automaticamente (il server non lo invia)
-          id:              'ex_${exercises.length}',
+          id: 'ex_${exercises.length}',
           // "nome" → nome dell'esercizio
-          name:            (exMap['nome']               as String?) ?? 'Esercizio senza nome',
+          name: (exMap['nome'] as String?) ?? 'Esercizio senza nome',
           // Il server non invia "setup" (tipo attrezzatura) → stringa vuota
-          setup:           '',
+          setup: '',
           // Usiamo "ripetizioni" come nota di carico (es. "8-10 reps")
           // così viene visualizzato nell'UI del dettaglio esercizio
-          loadNote:        ripetizioniStr,
+          loadNote: ripetizioniStr,
           // Video tutorial dal backend
-          videoUrl:        (exMap['video_url']           as String?) ?? '',
+          videoUrl: (exMap['video_url'] as String?) ?? '',
           // "note_esecuzione" → nota tecnica del trainer
-          externalNote:    exMap['note_esecuzione']      as String?,
+          externalNote: exMap['note_esecuzione'] as String?,
           // "gruppo_muscolare" → Petto | Schiena | Gambe | Spalle | Braccia | Altro
-          gruppoMuscolare: exMap['gruppo_muscolare']     as String?,
-          sets:            sets,
+          gruppoMuscolare: exMap['gruppo_muscolare'] as String?,
+          sets: sets,
         ));
       }
 
       days.add(TrainingDay(
         // ID basato sull'indice (il server usa nomi, non ID numerici)
-        id:       'd${days.length + 1}',
+        id: 'd${days.length + 1}',
         // "nome_giorno" → titolo del giorno (es. "Lunedì", "PUSH")
-        title:    (dayMap['nome_giorno']      as String?) ?? 'Giorno ${days.length + 1}',
+        title:
+            (dayMap['nome_giorno'] as String?) ?? 'Giorno ${days.length + 1}',
         // "tipo_allenamento" → sottotitolo con muscoli bersaglio
         subtitle: (dayMap['tipo_allenamento'] as String?) ?? '',
         // Il server non ha un campo "priority" separato
@@ -301,8 +338,12 @@ class DatabaseService {
 
     // Ordina i giorni per numero (estrae cifre dal titolo, es. "Giorno 1" → 1)
     days.sort((a, b) {
-      final numA = int.tryParse(RegExp(r'\d+').firstMatch(a.title)?.group(0) ?? '') ?? 999;
-      final numB = int.tryParse(RegExp(r'\d+').firstMatch(b.title)?.group(0) ?? '') ?? 999;
+      final numA =
+          int.tryParse(RegExp(r'\d+').firstMatch(a.title)?.group(0) ?? '') ??
+              999;
+      final numB =
+          int.tryParse(RegExp(r'\d+').firstMatch(b.title)?.group(0) ?? '') ??
+              999;
       return numA.compareTo(numB);
     });
 
@@ -334,7 +375,8 @@ class DatabaseService {
 
   // --- BIOMETRIC RECORDS ---
   static Future<void> saveBiometricRecord(BiometricRecord record) async {
-    final dateKey = '${record.date.year}-${record.date.month.toString().padLeft(2, '0')}-${record.date.day.toString().padLeft(2, '0')}';
+    final dateKey =
+        '${record.date.year}-${record.date.month.toString().padLeft(2, '0')}-${record.date.day.toString().padLeft(2, '0')}';
     await _biometricBox.put(dateKey, record);
   }
 
@@ -354,15 +396,16 @@ class DatabaseService {
       ..sort((a, b) => a.date.compareTo(b.date));
     return records.map((r) {
       final m = <String, dynamic>{
-        'date': '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}',
+        'date':
+            '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}',
         'weight': r.weight,
         'hips': r.hips,
         'chest': r.chest,
         'biceps': r.biceps,
       };
-      if (r.waist  != null) m['waist']  = r.waist;
-      if (r.thigh  != null) m['thigh']  = r.thigh;
-      if (r.calf   != null) m['calf']   = r.calf;
+      if (r.waist != null) m['waist'] = r.waist;
+      if (r.thigh != null) m['thigh'] = r.thigh;
+      if (r.calf != null) m['calf'] = r.calf;
       return m;
     }).toList();
   }
@@ -373,14 +416,21 @@ class DatabaseService {
         .where((w) => now.difference(w.date).inDays <= (weeks * 7))
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
-    return recentWorkouts.map((w) => {
-      'date': '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}/${w.date.year}',
-      'title': w.title,
-      'exercises': w.exercises.map((ex) => {
-        'name': ex.name,
-        'sets': ex.sets.map((s) => {'weight': s.weight, 'reps': s.reps}).toList(),
-      }).toList(),
-    }).toList();
+    return recentWorkouts
+        .map((w) => {
+              'date':
+                  '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}/${w.date.year}',
+              'title': w.title,
+              'exercises': w.exercises
+                  .map((ex) => {
+                        'name': ex.name,
+                        'sets': ex.sets
+                            .map((s) => {'weight': s.weight, 'reps': s.reps})
+                            .toList(),
+                      })
+                  .toList(),
+            })
+        .toList();
   }
 
   static String getBiometricHistoryForAI() {
@@ -390,8 +440,10 @@ class DatabaseService {
 
     StringBuffer buffer = StringBuffer();
     for (var r in records) {
-      final dateStr = '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}';
-      buffer.writeln('- $dateStr: Peso ${r.weight}kg, Fianchi ${r.hips}cm, Petto ${r.chest}cm, Bicipite ${r.biceps}cm, Vita ${r.waist ?? '—'}cm, Coscia ${r.thigh ?? '—'}cm, Polpaccio ${r.calf ?? '—'}cm');
+      final dateStr =
+          '${r.date.day.toString().padLeft(2, '0')}/${r.date.month.toString().padLeft(2, '0')}/${r.date.year}';
+      buffer.writeln(
+          '- $dateStr: Peso ${r.weight}kg, Fianchi ${r.hips}cm, Petto ${r.chest}cm, Bicipite ${r.biceps}cm, Vita ${r.waist ?? '—'}cm, Coscia ${r.thigh ?? '—'}cm, Polpaccio ${r.calf ?? '—'}cm');
     }
     return buffer.toString().trim();
   }
@@ -466,16 +518,16 @@ class DatabaseService {
 
     return _workoutBox.values.where((w) {
       if (!w.date.isAfter(cutoff)) return false;
-      
+
       // Priorità 1: Match esatto su dayId (nuovi salvataggi)
       if (w.dayId != null && w.dayId == day.id) return true;
-      
+
       // Priorità 2: Match cross-scheda cercando lo stesso numero nel titolo (es. "DAY 1" e "Giorno 1")
       if (targetNum != null) {
         final wNum = RegExp(r'\d+').firstMatch(w.title)?.group(0);
         if (wNum == targetNum) return true;
       }
-      
+
       // Priorità 3: Match sul titolo esatto (fallback generico)
       return w.title == day.title;
     }).length;
@@ -502,14 +554,16 @@ class DatabaseService {
     }
 
     final Set<String> daysWithWorkout = _workoutBox.values
-        .map((w) => '${w.date.year}-${w.date.month.toString().padLeft(2, '0')}-${w.date.day.toString().padLeft(2, '0')}')
+        .map((w) =>
+            '${w.date.year}-${w.date.month.toString().padLeft(2, '0')}-${w.date.day.toString().padLeft(2, '0')}')
         .toSet();
 
     int streak = 0;
     final today = DateTime.now();
     for (int i = 0; i <= 365; i++) {
       final d = today.subtract(Duration(days: i));
-      final key = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
       if (daysWithWorkout.contains(key)) {
         streak++;
       } else if (i == 0) {
@@ -527,7 +581,8 @@ class DatabaseService {
 
   static List<CompletedWorkout> getWorkoutsForMonth(DateTime month) {
     return _workoutBox.values.where((workout) {
-      return workout.date.year == month.year && workout.date.month == month.month;
+      return workout.date.year == month.year &&
+          workout.date.month == month.month;
     }).toList();
   }
 
@@ -578,17 +633,19 @@ class DatabaseService {
 
   static String getWorkoutHistoryForAI(int weeks) {
     final now = DateTime.now();
-    final recentWorkouts = _workoutBox.values.where((w) => now.difference(w.date).inDays <= (weeks * 7)).toList();
+    final recentWorkouts = _workoutBox.values
+        .where((w) => now.difference(w.date).inDays <= (weeks * 7))
+        .toList();
     recentWorkouts.sort((a, b) => a.date.compareTo(b.date));
-    
+
     if (recentWorkouts.isEmpty) return 'Nessun allenamento registrato.';
 
     Map<int, List<CompletedWorkout>> weeksMap = {};
     for (var w in recentWorkouts) {
       final daysAgo = now.difference(w.date).inDays;
-      final weekFromNow = (daysAgo / 7).floor(); 
+      final weekFromNow = (daysAgo / 7).floor();
       final weekIndex = weeks - weekFromNow;
-      
+
       if (weeksMap[weekIndex] == null) {
         weeksMap[weekIndex] = [];
       }
@@ -601,10 +658,12 @@ class DatabaseService {
     for (var wIdx in sortedWeeks) {
       buffer.writeln('week$wIdx:');
       for (var w in weeksMap[wIdx]!) {
-        final dateStr = '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}/${w.date.year}';
+        final dateStr =
+            '${w.date.day.toString().padLeft(2, '0')}/${w.date.month.toString().padLeft(2, '0')}/${w.date.year}';
         buffer.writeln('- $dateStr ${w.title}');
         for (var ex in w.exercises) {
-          final setsStr = ex.sets.map((s) => '${s.weight}kg x ${s.reps}').join(', ');
+          final setsStr =
+              ex.sets.map((s) => '${s.weight}kg x ${s.reps}').join(', ');
           buffer.writeln('  ${ex.name}: $setsStr');
         }
       }
@@ -613,7 +672,4 @@ class DatabaseService {
 
     return buffer.toString().trim();
   }
-
-
-
 }
