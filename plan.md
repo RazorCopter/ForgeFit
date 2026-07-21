@@ -17,7 +17,7 @@
 - [x] Versioni sorgente allineate a `2.4.0+76`
 - [x] Test automatici UI aggiunti
 - [x] Gate backend, Flutter, Docker e build web completati
-- [ ] Commit, push, merge su `main` e tag `v2.4.0`
+- [x] Commit, push, merge su `main` e tag `v2.4.0`
 - [ ] Backup dati di produzione pre-deploy verificato
 - [ ] Deploy backend/frontend e verifica dati post-deploy
 - [ ] APK Lite ARM64 `2.4.0+76` generato e verificato
