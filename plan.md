@@ -2,9 +2,29 @@
 
 **Data:** 21 luglio 2026
 
-**Stato:** release 2.3.0 distribuita e verificata in produzione
+**Stato:** release 2.4.0 premium UI in sviluppo e validazione
 
 **Ambito:** backend FastAPI, app Flutter, dashboard amministrativa, sincronizzazione, AI e release mobile
+
+## Stato di sviluppo — release 2.4.0
+
+- [x] Branch `feat/2.4.0-premium-ui` creato dalla baseline 2.3.0
+- [x] Design system ForgeFit Obsidian e component theme Material 3
+- [x] Navigazione semplificata a cinque destinazioni senza perdita di funzionalità
+- [x] Nuovo hub Profilo con metriche, Traguardi e Impostazioni
+- [x] Home premium con saluto, data e gerarchia informativa più chiara
+- [x] Sessione attiva con avanzamento, CTA premium e Semantics per timer/countdown
+- [x] Versioni sorgente allineate a `2.4.0+76`
+- [x] Test automatici UI aggiunti
+- [x] Gate backend, Flutter, Docker e build web completati
+- [ ] Commit, push, merge su `main` e tag `v2.4.0`
+- [ ] Backup dati di produzione pre-deploy verificato
+- [ ] Deploy backend/frontend e verifica dati post-deploy
+- [ ] APK Lite ARM64 `2.4.0+76` generato e verificato
+
+### Compatibilità dati 2.4.0
+
+La release non modifica schema SQLite, adapter Hive o chiavi di persistenza. Lo storico già raccolto e le credenziali utente restano invariati. Il deploy deve comunque creare un backup online SQLite e un archivio del volume prima di aggiornare i container.
 
 ## Stato di sviluppo — release 2.3.0
 

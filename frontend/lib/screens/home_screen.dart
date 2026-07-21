@@ -8,7 +8,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/training_data.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
@@ -32,6 +31,39 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _planHistory = [];
   int? _selectedHistoryId;
 
+  String get _firstName {
+    final name = DatabaseService.getUserProfile()?.name.trim() ?? '';
+    return name.isEmpty ? 'Atleta' : name.split(RegExp(r'\s+')).first;
+  }
+
+  String get _todayLabel {
+    const weekdays = [
+      'lunedì',
+      'martedì',
+      'mercoledì',
+      'giovedì',
+      'venerdì',
+      'sabato',
+      'domenica',
+    ];
+    const months = [
+      'gennaio',
+      'febbraio',
+      'marzo',
+      'aprile',
+      'maggio',
+      'giugno',
+      'luglio',
+      'agosto',
+      'settembre',
+      'ottobre',
+      'novembre',
+      'dicembre',
+    ];
+    final now = DateTime.now();
+    return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
+  }
+
   /// true mentre è in corso la chiamata GET /api/plans/{user_id}
   bool _isSyncing = false;
 
@@ -50,8 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final userId = DatabaseService.getUserId();
     if (userId == null) return;
     final lastSync = DatabaseService.getLastSyncTimestamp();
-    final isStale = lastSync == null ||
-        DateTime.now().difference(lastSync).inHours >= 4;
+    final isStale =
+        lastSync == null || DateTime.now().difference(lastSync).inHours >= 4;
     if (isStale) {
       await _syncScheda(silent: true);
     } else {
@@ -68,37 +100,59 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------------------
   IconData _getIconForDay(String dayId) {
     final lower = dayId.toLowerCase();
-    if (lower.contains('petto') || lower.contains('chest') || lower.contains('push')) {
+    if (lower.contains('petto') ||
+        lower.contains('chest') ||
+        lower.contains('push')) {
       return Icons.fitness_center;
     }
-    if (lower.contains('schiena') || lower.contains('back') || lower.contains('pull') || lower.contains('dorsali')) {
+    if (lower.contains('schiena') ||
+        lower.contains('back') ||
+        lower.contains('pull') ||
+        lower.contains('dorsali')) {
       return Icons.accessibility_new;
     }
-    if (lower.contains('gambe') || lower.contains('legs') || lower.contains('coscia') || lower.contains('quadricipiti')) {
+    if (lower.contains('gambe') ||
+        lower.contains('legs') ||
+        lower.contains('coscia') ||
+        lower.contains('quadricipiti')) {
       return Icons.directions_run;
     }
     if (lower.contains('spalle') || lower.contains('shoulder')) {
       return Icons.sports_handball;
     }
-    if (lower.contains('braccia') || lower.contains('bicipiti') || lower.contains('tricipiti') || lower.contains('arms')) {
+    if (lower.contains('braccia') ||
+        lower.contains('bicipiti') ||
+        lower.contains('tricipiti') ||
+        lower.contains('arms')) {
       return Icons.sports_martial_arts;
     }
-    if (lower.contains('full') || lower.contains('corpo') || lower.contains('total')) {
+    if (lower.contains('full') ||
+        lower.contains('corpo') ||
+        lower.contains('total')) {
       return Icons.self_improvement;
     }
-    if (lower.contains('cardio') || lower.contains('hiit') || lower.contains('corsa')) {
+    if (lower.contains('cardio') ||
+        lower.contains('hiit') ||
+        lower.contains('corsa')) {
       return Icons.directions_run;
     }
-    if (lower.contains('riposo') || lower.contains('rest') || lower.contains('recupero')) {
+    if (lower.contains('riposo') ||
+        lower.contains('rest') ||
+        lower.contains('recupero')) {
       return Icons.hotel;
     }
     // fallback per ID legacy (d1..d4)
     switch (dayId) {
-      case 'd1': return Icons.fitness_center;
-      case 'd2': return Icons.accessibility_new;
-      case 'd3': return Icons.directions_run;
-      case 'd4': return Icons.home;
-      default:   return Icons.sports_gymnastics;
+      case 'd1':
+        return Icons.fitness_center;
+      case 'd2':
+        return Icons.accessibility_new;
+      case 'd3':
+        return Icons.directions_run;
+      case 'd4':
+        return Icons.home;
+      default:
+        return Icons.sports_gymnastics;
     }
   }
 
@@ -118,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final histItem = _planHistory.firstWhere((e) => e['id'] == histId, orElse: () => {});
+    final histItem =
+        _planHistory.firstWhere((e) => e['id'] == histId, orElse: () => {});
     if (histItem.isNotEmpty) {
       final planData = histItem['plan'] as Map<String, dynamic>?;
       if (planData != null) {
@@ -146,11 +201,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _syncScheda({bool silent = false}) async {
     // Recupera l'ID utente: è necessario per la chiamata REST
     final userId = DatabaseService.getUserId();
-    if (kDebugMode) debugPrint('🔄 [HomeScreen] _syncScheda called. userId from Hive: $userId');
+    if (kDebugMode)
+      debugPrint(
+          '🔄 [HomeScreen] _syncScheda called. userId from Hive: $userId');
 
     if (userId == null) {
       if (kDebugMode) debugPrint('❌ [HomeScreen] userId is NULL.');
-      if (!silent) _showErrorSnackBar('Nessun account trovato. Effettua il login o riavvia l\'app.');
+      if (!silent)
+        _showErrorSnackBar(
+            'Nessun account trovato. Effettua il login o riavvia l\'app.');
       return;
     }
 
@@ -160,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final List<TrainingDay> parsedDays = await PlanService.syncPlan(userId);
       await DatabaseService.saveLastSyncTimestamp();
-      
+
       try {
         final hist = await PlanService.fetchPlanHistory(userId);
         if (mounted) setState(() => _planHistory = hist);
@@ -169,15 +228,20 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       setState(() {
-         _days = parsedDays;
-         _selectedHistoryId = null;
+        _days = parsedDays;
+        _selectedHistoryId = null;
       });
-      if (!silent) _showSuccessSnackBar('Scheda sincronizzata! ${parsedDays.length} giorni caricati.');
+      if (!silent)
+        _showSuccessSnackBar(
+            'Scheda sincronizzata! ${parsedDays.length} giorni caricati.');
     } on ApiException catch (e) {
-      if (!silent) _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
+      if (!silent)
+        _showErrorSnackBar('Errore Server (${e.statusCode}): ${e.message}');
     } catch (e) {
       if (e.toString().contains('no_plan')) {
-        if (!silent) _showInfoSnackBar('Nessuna scheda disponibile. Contatta il tuo trainer.');
+        if (!silent)
+          _showInfoSnackBar(
+              'Nessuna scheda disponibile. Contatta il tuo trainer.');
       } else {
         if (!silent) _showErrorSnackBar('Errore di sistema: $e');
       }
@@ -215,7 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+            const Icon(Icons.check_circle_outline,
+                color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
@@ -270,6 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
+          title: const Text('FORGEFIT'),
           backgroundColor: Colors.transparent,
           elevation: 0,
           toolbarHeight: kToolbarHeight,
@@ -305,57 +371,31 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Banner "FORGE FIT" + indicatore server ───────
-              // ── Banner "FORGE FIT" ───────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [AppTheme.cyan, AppTheme.vividPurple],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ).createShader(bounds),
-                    child: Text(
-                      'FORGE FIT',
-                      style: GoogleFonts.orbitron(
-                        fontSize: 38,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.0,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: AppTheme.cyan.withValues(alpha: 0.5),
-                            blurRadius: 15,
-                          ),
-                          Shadow(
-                            color: AppTheme.vividPurple.withValues(alpha: 0.5),
-                            blurRadius: 15,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(duration: 800.ms).scale(begin: const Offset(0.9, 0.9)),
-
-              const SizedBox(height: 32),
-
-              const Text(
-                'La tua Settimana',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+              Text(
+                _todayLabel.toUpperCase(),
+                style: const TextStyle(
+                  color: AppTheme.cyan,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
                 ),
-              ).animate().fade(duration: 500.ms).slideX(begin: -0.1, end: 0),
-              
-              const SizedBox(height: 16),
+              ).animate().fade(duration: 350.ms),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Ciao, $_firstName',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ).animate().fade(duration: 400.ms).slideX(begin: -0.04, end: 0),
+              const SizedBox(height: AppSpacing.xxs),
+              const Text(
+                'La tua settimana di allenamento',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+              ),
+              const SizedBox(height: AppSpacing.lg),
 
               // Dashboard Controls (Plan Selector & Sync Status)
               AppTheme.glassContainer(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 borderColor: AppTheme.cyan.withValues(alpha: 0.3),
                 child: Row(
                   children: [
@@ -367,9 +407,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: DropdownButton<int?>(
                                 isExpanded: true,
                                 value: _selectedHistoryId,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.cyan, size: 20),
+                                icon: const Icon(Icons.keyboard_arrow_down,
+                                    color: AppTheme.cyan, size: 20),
                                 dropdownColor: AppTheme.surfaceVariant,
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600),
                                 items: [
                                   const DropdownMenuItem<int?>(
                                     value: null,
@@ -382,14 +426,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                     String dateStr = '';
                                     if (rawDate != null) {
                                       try {
-                                        final d = DateTime.parse(rawDate).toLocal();
-                                        dateStr = '${d.day}/${d.month}/${d.year}';
+                                        final d =
+                                            DateTime.parse(rawDate).toLocal();
+                                        dateStr =
+                                            '${d.day}/${d.month}/${d.year}';
                                       } catch (_) {}
                                     }
-                                    final text = 'v$ver - $dateStr${label != null ? ' ($label)' : ''}';
+                                    final text =
+                                        'v$ver - $dateStr${label != null ? ' ($label)' : ''}';
                                     return DropdownMenuItem<int?>(
                                       value: hist['id'] as int,
-                                      child: Text(text, overflow: TextOverflow.ellipsis),
+                                      child: Text(text,
+                                          overflow: TextOverflow.ellipsis),
                                     );
                                   }),
                                 ],
@@ -398,11 +446,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             )
                           : Row(
                               children: [
-                                const Icon(Icons.history, color: AppTheme.cyan, size: 20),
+                                const Icon(Icons.history,
+                                    color: AppTheme.cyan, size: 20),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Piano Attuale',
-                                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
@@ -423,9 +475,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         valueListenable: ConnectivityService.isOnline,
                         builder: (context, online, _) {
                           return ValueListenableBuilder(
-                            valueListenable: DatabaseService.workoutBoxListenable(),
+                            valueListenable:
+                                DatabaseService.workoutBoxListenable(),
                             builder: (context, _, __) {
-                              final pending = DatabaseService.getUnsyncedWorkouts().length;
+                              final pending =
+                                  DatabaseService.getUnsyncedWorkouts().length;
                               final Color statusColor;
                               final IconData statusIcon;
                               final String statusTooltip;
@@ -450,11 +504,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: GestureDetector(
                                   onTap: canForceSync
                                       ? () async {
-                                          await SyncService.syncAllPendingData();
+                                          await SyncService
+                                              .syncAllPendingData();
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
                                               const SnackBar(
-                                                content: Text('Sincronizzazione completata'),
+                                                content: Text(
+                                                    'Sincronizzazione completata'),
                                                 backgroundColor: Colors.green,
                                                 duration: Duration(seconds: 2),
                                               ),
@@ -478,17 +535,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       AnimatedContainer(
-                                        duration: const Duration(milliseconds: 400),
+                                        duration:
+                                            const Duration(milliseconds: 400),
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.15),
+                                          color: statusColor.withValues(
+                                              alpha: 0.15),
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: statusColor.withValues(alpha: 0.5), width: 1.5),
+                                          border: Border.all(
+                                              color: statusColor.withValues(
+                                                  alpha: 0.5),
+                                              width: 1.5),
                                           boxShadow: [
-                                            BoxShadow(color: statusColor.withValues(alpha: 0.3), blurRadius: 8),
+                                            BoxShadow(
+                                                color: statusColor.withValues(
+                                                    alpha: 0.3),
+                                                blurRadius: 8),
                                           ],
                                         ),
-                                        child: Icon(statusIcon, color: statusColor, size: 14),
+                                        child: Icon(statusIcon,
+                                            color: statusColor, size: 14),
                                       ),
                                     ],
                                   ),
@@ -502,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ).animate().fade(duration: 400.ms),
-              
+
               const SizedBox(height: 16),
 
               // ValueListenableBuilder che reagisce agli aggiornamenti dei workout (es. fine sync in background)
@@ -512,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (context, _, __) {
                     final streak = DatabaseService.getCurrentStreak();
                     Widget streakBanner = const SizedBox.shrink();
-                    
+
                     if (streak >= 2) {
                       // Colori e messaggio adattivi in base alla streak
                       final Color streakColor;
@@ -524,11 +590,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         streakMsg = 'Due settimane filate. Leggendario!';
                       } else if (streak >= 7) {
                         streakColor = const Color(0xFFFFD700); // gold
-                        streakGradient = [const Color(0xFFFFD700), const Color(0xFFFF8C00)];
+                        streakGradient = [
+                          const Color(0xFFFFD700),
+                          const Color(0xFFFF8C00)
+                        ];
                         streakMsg = 'Una settimana intera. Sei inarrestabile!';
                       } else {
                         streakColor = Colors.orangeAccent;
-                        streakGradient = [Colors.orangeAccent, Colors.deepOrange];
+                        streakGradient = [
+                          Colors.orangeAccent,
+                          Colors.deepOrange
+                        ];
                         streakMsg = 'Continua così, stai andando alla grande!';
                       }
 
@@ -545,7 +617,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               end: Alignment.centerRight,
                             ),
                             border: Border.all(
-                                color: streakColor.withValues(alpha: 0.4), width: 1.5),
+                                color: streakColor.withValues(alpha: 0.4),
+                                width: 1.5),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -553,16 +626,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Row(
                               children: [
                                 Text(
-                                  streak >= 14 ? '⚡' : streak >= 7 ? '🏆' : '🔥',
+                                  streak >= 14
+                                      ? '⚡'
+                                      : streak >= 7
+                                          ? '🏆'
+                                          : '🔥',
                                   style: const TextStyle(fontSize: 28),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       ShaderMask(
-                                        shaderCallback: (bounds) => LinearGradient(
+                                        shaderCallback: (bounds) =>
+                                            LinearGradient(
                                           colors: streakGradient,
                                         ).createShader(bounds),
                                         child: Text(
@@ -587,7 +666,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                        ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: -0.1),
                       );
                     }
 
@@ -599,9 +681,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: _isSyncing && _days.isEmpty
                               ? _buildShimmerLoading()
                               : _days.isEmpty
-                                  ? _buildEmptyState()   // Nessuna scheda caricata
+                                  ? _buildEmptyState() // Nessuna scheda caricata
                                   : RefreshIndicator(
-                                      onRefresh: () => _syncScheda(silent: true),
+                                      onRefresh: () =>
+                                          _syncScheda(silent: true),
                                       color: AppTheme.cyan,
                                       backgroundColor: AppTheme.surface,
                                       child: _buildDaysList(),
@@ -653,7 +736,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Lottie.asset('assets/lottie/empty_plan.json', width: 160, repeat: true),
+            Lottie.asset('assets/lottie/empty_plan.json',
+                width: 160, repeat: true),
 
             const SizedBox(height: 24),
 
@@ -674,13 +758,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'Premi l\'icona ',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
+                  style: TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
                 ),
                 Icon(Icons.cloud_sync, color: AppTheme.cyan, size: 16),
                 Text(
                   ' in alto a destra\nper scaricare la scheda dal tuo trainer.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
+                  style: TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 14, height: 1.6),
                 ),
               ],
             ),
@@ -697,8 +783,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.cyan),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
@@ -719,10 +805,13 @@ class _HomeScreenState extends State<HomeScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 20.0),
           child: _buildDayCard(day),
-        ).animate().fade(
+        )
+            .animate()
+            .fade(
               delay: (150 * index).ms,
               duration: 600.ms,
-            ).slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart);
+            )
+            .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart);
       },
     );
   }
@@ -783,84 +872,88 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Builder(
-                        builder: (context) {
-                          String dTitle = day.title;
-                          String dSubtitle = day.subtitle;
-                          
-                          int firstSepIndex = -1;
-                          String? usedSep;
-                          final separators = [' - ', ' + ', ': ', ' – ', ' — '];
-                          
-                          for (var sep in separators) {
-                            int idx = dTitle.indexOf(sep);
-                            if (idx != -1 && (firstSepIndex == -1 || idx < firstSepIndex)) {
-                              firstSepIndex = idx;
-                              usedSep = sep;
-                            }
-                          }
-                          
-                          if (firstSepIndex != -1 && usedSep != null) {
-                            String leftPart = dTitle.substring(0, firstSepIndex).trim();
-                            String rightPart = dTitle.substring(firstSepIndex + usedSep.length).trim();
-                            
-                            dTitle = leftPart;
-                            
-                            String normalizedRight = rightPart
-                                .replaceAll(' + ', ';')
-                                .replaceAll(' - ', ';')
-                                .replaceAll(' – ', ';')
-                                .replaceAll(' — ', ';')
-                                .replaceAll(' e ', ';')
-                                .replaceAll(',', ';');
-                                
-                            final bulletList = normalizedRight.split(';')
-                                .map((e) => e.trim())
-                                .where((e) => e.isNotEmpty)
-                                .toList();
-                                
-                            if (bulletList.isNotEmpty) {
-                                dSubtitle = bulletList.map((e) => "• $e").join('\n');
-                            }
-                          }
+                      Builder(builder: (context) {
+                        String dTitle = day.title;
+                        String dSubtitle = day.subtitle;
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Titolo giorno (es. DAY 1)
+                        int firstSepIndex = -1;
+                        String? usedSep;
+                        final separators = [' - ', ' + ', ': ', ' – ', ' — '];
+
+                        for (var sep in separators) {
+                          int idx = dTitle.indexOf(sep);
+                          if (idx != -1 &&
+                              (firstSepIndex == -1 || idx < firstSepIndex)) {
+                            firstSepIndex = idx;
+                            usedSep = sep;
+                          }
+                        }
+
+                        if (firstSepIndex != -1 && usedSep != null) {
+                          String leftPart =
+                              dTitle.substring(0, firstSepIndex).trim();
+                          String rightPart = dTitle
+                              .substring(firstSepIndex + usedSep.length)
+                              .trim();
+
+                          dTitle = leftPart;
+
+                          String normalizedRight = rightPart
+                              .replaceAll(' + ', ';')
+                              .replaceAll(' - ', ';')
+                              .replaceAll(' – ', ';')
+                              .replaceAll(' — ', ';')
+                              .replaceAll(' e ', ';')
+                              .replaceAll(',', ';');
+
+                          final bulletList = normalizedRight
+                              .split(';')
+                              .map((e) => e.trim())
+                              .where((e) => e.isNotEmpty)
+                              .toList();
+
+                          if (bulletList.isNotEmpty) {
+                            dSubtitle =
+                                bulletList.map((e) => "• $e").join('\n');
+                          }
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Titolo giorno (es. DAY 1)
+                            Text(
+                              dTitle,
+                              maxLines: 2,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: accentColor,
+                                letterSpacing: 1.2,
+                                height: 1.1,
+                              ),
+                            ),
+                            if (dSubtitle.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              // Sottotitolo (muscoli bersaglio in elenco o riga)
                               Text(
-                                dTitle,
-                                maxLines: 2,
+                                dSubtitle,
+                                maxLines: 6,
                                 softWrap: true,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w900,
-                                  color: accentColor,
-                                  letterSpacing: 1.2,
-                                  height: 1.1,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.4,
                                 ),
                               ),
-                              if (dSubtitle.isNotEmpty) ...[
-                                const SizedBox(height: 6),
-                                // Sottotitolo (muscoli bersaglio in elenco o riga)
-                                Text(
-                                  dSubtitle,
-                                  maxLines: 6,
-                                  softWrap: true,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
                             ],
-                          );
-                        }
-                      ),
+                          ],
+                        );
+                      }),
                     ],
                   ),
                 ),
