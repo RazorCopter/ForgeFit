@@ -20,13 +20,17 @@
 - Il frontend conserva anche il refresh token ricevuto dopo la registrazione.
 - Corretta la creazione clienti della dashboard, che usava l'endpoint inesistente `/api/register`.
 - Lo storico allenamenti viene scaricato in pagine stabili, evitando la cancellazione locale dei record successivi al centesimo.
+- Logout, scadenza JWT, cambio password ed errori 401 non cancellano più storico, scheda, misurazioni e preferenze Hive; la cancellazione resta soltanto nel reset esplicito confermato.
+- Il backup amministrativo usa la SQLite Online Backup API e viene validato prima del download.
+- Il restore limita la dimensione dell'upload, verifica realmente `integrity_check`, chiavi esterne e schema ForgeFit, quindi conserva un punto di recupero `fitness.pre-restore.db` prima dello swap.
 
 ### Tests
-- Aggiunti test backend per registrazione, profilo autenticato, limiti password, paginazione oltre 200 record, segretezza delle chiavi AI e rendering sicuro della dashboard.
+- Aggiunti test backend per registrazione, profilo autenticato, limiti password, paginazione oltre 200 record, segretezza delle chiavi AI, rendering sicuro, conservazione dati al logout e compatibilità backup 2.2.4.
 - Aggiunti test Flutter per tutte le transizioni principali e invalide della sessione esercizio.
 
 ### Operational notes
-- Prima della distribuzione devono ancora essere ruotate le credenziali precedentemente esposte e bonificata la cronologia Git; la semplice rimozione dalla working tree non le revoca.
+- Il proprietario ha confermato la modifica delle credenziali operative precedentemente esposte; resta da bonificare in modo coordinato la cronologia Git.
+- Il backup reale 2.2.4 è stato verificato in sola lettura: integrità SQLite, chiavi esterne, JSON applicativi e schema risultano compatibili con la 2.3.0.
 
 ## [2.2.4] — 2026-06-18
 

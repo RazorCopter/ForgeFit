@@ -126,8 +126,7 @@ class _SetupScreenState extends State<SetupScreen> {
     );
 
     if (confirm == true) {
-      await AuthService.logout();
-      await DatabaseService.clearAllData();
+      await AuthService.logout(clearLocalData: true);
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(

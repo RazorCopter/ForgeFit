@@ -12,30 +12,34 @@ Ultimo aggiornamento: 21 luglio 2026. La checklist viene aggiornata insieme al c
 
 - [x] Baseline: compilazione Python e validazione Docker Compose
 - [x] SEC-01: credenziali rimosse dalla working tree e sostituite con variabili d'ambiente
-- [ ] SEC-01 esterno: ruotare le credenziali revocate e bonificare la cronologia Git
+- [x] SEC-01 esterno: rotazione credenziali confermata dal proprietario
+- [ ] SEC-01 storico: bonificare in modo coordinato la cronologia Git
 - [x] SEC-02: eliminare stored XSS e secret restituiti dalla dashboard
 - [x] AUTH-01: registrazione con token e sessione completa
 - [x] SYNC-01: pull paginato senza perdita oltre 100 allenamenti
+- [x] DATA-00: logout/401 non cancellano i dati Hive; reset distruttivo solo esplicito
 - [ ] SYNC-02: idempotency key, outbox e tombstone
 - [x] UX-01/05: state machine preview/countdown/esecuzione e test
 - [ ] DATA-01/02: metriche e timestamp Health coerenti
 - [ ] AI-01: SDK supportato, entitlement, whitelist e quote
 - [ ] PRIV-01/REL-01: privacy, secure storage e firma release
-- [ ] OPS-01/02: migrazioni, backup e hardening Docker
+- [x] OPS-01 backup/restore: SQLite Online Backup API, limite upload, integrità, schema e rollback
+- [ ] OPS-01 migrazioni / OPS-02: Alembic e hardening Docker ancora aperti
 - [ ] QA-01: test backend/Flutter presenti; CI ancora da configurare
 
 Le attività non completate non vengono dichiarate risolte nel changelog. Le azioni esterne restano aperte finché non sono confermate dal proprietario.
 
 ### Gate release 2.3.0
 
-- [x] 5 test backend superati
+- [x] 8 test backend superati
 - [x] 5 test Flutter superati
 - [x] Flutter analyze senza errori bloccanti
 - [x] Build web release completata
 - [x] Compilazione Python completata
 - [x] Docker Compose validato
-- [x] Versione `2.3.0+74` allineata tra frontend, backend e web
-- [ ] Rotazione credenziali precedentemente esposte
+- [x] Versione `2.3.0+75` allineata tra frontend, backend e web
+- [x] Rotazione credenziali precedentemente esposte confermata dal proprietario
+- [x] Backup reale 2.2.4 verificato e compatibile con lo schema 2.3.0
 - [ ] Bonifica coordinata della cronologia Git
 - [ ] Pull request, revisione e merge su `main`
 

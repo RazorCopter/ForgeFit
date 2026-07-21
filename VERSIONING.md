@@ -10,7 +10,7 @@ ForgeFit usa **Semantic Versioning** nel formato `MAJOR.MINOR.PATCH`.
 
 Ogni release deve aggiornare insieme:
 
-1. `frontend/pubspec.yaml`: versione prodotto più build number, es. `2.3.0+74`;
+1. `frontend/pubspec.yaml`: versione prodotto più build number, es. `2.3.0+75`;
 2. `frontend/lib/core/app_version.dart`: versione mostrata dall'app;
 3. `backend/version.py`: versione API restituita da `/api/system/version`;
 4. `frontend/web/index.html`: titolo della web app;
@@ -50,7 +50,7 @@ Il build number Flutter cresce sempre, anche per build scartate destinate agli s
 ## Release corrente
 
 - Versione prodotto: `2.3.0`
-- Build Flutter: `74`
+- Build Flutter: `75`
 - Branch previsto: `feat/2.3.0-session-readiness`
 - Compatibilità dati: nessuna migrazione Hive o SQLite richiesta
-- Stato: release candidate; restano esterne la rotazione delle credenziali revocate e la bonifica della cronologia Git
+- Stato: release candidate verificata; rotazione credenziali confermata dal proprietario, bonifica della cronologia Git ancora aperta

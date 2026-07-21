@@ -12,6 +12,7 @@ os.environ.setdefault("JWT_SECRET_KEY", "forgefit-test-secret-never-use-in-produ
 
 import auth as auth_utils
 import models
+import routers.system as system_router
 from database import Base, get_db
 from main import app
 
@@ -170,3 +171,55 @@ def test_dashboard_uses_safe_dom_for_user_controlled_identity_fields():
     assert "nameEl.textContent = fullName" in source
     assert "emailTd.textContent = email" in source
     assert "el.textContent = (ok ? '✅ ' : '❌ ')" in source
+
+
+def test_logout_preserves_local_data_unless_reset_is_explicit():
+    frontend_root = Path(__file__).parents[2] / "frontend" / "lib"
+    auth_source = (frontend_root / "core" / "auth_service.dart").read_text(
+        encoding="utf-8"
+    )
+    setup_source = (frontend_root / "screens" / "setup_screen.dart").read_text(
+        encoding="utf-8"
+    )
+
+    assert "logout({bool clearLocalData = false})" in auth_source
+    assert "if (clearLocalData)" in auth_source
+    assert "AuthService.logout(clearLocalData: true)" in setup_source
+
+
+def test_sqlite_online_backup_is_valid_and_accepts_extra_legacy_tables(tmp_path):
+    source_path = tmp_path / "source.db"
+    backup_path = tmp_path / "backup.db"
+    source_engine = create_engine(f"sqlite:///{source_path}")
+    Base.metadata.create_all(bind=source_engine)
+    source_engine.dispose()
+
+    # Il backup reale 2.2.4 contiene questa tabella vuota: le tabelle extra
+    # devono essere preservate e non rendere lo snapshot incompatibile.
+    import sqlite3
+    with sqlite3.connect(source_path) as connection:
+        connection.execute(
+            "CREATE TABLE passkey_credentials (credential_id VARCHAR PRIMARY KEY)"
+        )
+
+    system_router._create_consistent_backup(source_path, backup_path)
+    system_router._validate_database(backup_path)
+
+    with sqlite3.connect(backup_path) as connection:
+        tables = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+    assert "passkey_credentials" in tables
+
+
+def test_restore_validation_rejects_an_unrelated_sqlite_database(tmp_path):
+    import sqlite3
+    unrelated_path = tmp_path / "unrelated.db"
+    with sqlite3.connect(unrelated_path) as connection:
+        connection.execute("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)")
+
+    with pytest.raises(sqlite3.DatabaseError, match="schema incompatibile"):
+        system_router._validate_database(unrelated_path)
