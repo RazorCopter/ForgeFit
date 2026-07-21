@@ -1,5 +1,25 @@
 # Changelog — ForgeFit
 
+## [2.4.0] — 2026-07-21
+
+### Added
+- Design system **ForgeFit Obsidian** con token condivisi per colori, spaziatura, raggi e motion.
+- Nuovo hub Profilo con riepilogo sessioni, streak, tempo allenato e accesso a Traguardi e Impostazioni.
+- Indicatore di avanzamento serie e annunci semantici per countdown e cronometro nella sessione attiva.
+
+### Changed
+- Navigazione principale semplificata a cinque destinazioni: Oggi, Storico, Progressi, Coach e Profilo.
+- Home ridisegnata con data, saluto personale e gerarchia visiva più orientata al prossimo allenamento.
+- Superfici, pulsanti, input, dialog, snackbar e card uniformati a Material 3 con contrasto e touch target migliorati.
+- CTA della sessione resa più leggibile e stabile; countdown e cronometro usano cifre tabulari senza glow invasivo.
+
+### Compatibility
+- Nessuna migrazione SQLite o Hive: dati, profili, credenziali utente e storico della 2.2.4/2.3.0 restano compatibili.
+- Backend e API invariati salvo l'allineamento della versione applicativa.
+
+### Tests
+- Aggiunti test del design system e delle etichette della navigazione Material 3.
+
 ## [2.3.0] — 2026-07-21
 
 ### Added

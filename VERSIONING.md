@@ -49,9 +49,9 @@ Il build number Flutter cresce sempre, anche per build scartate destinate agli s
 
 ## Release corrente
 
-- Versione prodotto: `2.3.0`
-- Build Flutter: `75`
-- Branch previsto: `feat/2.3.0-session-readiness`
+- Versione prodotto: `2.4.0`
+- Build Flutter: `76`
+- Branch previsto: `feat/2.4.0-premium-ui`
 - Compatibilità dati: nessuna migrazione Hive o SQLite richiesta
-- Tag distribuito: `v2.3.0` sul commit `2781bc3`
-- Stato: distribuita e verificata in produzione; bonifica della cronologia Git ancora aperta
+- Tag previsto: `v2.4.0`
+- Stato: release premium UI in validazione; bonifica della cronologia Git ancora aperta

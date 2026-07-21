@@ -598,7 +598,24 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: Text(widget.exercise.name),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.exercise.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Serie ${_activeSetIndex + 1} di ${widget.exercise.sets.length}',
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: Colors.transparent,
             actions: [
               IconButton(
@@ -624,20 +641,37 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
               ),
             ],
           ),
-          body: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                          begin: const Offset(0.05, 0), end: Offset.zero)
-                      .animate(animation),
-                  child: child,
+          body: Column(
+            children: [
+              Semantics(
+                label:
+                    'Avanzamento serie ${_activeSetIndex + 1} di ${widget.exercise.sets.length}',
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  value: (_activeSetIndex + 1) / widget.exercise.sets.length,
+                  color: widget.accentColor,
                 ),
-              );
-            },
-            child: _buildBodyForPhase(),
+              ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: AppMotion.standard,
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.035, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildBodyForPhase(),
+                ),
+              ),
+            ],
           ),
           bottomNavigationBar: _buildBottomAction(),
         ),
@@ -696,24 +730,25 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: ElevatedButton.icon(
-          onPressed: action,
-          icon: Icon(icon, size: 28),
-          label: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
+        child: Semantics(
+          button: true,
+          label: label.toLowerCase(),
+          child: FilledButton.icon(
+            onPressed: action,
+            icon: Icon(icon, size: 26),
+            label: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+              ),
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: background,
-            foregroundColor: foreground,
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 8,
+            style: FilledButton.styleFrom(
+              backgroundColor: background,
+              foregroundColor: foreground,
+              minimumSize: const Size.fromHeight(64),
+            ),
           ),
         ),
       ),
@@ -891,18 +926,18 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
-            Text(
-              '$_countdownRemaining',
-              style: TextStyle(
-                color: widget.accentColor,
-                fontSize: 128,
-                height: 1,
-                fontWeight: FontWeight.w900,
-                shadows: [
-                  Shadow(
-                      color: widget.accentColor.withValues(alpha: 0.6),
-                      blurRadius: 30)
-                ],
+            Semantics(
+              liveRegion: true,
+              label: 'Avvio tra $_countdownRemaining secondi',
+              child: Text(
+                '$_countdownRemaining',
+                style: TextStyle(
+                  color: widget.accentColor,
+                  fontSize: 118,
+                  height: 1,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -1046,21 +1081,21 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen> {
                       size: 36,
                       color: widget.accentColor.withValues(alpha: 0.7)),
                   const SizedBox(height: 8),
-                  ValueListenableBuilder<int>(
-                    valueListenable: _stopwatchNotifier,
-                    builder: (_, secs, __) => Text(
-                      _formatSeconds(secs),
-                      style: TextStyle(
-                        fontSize: 80,
-                        fontWeight: FontWeight.w900,
-                        color: widget.accentColor,
-                        height: 1.0,
-                        shadows: [
-                          Shadow(
-                              color: widget.accentColor.withValues(alpha: 0.4),
-                              blurRadius: 20)
-                        ],
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                  Semantics(
+                    liveRegion: true,
+                    label:
+                        editable ? 'Tempo registrato' : 'Tempo sotto tensione',
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _stopwatchNotifier,
+                      builder: (_, secs, __) => Text(
+                        _formatSeconds(secs),
+                        style: TextStyle(
+                          fontSize: 76,
+                          fontWeight: FontWeight.w800,
+                          color: widget.accentColor,
+                          height: 1.0,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
                   ),
