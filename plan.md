@@ -2,7 +2,7 @@
 
 **Data:** 21 luglio 2026
 
-**Stato:** in esecuzione — release 2.3.0
+**Stato:** release 2.3.0 distribuita e verificata in produzione
 
 **Ambito:** backend FastAPI, app Flutter, dashboard amministrativa, sincronizzazione, AI e release mobile
 
@@ -40,8 +40,10 @@ Le attività non completate non vengono dichiarate risolte nel changelog. Le azi
 - [x] Versione `2.3.0+75` allineata tra frontend, backend e web
 - [x] Rotazione credenziali precedentemente esposte confermata dal proprietario
 - [x] Backup reale 2.2.4 verificato e compatibile con lo schema 2.3.0
+- [x] Backup completo pre-deploy del volume `/app/data` creato e verificato
+- [x] Produzione verificata: versione 2.3.0, database integro e conteggi invariati
 - [ ] Bonifica coordinata della cronologia Git
-- [ ] Pull request, revisione e merge su `main`
+- [x] Merge su `main`, tag `v2.3.0`, push e deploy Portainer completati
 
 ## 1. Obiettivi
 

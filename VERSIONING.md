@@ -53,4 +53,5 @@ Il build number Flutter cresce sempre, anche per build scartate destinate agli s
 - Build Flutter: `75`
 - Branch previsto: `feat/2.3.0-session-readiness`
 - Compatibilità dati: nessuna migrazione Hive o SQLite richiesta
-- Stato: release candidate verificata; rotazione credenziali confermata dal proprietario, bonifica della cronologia Git ancora aperta
+- Tag distribuito: `v2.3.0` sul commit `2781bc3`
+- Stato: distribuita e verificata in produzione; bonifica della cronologia Git ancora aperta
