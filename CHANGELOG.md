@@ -20,6 +20,10 @@
 ### Tests
 - Aggiunti test del design system e delle etichette della navigazione Material 3.
 
+### Operational notes
+- Deploy completato con snapshot SQLite online e backup integrale del volume; integrità, chiavi esterne e conteggi dati verificati invariati dopo l'aggiornamento.
+- Generato APK Lite ARM64 `2.4.0+76` offuscato, allineato, firmato e verificato per Android 8.0+ / target Android 16.
+
 ## [2.3.0] — 2026-07-21
 
 ### Added

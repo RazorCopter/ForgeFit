@@ -54,4 +54,4 @@ Il build number Flutter cresce sempre, anche per build scartate destinate agli s
 - Branch previsto: `feat/2.4.0-premium-ui`
 - Compatibilità dati: nessuna migrazione Hive o SQLite richiesta
 - Tag distribuzione: `v2.4.0`
-- Stato: release premium UI validata e pronta al deploy; bonifica della cronologia Git ancora aperta
+- Stato: distribuita e verificata in produzione; bonifica della cronologia Git ancora aperta

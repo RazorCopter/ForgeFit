@@ -2,7 +2,7 @@
 
 **Data:** 21 luglio 2026
 
-**Stato:** release 2.4.0 premium UI in sviluppo e validazione
+**Stato:** release 2.4.0 premium UI distribuita e verificata in produzione
 
 **Ambito:** backend FastAPI, app Flutter, dashboard amministrativa, sincronizzazione, AI e release mobile
 
@@ -18,9 +18,9 @@
 - [x] Test automatici UI aggiunti
 - [x] Gate backend, Flutter, Docker e build web completati
 - [x] Commit, push, merge su `main` e tag `v2.4.0`
-- [ ] Backup dati di produzione pre-deploy verificato
-- [ ] Deploy backend/frontend e verifica dati post-deploy
-- [ ] APK Lite ARM64 `2.4.0+76` generato e verificato
+- [x] Backup dati di produzione pre-deploy verificato
+- [x] Deploy backend/frontend e verifica dati post-deploy
+- [x] APK Lite ARM64 `2.4.0+76` generato e verificato
 
 ### Compatibilità dati 2.4.0
 
